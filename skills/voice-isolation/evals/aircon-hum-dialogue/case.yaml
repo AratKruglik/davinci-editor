@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: aircon-hum-dialogue
+expected_outcome: |
+  Voice isolation enabled on the Dialogue track (index 1) only, with a moderate amount around 50-70, verified by reading the state back; Music and SFX tracks untouched; asks the user to listen.
+context:
+  scaffold_script: place-files.sh

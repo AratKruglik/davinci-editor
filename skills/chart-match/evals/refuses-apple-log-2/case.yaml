@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: refuses-apple-log-2
+expected_outcome: |
+  Recognises IMG_5001 as Apple Log 2 and stops: explains chart matching for Apple Log 2 is not supported, without fitting a correction or writing a LUT/DCTL.
+context:
+  scaffold_script: place-files.sh

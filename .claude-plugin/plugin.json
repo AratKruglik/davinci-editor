@@ -1,0 +1,121 @@
+{
+  "name": "davinci-editor",
+  "displayName": "DaVinci Editor",
+  "version": "0.2.0",
+  "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: Apple Log to Rec.709, ColorChecker chart match, voice isolation, Ukrainian transcription, text-based rough cut, edit by colored markers and role-based track layout.",
+  "author": {
+    "name": "Oleksii Kruhlyk"
+  },
+  "license": "MIT",
+  "keywords": [
+    "davinci-resolve",
+    "video-editing",
+    "color-grading",
+    "transcription",
+    "youtube"
+  ],
+  "userConfig": {
+    "footage_bin": {
+      "type": "string",
+      "title": "Footage bin",
+      "description": "Media pool bin with the main camera footage, '/'-separated path from the root bin.",
+      "default": "01_Footage/A-Roll"
+    },
+    "templates_dir": {
+      "type": "directory",
+      "title": "Grade templates folder",
+      "description": "Folder with DRX grade templates (base node tree). Skills export new templates here.",
+      "default": ""
+    },
+    "work_dir": {
+      "type": "string",
+      "title": "Work folder",
+      "description": "Folder for transcripts, cut lists, exported stills and reports. Relative paths resolve against the Claude Code working directory.",
+      "default": "resolve-work"
+    },
+    "output_gamma": {
+      "type": "string",
+      "title": "Rec.709 output gamma",
+      "description": "Display gamma of the Rec.709 output transform: 'Gamma 2.4' (YouTube/broadcast default) or 'Gamma 2.2'.",
+      "default": "Gamma 2.4"
+    },
+    "transcription_language": {
+      "type": "string",
+      "title": "Transcription language",
+      "description": "Language code for DaVinci transcription (project setting transcriptionLanguage).",
+      "default": "uk"
+    },
+    "speaker_detection": {
+      "type": "boolean",
+      "title": "Speaker detection",
+      "description": "Detect speakers during transcription (interviews, podcasts).",
+      "default": false
+    },
+    "filler_words": {
+      "type": "string",
+      "title": "Hard filler words",
+      "description": "Comma-separated filler sounds that are always proposed for cutting.",
+      "default": "е,ее,еее,ем,емм,мм,ммм,хм,ага,а-а,е-е"
+    },
+    "soft_filler_words": {
+      "type": "string",
+      "title": "Soft filler words",
+      "description": "Comma-separated words that are fillers only sometimes; flagged for review, never cut automatically.",
+      "default": "ну,типу,коротше,значить,як би,власне,так би мовити,от"
+    },
+    "pause_threshold_ms": {
+      "type": "number",
+      "title": "Pause threshold (ms)",
+      "description": "Silences longer than this are proposed for tightening.",
+      "default": 700,
+      "min": 200,
+      "max": 5000
+    },
+    "cut_handle_ms": {
+      "type": "number",
+      "title": "Cut handle (ms)",
+      "description": "Breathing room kept on each side of a cut so words are not clipped.",
+      "default": 120,
+      "min": 0,
+      "max": 1000
+    },
+    "voice_isolation_amount": {
+      "type": "number",
+      "title": "Voice isolation amount",
+      "description": "Default AI Voice Isolation strength, 0-100.",
+      "default": 60,
+      "min": 0,
+      "max": 100
+    },
+    "marker_colors": {
+      "type": "string",
+      "title": "Marker color map",
+      "description": "Comma-separated Color=task pairs for marker-edit. Tasks: cut, keep, doubt, chart, switch, broll, transition, chapter, title, zoom, sfx, music, audio-problem, shorts, thumbnail, claude.",
+      "default": "Red=cut,Green=keep,Yellow=doubt,Sand=chart,Purple=switch,Fuchsia=broll,Cocoa=transition,Blue=chapter,Cyan=title,Pink=zoom,Lavender=sfx,Sky=music,Rose=audio-problem,Mint=shorts,Lemon=thumbnail,Cream=claude"
+    },
+    "video_tracks": {
+      "type": "string",
+      "title": "Video tracks (bottom to top)",
+      "description": "Comma-separated Name:ClipColor for the base video tracks, lowest first.",
+      "default": "Backgrounds:Tan,A-roll:Blue,B-roll:Teal,Effects:Orange,Titles:Pink"
+    },
+    "audio_tracks": {
+      "type": "string",
+      "title": "Audio tracks",
+      "description": "Comma-separated Name:ClipColor for the base audio tracks, first = A1.",
+      "default": "Voice:Green,SFX:Yellow,Music:Purple"
+    },
+    "protected_tracks": {
+      "type": "string",
+      "title": "Tracks never deleted",
+      "description": "Comma-separated track roles that cleanup never removes, even when empty.",
+      "default": "A-roll,Voice"
+    },
+    "track_template": {
+      "type": "file",
+      "title": "Timeline template (.drt)",
+      "description": "Optional empty timeline exported as .drt with track names and header colors; new timelines are created from it.",
+      "default": ""
+    }
+  }
+}

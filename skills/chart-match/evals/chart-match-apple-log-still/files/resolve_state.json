@@ -1,0 +1,69 @@
+{
+ "project": "Kitchen Tutorial 2026-10",
+ "resolve_version": "21.1.1.5",
+ "project_settings": {
+  "colorScienceMode": "davinciYRGB",
+  "timelineFrameRate": 25.0
+ },
+ "timeline": "Assembly",
+ "chart_marker": {
+  "frame_relative": 812,
+  "name": "chart",
+  "note": "kitchen"
+ },
+ "color_groups": {
+  "kitchen": [
+   "IMG_4127",
+   "IMG_4128",
+   "IMG_4129"
+  ]
+ },
+ "clips": {
+  "IMG_4127": {
+   "detected_format": "Apple Log",
+   "current_version": {
+    "versionName": "claude",
+    "versionType": 1
+   },
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "DEPTH",
+    "LOOK"
+   ]
+  },
+  "IMG_4128": {
+   "detected_format": "Apple Log",
+   "current_version": {
+    "versionName": "claude",
+    "versionType": 1
+   },
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "DEPTH",
+    "LOOK"
+   ]
+  },
+  "IMG_4129": {
+   "detected_format": "Apple Log",
+   "current_version": {
+    "versionName": "claude",
+    "versionType": 1
+   },
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "DEPTH",
+    "LOOK"
+   ]
+  }
+ },
+ "exported_stills": {
+  "ungraded": "kitchen-chart-log.tif",
+  "preview": "kitchen-chart-log.png"
+ }
+}

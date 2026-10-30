@@ -1,0 +1,30 @@
+{
+ "project": "Street Vlog",
+ "resolve_version": "21.1.1.5",
+ "project_settings": {
+  "colorScienceMode": "davinciYRGB"
+ },
+ "timeline": "Assembly",
+ "chart_marker": {
+  "frame_relative": 140,
+  "name": "chart",
+  "note": "street"
+ },
+ "clips": {
+  "IMG_5001": {
+   "Video Codec": "Apple ProRes 422 HQ",
+   "file_probe": {
+    "apple_log2_marker": true,
+    "primaries": 9,
+    "transfer": 2
+   },
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "DEPTH",
+    "LOOK"
+   ]
+  }
+ }
+}

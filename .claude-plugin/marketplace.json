@@ -1,0 +1,17 @@
+{
+  "name": "davinci-editor",
+  "owner": {
+    "name": "Oleksii Kruhlyk"
+  },
+  "metadata": {
+    "description": "Claude Code / Cowork plugin for editing in DaVinci Resolve Studio 21+"
+  },
+  "plugins": [
+    {
+      "name": "davinci-editor",
+      "source": "./",
+      "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: color, chart match, transcription, text-based rough cut, markers, track layout.",
+      "category": "productivity"
+    }
+  ]
+}

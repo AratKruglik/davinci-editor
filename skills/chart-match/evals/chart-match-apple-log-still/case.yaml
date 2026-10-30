@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: chart-match-apple-log-still
+expected_outcome: |
+  Patch corners located on the rotated chart, a fitted correction with low predicted CIEDE2000 error, a compiled-ready DCTL applied on the CHART node of the kitchen clips, nodes re-enabled after still export, and a per-patch error report.
+context:
+  scaffold_script: place-files.sh

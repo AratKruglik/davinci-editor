@@ -1,0 +1,85 @@
+{
+ "project": "Kitchen Tutorial 2026-10",
+ "resolve_version": "21.1.1.5",
+ "project_settings": {
+  "colorScienceMode": "davinciYRGB",
+  "isAutoColorManage": "0"
+ },
+ "bin": "01_Footage/A-Roll",
+ "templates_dir_listing": [
+  "base-apple-log.drx"
+ ],
+ "timelines": [
+  "Assembly"
+ ],
+ "clips": [
+  {
+   "Clip Name": "IMG_4127",
+   "File Path": "/Volumes/Footage/2026-10-28/IMG_4127.mov",
+   "Type": "Video + Audio",
+   "Video Codec": "Apple ProRes 422 HQ",
+   "Bit Depth": "10",
+   "FPS": 25.0,
+   "Resolution": "3840x2160",
+   "Input Color Space": "",
+   "Format": "QuickTime",
+   "file_probe": {
+    "apple_log_marker": true,
+    "apple_log2_marker": false,
+    "primaries": 9,
+    "transfer": 2
+   }
+  },
+  {
+   "Clip Name": "IMG_4128",
+   "File Path": "/Volumes/Footage/2026-10-28/IMG_4128.mov",
+   "Type": "Video + Audio",
+   "Video Codec": "Apple ProRes 422 HQ",
+   "Bit Depth": "10",
+   "FPS": 25.0,
+   "Resolution": "3840x2160",
+   "Input Color Space": "",
+   "Format": "QuickTime",
+   "file_probe": {
+    "apple_log_marker": true,
+    "apple_log2_marker": true,
+    "primaries": 2,
+    "transfer": 2
+   }
+  },
+  {
+   "Clip Name": "IMG_4131",
+   "File Path": "/Volumes/Footage/2026-10-28/IMG_4131.mov",
+   "Type": "Video + Audio",
+   "Video Codec": "H.265",
+   "Bit Depth": "10",
+   "FPS": 25.0,
+   "Resolution": "3840x2160",
+   "Input Color Space": "",
+   "Format": "QuickTime",
+   "file_probe": {
+    "apple_log_marker": false,
+    "apple_log2_marker": false,
+    "primaries": 9,
+    "transfer": 18
+   }
+  },
+  {
+   "Clip Name": "IMG_4132",
+   "File Path": "/Volumes/Footage/2026-10-28/IMG_4132.mov",
+   "Type": "Video + Audio",
+   "Video Codec": "H.264",
+   "Bit Depth": "8",
+   "FPS": 25.0,
+   "Resolution": "3840x2160",
+   "Input Color Space": "",
+   "Format": "QuickTime",
+   "file_probe": {
+    "apple_log_marker": false,
+    "apple_log2_marker": false,
+    "primaries": 1,
+    "transfer": 1
+   }
+  }
+ ]
+}

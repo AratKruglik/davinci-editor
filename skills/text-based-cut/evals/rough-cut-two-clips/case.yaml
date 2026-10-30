@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: rough-cut-two-clips
+expected_outcome: |
+  A cut list for approval and an assembly plan for a NEW timeline that removes the abandoned take and 'ой, стоп, ще раз', the unfinished sentence at the end of IMG_4127 restarted in IMG_4128, hard fillers, the 'і і' repeat and long pauses, while keeping the final complete takes; the source timeline is not modified.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,42 @@
+{
+ "project": "Kitchen Tutorial 2026-10",
+ "resolve_version": "21.1.1.5",
+ "timeline": "Kitchen - rough cut 2026-10-29",
+ "audio_tracks": [
+  {
+   "index": 1,
+   "name": "Dialogue",
+   "items": [
+    "IMG_4127",
+    "IMG_4128"
+   ],
+   "voice_isolation": {
+    "isEnabled": false,
+    "amount": 0
+   }
+  },
+  {
+   "index": 2,
+   "name": "Music",
+   "items": [
+    "lofi_bed_92bpm.wav"
+   ],
+   "voice_isolation": {
+    "isEnabled": false,
+    "amount": 0
+   }
+  },
+  {
+   "index": 3,
+   "name": "SFX",
+   "items": [
+    "whoosh_01.wav",
+    "click_ui.wav"
+   ],
+   "voice_isolation": {
+    "isEnabled": false,
+    "amount": 0
+   }
+  }
+ ]
+}

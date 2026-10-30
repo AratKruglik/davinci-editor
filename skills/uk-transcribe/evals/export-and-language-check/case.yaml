@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: export-and-language-check
+expected_outcome: |
+  SRT and TXT for both clips, and a clear warning that IMG_4130 was transcribed as English (language 'en') with garbled text, so the Ukrainian extended model is likely missing and that clip must be redone.
+context:
+  scaffold_script: place-files.sh

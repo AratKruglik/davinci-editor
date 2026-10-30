@@ -1,0 +1,32 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  cowork-zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check tag matches plugin version
+        run: |
+          version=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != plugin.json version $version"; exit 1; }
+      - name: Self-tests
+        run: |
+          python3 skills/resolve-core/scripts/tc.py selftest
+          python3 skills/chart-match/scripts/test_chart_match.py
+          python3 skills/text-based-cut/scripts/test_cut_candidates.py
+      - name: Build Cowork plugin zip
+        run: python3 scripts/build_cowork.py --out dist
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --title "$GITHUB_REF_NAME" --generate-notes

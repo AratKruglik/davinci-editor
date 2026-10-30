@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: mixed-iphone-footage
+expected_outcome: |
+  Per-clip format table (IMG_4127 Apple Log, IMG_4128 Apple Log 2, IMG_4131 HLG not log, IMG_4132 Rec.709 SDR), Apple Log template applied only to IMG_4127 as a remote version, Apple Log 2 handled separately (template missing → capture step or question), HLG and Rec.709 clips not given a log transform.
+context:
+  scaffold_script: place-files.sh
