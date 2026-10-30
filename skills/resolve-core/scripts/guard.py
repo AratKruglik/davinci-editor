@@ -10,21 +10,23 @@ import json
 import re
 import sys
 
-DESTRUCTIVE = re.compile(
-    r"\b(DeleteClips|DeleteTimelines|DeleteTrack|DeleteFolders|DeleteProject|DeleteMedia|DeleteStills|DeleteClipMattes"
-    r"|DeleteMarkerAtFrame|DeleteMarkersByColor|DeleteMarkerByCustomData|ResetAllGrades|ClearTranscription"
-    r"|ClearAudioClassification|DeleteVersionByName|DeleteTakeByIndex|UnlinkProxyMedia|ReplaceClip)\s*\(")
-# Claude's own scratch work, created in the same session: never worth a prompt.
+# Any reference counts, not only a call: `f = mp.DeleteTimelines; f(x)` must still prompt.
+DESTRUCTIVE = re.compile(r"\b(Delete\w*|Clear\w*|Reset\w*|ReplaceClip|UnlinkProxyMedia)\b")
+# Names built at run time can't be checked statically, so they always prompt.
+DYNAMIC = re.compile(r"\b(getattr|setattr|delattr|eval|exec|compile|__getattribute__|__dict__)\b")
+# Claude's own scratch work, created in the same session: never worth a prompt. Only the exact literal call is exempt.
 SAFE = [
-    re.compile(r"DeleteMarkersByColor\s*\(\s*['\"]Cream['\"]"),
-    re.compile(r"DeleteVersionByName\s*\(\s*['\"]claude-measure['\"]"),
+    re.compile(r"\.DeleteMarkersByColor\s*\(\s*['\"]Cream['\"]\s*\)"),
+    re.compile(r"\.DeleteVersionByName\s*\(\s*['\"]claude-measure['\"]\s*,\s*0\s*\)"),
 ]
 
 
 def findings(script):
     for safe in SAFE:
         script = safe.sub("", script)
-    return sorted({m.group(1) for m in DESTRUCTIVE.finditer(script)})
+    hits = {m.group(1) for m in DESTRUCTIVE.finditer(script)}
+    hits |= {f"{m.group(1)} (dynamic call)" for m in DYNAMIC.finditer(script)}
+    return sorted(hits)
 
 
 def decide(event):
@@ -50,6 +52,10 @@ def selftest():
     assert out["hookSpecificOutput"]["permissionDecision"] == "ask"
     assert "DeleteTimelines" in reason and "DeleteMarkersByColor" in reason, reason
     assert decide({"tool_input": {"script": "g.ResetAllGrades ()"}})
+    for bypass in ['tl.DeleteMarkersByColor("Cream" if False else "Red")', 'getattr(mp, "Delete" + "Timelines")([tl])',
+                   "f = mp.DeleteTimelines; f([tl])", "project.DeleteAllRenderJobs()", "gal.DeleteGalleryStillAlbum(a)",
+                   "item.DeleteVersionByName('claude-measure', 1)"]:
+        assert decide({"tool_input": {"script": bypass}}), bypass
     print("guard selftest ok")
 
 
