@@ -12,6 +12,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_scripting_docs"
   - "Bash(python3 *cut_candidates.py *)"
   - "Bash(python3 *tc.py *)"
+  - "Bash(python3 *split_edits.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -92,6 +93,16 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/cut_candidates.py assemble "<work>/cuts.json
 
 It refuses while any `review` remains, drops slivers that contain no speech, and prints duration before → after. Show that to the user. Reorder `plan.json` entries if the clip order chosen in step 0 isn't file-name order.
 
+**Split edits at clip changes** (only if neighbouring segments come from different clips or takes; `split-edits` mode 1, nothing is deleted later). Write `<work>/clip-frames.json` = `{clip_id: int(clip.GetClipProperty()["Frames"])}`, then:
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/../split-edits/scripts/split_edits.py joins --rough "<work>/plan.json" --frames "<work>/clip-frames.json" \
+  --transcripts "<work>/transcripts" --cuts "<work>/cuts.json" --j-lead ${user_config.split_j_lead_frames} --l-tail ${user_config.split_l_tail_frames} \
+  --max ${user_config.split_max_frames} --fade ${user_config.split_fade_frames} --max-in-row ${user_config.split_max_in_row} --out "<work>/split-plan.json"
+```
+
+Offer its proposals (J/L, frames, words around the join, reason; rejected ones with reasons) as one more approval round, as `split-edits` §3 describes; set each `decision` and run `split_edits.py audio "<work>/split-plan.json" --out "<work>/split-audio.json"`. No proposals or all `keep` → skip; Voice mirrors A-roll as usual.
+
 ## 6. Build the new timeline
 
 1. Run the append calibration from `resolve-core` (once per session) to know `endFrame` inclusivity and source offset.
@@ -100,9 +111,10 @@ It refuses while any `review` remains, drops slivers that contain no speech, and
 4. Tracks: run `track-layout` setup on the new (empty) timeline first, then get indices by role: video `A-roll`, audio `Voice` (`track_index` from `track-layout`). Never assume V1/A1 — in the standard layout V1 is Backgrounds.
 5. Append in order, contiguous, batches of ≤ 50 per call — video to A-roll and audio to Voice as two entries per segment:
    `{"mediaPoolItem": item, "startFrame": start + offset, "endFrame": end_for_api, "mediaType": 1, "trackIndex": a_roll, "recordFrame": tl.GetStartFrame() + running_total}` and the same with `"mediaType": 2, "trackIndex": voice`.
+   With approved split edits, the audio entries come from `split-audio.json` instead (same order as `plan.json`): `startFrame` = `source_start` + offset, end from `source_end`, `recordFrame` = `tl.GetStartFrame()` + `record`; afterwards `SetFades` on rows with `fade_in` / `fade_out`.
    Then relink each video/audio pair with `tl.SetClipsLinked([video_item, audio_item], True)` and verify it (whether separate appends keep the link is unverified; linking explicitly is safe either way). Camera audio with several channels: check `clip.GetAudioMapping()` once and tell the user which channels landed on Voice.
-6. Verify: number of video items on A-roll and audio items on Voice == plan entries; each item's `GetDuration()` equals the planned length; timeline end == start + total. Report any mismatch with the entry id — don't "fix" by nudging silently.
-7. At every join add a timeline marker in **Cream** (Claude's color; Blue means "chapter" for the user), name `cut`, note = removed text/type, `customData` = `claude:cut`, duration 1, so the user can review jump cuts quickly and delete them all with `DeleteMarkersByColor("Cream")`.
+6. Verify: number of video items on A-roll and audio items on Voice == plan entries; each item's `GetDuration()` equals the planned length (for Voice with split edits: `source_end - source_start` from `split-audio.json`); timeline end == start + total. Report any mismatch with the entry id — don't "fix" by nudging silently.
+7. At every join add a timeline marker in **Cream** (a split join gets the `split-edits` marker instead: name `J` / `L`, `customData` = `claude:split`) (Claude's color; Blue means "chapter" for the user), name `cut`, note = removed text/type, `customData` = `claude:cut`, duration 1, so the user can review jump cuts quickly and delete them all with `DeleteMarkersByColor("Cream")`.
 8. Optional (ask): 2-frame audio crossfades at joins against clicks: `item.AddTransition({"type": "Cross Fade +3 dB", "category": "audio", "position": "end", "alignment": "center", "duration": 2})`. Try on the first join, check the result, then continue; if the API refuses, tell the user (Fairlight → select all → Ctrl/Cmd+T does it manually).
 9. Grades: check `GetCurrentVersion()` on a few items; load the remote `claude` version where needed (see `resolve-core` §7), or `CopyGrades` from the source timeline item.
 10. Mark the user's handled markers: `clip.UpdateMarkerCustomData(frame, "claude:done:text-based-cut:<date>")`, re-read; never change their color, name or note.

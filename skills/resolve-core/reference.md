@@ -106,6 +106,7 @@ def items(kind, i):
         rows.append({"name": it.GetName(), "clip_id": mpi.GetUniqueId() if mpi else None,
                      "start": it.GetStart(), "end": it.GetEnd(),
                      "source_start": it.GetSourceStartFrame(), "source_end": it.GetSourceEndFrame(),
+                     "left_offset": it.GetLeftOffset(), "right_offset": it.GetRightOffset(),
                      "enabled": it.GetClipEnabled(), "speed": (it.GetSpeed() or {}).get("Percentage", 100.0),
                      "online": p.get("Online Status"), "file": p.get("File Path"), "fps": p.get("FPS"),
                      "resolution": p.get("Resolution"), "color": it.GetClipColor(),
@@ -126,7 +127,7 @@ with open(path, "w", encoding="utf-8") as f:
 result = {"path": path, "items": {k: sum(len(t["items"]) for t in v) for k, v in dump["tracks"].items()}}
 ```
 
-Timeline markers in the dump are relative to `start_frame` (add it to get absolute frames). Words on the timeline:
+Timeline markers in the dump are relative to `start_frame` (add it to get absolute frames). `left_offset` / `right_offset` are the media handles (frames the item can be extended by on each side); what they return on a clip with a known handle is unverified in 21.1.1 — check once against `source_start` and the clip's `Frames`. Words on the timeline:
 
 ```bash
 python3 <plugin>/skills/resolve-core/scripts/timeline_map.py words "<work>/timeline-<name>.json" "<work>/transcripts" \

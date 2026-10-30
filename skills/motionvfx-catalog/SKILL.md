@@ -16,7 +16,7 @@ allowed-tools:
 
 You are running as a forked helper. Do the job, then reply with a short summary; the full data stays in the catalog file.
 
-Action: `$ARGUMENTS` (empty = `scan`).
+Action: `$action` (empty = `scan`). For `search`, the query is everything in `$ARGUMENTS` after the word `search`.
 
 Catalog file: `${user_config.work_dir}/motionvfx-catalog.json` (machine-wide, not per project). If the `${user_config.…}` placeholder reached you unsubstituted, use `resolve-work/motionvfx-catalog.json`.
 

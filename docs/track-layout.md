@@ -1,6 +1,6 @@
 # Скіл `track-layout` — базовий набір доріжок
 
-Статус: чернетка після брейншторму, специфікації ще немає. Оновлено: 2026-10-30.
+Статус: реалізовано в скілі `track-layout` (дії `setup`, `add`, `recolor`, `lock`, `unlock`, `cleanup`). Оновлено: 2026-10-30.
 Пов'язані документи: `claude/davinci-plugin-skills.md`, `claude/marker-color-system.md`.
 
 ## Ідея

@@ -74,7 +74,7 @@ Approval: show one table — `# | TC | kind | what / mood | reason | file (candi
 
 ## 3. Place
 
-1. Tracks by role: `SFX`, `Music`, and `Ambience` if any cue needs it (`track_index(..., create=True)` for audio is fine: audio track order doesn't affect the mix). Lock `A-roll` and `Voice` for this stage (`track-layout lock`) if `edit-episode` hasn't.
+1. Tracks by role: `SFX`, `Music`, and `Ambience` if any cue needs it (`track_index(..., create=True)` for audio is fine: audio track order doesn't affect the mix). Lock `A-roll` and `Voice` for this stage (`track-layout lock sound`) if `edit-episode` hasn't.
 2. Import each chosen file once into `02_Sound/SFX` or `02_Sound/Music` (reuse an item whose `File Path` matches); never copy the file.
 3. Append with `mediaType: 2`, `trackIndex` of the role, `recordFrame` from the cue, `startFrame` 0 and `endFrame` = the cue length or the file length (append calibration from `resolve-core`). Overlapping cues on one track → put the later one on `SFX 2` / `Music 2` (`track-layout`).
 4. Levels (one call per group, then read back): `tl.NormalizeAudioLevel(items, {...})` with the BS.1770 / LUFS mode from `tl.GetNormalizeAudioModes()`:

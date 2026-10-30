@@ -1,0 +1,91 @@
+{
+ "handle_ms": 120,
+ "clips": [
+  {
+   "clip_name": "IMG_4140",
+   "clip_id": "A1-4140",
+   "fps": 25.0,
+   "start_tc": "10:12:00:00",
+   "drop_frame": false
+  },
+  {
+   "clip_name": "IMG_4141",
+   "clip_id": "A1-4141",
+   "fps": 25.0,
+   "start_tc": "10:20:00:00",
+   "drop_frame": false
+  },
+  {
+   "clip_name": "IMG_4142",
+   "clip_id": "A1-4142",
+   "fps": 25.0,
+   "start_tc": "10:31:00:00",
+   "drop_frame": false
+  }
+ ],
+ "candidates": [
+  {
+   "id": "c0",
+   "clip": "IMG_4140",
+   "type": "editorial",
+   "start": 1550,
+   "end": 1800,
+   "decision": "cut",
+   "reason": "slip and restart"
+  },
+  {
+   "id": "c1",
+   "clip": "IMG_4141",
+   "type": "editorial",
+   "start": 1625,
+   "end": 1750,
+   "decision": "cut",
+   "reason": "slip and restart"
+  },
+  {
+   "id": "c2",
+   "clip": "IMG_4140",
+   "type": "head",
+   "start": 0,
+   "end": 300,
+   "decision": "cut",
+   "reason": "head silence"
+  },
+  {
+   "id": "c3",
+   "clip": "IMG_4140",
+   "type": "tail",
+   "start": 2675,
+   "end": 3000,
+   "decision": "cut",
+   "reason": "tail silence"
+  },
+  {
+   "id": "c4",
+   "clip": "IMG_4141",
+   "type": "head",
+   "start": 0,
+   "end": 120,
+   "decision": "cut",
+   "reason": "head silence"
+  },
+  {
+   "id": "c5",
+   "clip": "IMG_4142",
+   "type": "head",
+   "start": 0,
+   "end": 40,
+   "decision": "cut",
+   "reason": "head silence"
+  },
+  {
+   "id": "c6",
+   "clip": "IMG_4142",
+   "type": "tail",
+   "start": 915,
+   "end": 1200,
+   "decision": "cut",
+   "reason": "tail silence"
+  }
+ ]
+}

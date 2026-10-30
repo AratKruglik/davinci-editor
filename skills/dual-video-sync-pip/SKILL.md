@@ -2,7 +2,7 @@
 name: dual-video-sync-pip
 description: For video tutorials in DaVinci Resolve Studio 21+ - syncs the camera with the screen recording by sound (Resolve's waveform auto-align), then lays the screen recording on the Screen track under the already cut A-roll and a picture-in-picture camera on the PiP track, switching camera / screen / PiP by the user's Purple markers. PiP is built with clip transform properties; MotionVFX placeholders are offered as an optional manual finish.
 when_to_use: Tutorial or screencast with a separate screen recording and a camera; user wants them synced, switching between face and screen, or a face-in-corner PiP; stage B of edit-episode after text-based-cut; Purple markers. Triggers - "синхронізуй екран і камеру", "запис екрану", "картинка в картинці", "PiP", "обличчя в кутку", "перемикай камеру й екран".
-argument-hint: "[timeline] [corner-br|corner-bl|corner-tr|corner-tl] [pip size 0.15-0.4]"
+argument-hint: "[timeline] [corner-br|corner-bl|corner-tr|corner-tl] [pip size 0.1-0.5]"
 arguments: [timeline, layout, size]
 effort: high
 allowed-tools:
@@ -12,6 +12,7 @@ allowed-tools:
   - "Bash(python3 *pip_plan.py *)"
   - "Bash(python3 *catalog.py *)"
   - "Bash(python3 *tc.py *)"
+  - "Bash(python3 *split_edits.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -77,6 +78,8 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/pip_plan.py "<work>/pip-input.json" > "<work
 ```
 
 Read `warnings`: parts without screen recording stay camera; tell the user where.
+
+Split edits — offer them before the `pip_plan.py` run above, on the switches (`split-edits` mode 1: the picture follows the phrase instead of cutting at the marker frame): dump the timeline (`resolve-core/reference.md#timeline-dump`) and run `python3 ${CLAUDE_SKILL_DIR}/../split-edits/scripts/split_edits.py sections "<work>/timeline-<name>.json" "<work>/transcripts" "<work>/pip-input.json" --source-offset <calibration offset> --j-lead ${user_config.split_j_lead_frames} --l-tail ${user_config.split_l_tail_frames} --max ${user_config.split_max_frames} --out "<work>/pip-input-split.json"`. Show its notes with the plan; if the user agrees, pass `pip-input-split.json` to `pip_plan.py`. Screen items, once placed, are not moved by `split-edits`.
 
 ## 4. Tracks
 

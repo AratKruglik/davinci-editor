@@ -1,9 +1,9 @@
 ---
 name: track-layout
-description: Sets up and maintains role-based tracks on a DaVinci Resolve 21+ timeline - video Backgrounds, A-roll, B-roll, Effects, Titles and audio Voice, SFX, Music (plus Screen, B-roll 2, Voice 2, Ambience, Subtitles UA on demand) - names them, colors clips by role, locks tracks per stage and removes empty tracks after confirmation. Other skills find tracks by role through it, never by number.
+description: Sets up and maintains role-based tracks on a DaVinci Resolve 21+ timeline - video Backgrounds, A-roll, B-roll, Effects, Titles and audio Voice, SFX, Music (plus Screen, B-roll 2, Voice 2, Ambience, Subtitles UA on demand) - names them, colors clips by role, locks tracks per stage and unlocks them when the stage ends, removes empty tracks after confirmation. Other skills find tracks by role through it, never by number.
 when_to_use: New or rough-cut timeline needs the standard track structure, a track for a role is missing, clips need recoloring by role, tracks should be locked for a stage, or empty tracks should be cleaned up before render. Triggers - "розклади доріжки", "структура доріжок", "додай доріжку B-roll", "прибери порожні доріжки", "track layout", "перефарбуй кліпи по ролях".
-argument-hint: "[setup|add <role>|recolor|lock <stage>|cleanup]"
-arguments: [action, role]
+argument-hint: "[setup|add <role>|recolor|lock <stage>|unlock <stage>|cleanup]"
+arguments: [action, target]
 allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
   - "mcp__DaVinci_Resolve__search_scripting_api"
@@ -18,7 +18,7 @@ hooks:
 
 # Track layout by role
 
-Follow `resolve-core` first. Action: `$action` (default `setup`).
+Follow `resolve-core` first. Action: `$action` (default `setup`). Target: `$target` — the role for `add`, the stage (`sound` or `graphics`) for `lock` / `unlock`.
 
 ## Layout (from plugin config)
 
@@ -67,13 +67,21 @@ Only `create=True` for roles that belong on top (Titles 2, B-roll 2 when nothing
 3. Look ahead before placing content: transcript type and markers tell what this episode needs (Purple → Screen and PiP, overlapping Fuchsia → B-roll 2, two speakers → Voice 2, Lavender/Sky with room tone → Ambience). Create those tracks now, in order.
 4. Verify by reading back every track name and report the final layout table (index, type, name, clip count).
 
+## add
+
+Role from `$target` (a base or on-demand role above; anything else → ask). Already there → report its index. Its place is on top of its kind (Titles 2, B-roll 2 with nothing above, Ambience, Subtitles UA, or an empty timeline) → `track_index(tl, kind, role, create=True, sub)`, then `recolor` that track. Its place is in the middle (Screen, PiP, Voice 2 under SFX…) → tell the user exactly where to add it manually (right-click the header of the track it goes above/below → Add Track), wait, then find the new unnamed track, name it and recolor.
+
 ## recolor
 
 For every track with a known role, `item.SetClipColor(role_color)` on each item; skip items already that color. Run it after any skill that placed clips.
 
 ## lock
 
-Stage locks (ask before changing locks the user set): sound stage → lock Voice and A-roll; graphics stage → lock A-roll, B-roll, Voice. Unlock when the stage ends. Report which tracks are locked.
+Stage from `$target` (missing → ask): `sound` → lock Voice and A-roll; `graphics` → lock A-roll, B-roll, Voice. Read `GetIsTrackLocked` first: tracks the user had already locked stay as they are and are named in the report (ask before changing them). Report which tracks are locked.
+
+## unlock
+
+Stage from `$target` (missing → the tracks of both stages). Unlock that stage's tracks, except the ones the user had locked before `lock` ran (from its report, or ask). Report which tracks are unlocked.
 
 ## cleanup
 

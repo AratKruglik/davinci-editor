@@ -1,6 +1,6 @@
 # Скіл `split-edits` — J-кати і L-кати
 
-Статус: завдання на реалізацію, скіла ще немає. Оновлено: 2026-10-30.
+Статус: реалізовано в скілі `split-edits` (скрипт `split_edits.py`: `joins`, `audio`, `verify`, `sections`, `ambience`). Оновлено: 2026-10-30.
 Пов'язані документи: `claude/davinci-plugin-skills.md`, `claude/marker-color-system.md`, `claude/track-layout.md`.
 
 ## Ідея

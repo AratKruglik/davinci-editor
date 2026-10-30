@@ -52,7 +52,7 @@ Show the plan before building: `# | TC | kind | text | duration | route (Fusion 
 
 ## 3. Build (Fusion route)
 
-1. Backup the timeline (`resolve-core` §3). Lock `A-roll`, `B-roll`, `Voice` for the stage (`track-layout lock`).
+1. Backup the timeline (`resolve-core` §3). Lock `A-roll`, `B-roll`, `Voice` for the stage (`track-layout lock graphics`).
 2. Still for placement: playhead to the marker (`tl.SetCurrentTimecode(tc)`), `project.ExportCurrentFrameAsStill("<work>/stills/title-<n>.tif")`, Read it. Move a lower third or callout away from the face and from the UI the viewer must see; for a callout read the point (`--at x y`, 0..1 from the top-left) off this still.
 3. Spec:
    ```bash

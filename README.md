@@ -1,8 +1,37 @@
-# davinci-editor
+<p align="center">
+  <img src="assets/banner.svg" width="100%" alt="davinci-editor: Claude edits in DaVinci Resolve Studio">
+</p>
 
-A Claude Code and Claude Desktop (Cowork) plugin that edits in DaVinci Resolve Studio 21+ through Resolve's MCP server: project bootstrap, Apple Log → Rec.709, ColorChecker chart match, natural skin grade, background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, editing by colored markers, role-based tracks, sound design, AI Voice Isolation, loudness finish for YouTube, Fusion motion graphics, tutorial zooms, Ukrainian subtitles, Shorts, chapters, thumbnail frames, pre-delivery QC and H.265 delivery.
+<p align="center">
+  <b>Your colored markers in, a finished YouTube episode out.</b><br>
+  25 Claude skills that grade, cut, mix, title and deliver inside DaVinci Resolve Studio 21+,<br>
+  stopping for your approval at every step and never touching your source timeline.
+</p>
 
-Plan and roadmap: [docs/davinci-plugin-skills.md](docs/davinci-plugin-skills.md) · markers: [docs/marker-color-system.md](docs/marker-color-system.md) · tracks: [docs/track-layout.md](docs/track-layout.md) (in Ukrainian).
+<p align="center">
+  <a href="https://github.com/AratKruglik/davinci-editor/releases/latest"><img src="https://img.shields.io/github/v/release/AratKruglik/davinci-editor?label=release&color=D97757" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/DaVinci%20Resolve%20Studio-21%2B-233A5E" alt="DaVinci Resolve Studio 21+">
+  <img src="https://img.shields.io/badge/Claude%20Code%20%C2%B7%20Cowork-plugin-D97757" alt="Claude Code and Cowork plugin">
+  <img src="https://img.shields.io/badge/skills-25-2BB3A6" alt="25 skills">
+  <img src="https://img.shields.io/badge/macOS-Apple%20Silicon-111111?logo=apple" alt="macOS, Apple Silicon">
+  <img src="https://img.shields.io/badge/Python-3.10%2B%20stdlib%20only-3776AB?logo=python&logoColor=white" alt="Python 3.10+, standard library only">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3DBE6B" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <a href="#step-2a-claude-code"><b>Install</b></a> ·
+  <a href="docs/skills/README.md"><b>Skill guide &amp; prompts</b></a> ·
+  <a href="#skills"><b>All skills</b></a> ·
+  <a href="docs/marker-color-system.md">Markers</a> ·
+  <a href="#troubleshooting">Troubleshooting</a>
+</p>
+
+|  | Stage | What Claude does |
+|---|---|---|
+| 🎨 | **Color before the cut** | project and bins, Apple Log → Rec.709, ColorChecker chart match with a ΔE report, natural skin tones, background blur |
+| ✂️ | **Rough cut** | Ukrainian transcript, cut list of fillers, pauses and failed takes for your approval, camera + screen sync with PiP, J- and L-cuts |
+| 🎧 | **Sound** | AI Voice Isolation, SFX and music from your licensed library, dialogue leveling, measured -14 LUFS |
+| 🚀 | **Graphics & delivery** | Fusion titles in your brand style, tutorial zooms, subtitles, chapters, Shorts, thumbnail frames, QC and verified H.265 renders |
 
 Quick install in Claude Code (2.1.275+), once Resolve's MCP server is connected (for Cowork, see [Step 2B](#step-2b-claude-desktop-and-cowork)):
 
@@ -10,7 +39,9 @@ Quick install in Claude Code (2.1.275+), once Resolve's MCP server is connected 
 /plugin install davinci-editor --marketplace AratKruglik/davinci-editor
 ```
 
-Full instructions below.
+Then run `/davinci-editor:edit-episode My episode` for the whole workflow, or ask for one step in plain language. Full instructions below.
+
+Design notes (in Ukrainian): [plan and roadmap](docs/davinci-plugin-skills.md) · [marker colors](docs/marker-color-system.md) · [track layout](docs/track-layout.md).
 
 ## Contents
 
@@ -23,6 +54,7 @@ Full instructions below.
 - [Skills](#skills)
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
+- [Credits and trademarks](#credits-and-trademarks)
 
 ## Requirements
 
@@ -259,6 +291,10 @@ The defaults suit Ukrainian-language YouTube tutorials; change only what differs
 | `depth_strength` | `medium` | background blur: `medium` = template node; `light`/`strong` = group DRX |
 | `pip_layout` | `corner-br` | PiP corner for the camera |
 | `pip_size` | `0.28` | PiP width as a share of the frame |
+| `split_j_lead_frames` / `split_l_tail_frames` | `12` / `12` | J-cut lead and L-cut tail, frames |
+| `split_max_frames` | `50` | largest J/L shift, frames |
+| `split_fade_frames` | `4` | audio fade on a moved split-edit boundary, frames |
+| `split_max_in_row` | `3` | most split edits in a row without a plain cut |
 | `sfx_library_dir` | — | your sound effects folder (indexed by `sound-design`) |
 | `music_library_dir` | — | your licensed music folder |
 | `music_bed_lufs` | `-30` | music under speech |
@@ -293,32 +329,35 @@ What Claude never does without confirmation: delete clips, timelines, grades, LU
 
 ## Skills
 
+Each skill name links to its full guide: inputs, settings, approval stops and example prompts ([all skills](docs/skills/README.md)).
+
 | Skill | How to invoke | What it does |
 |---|---|---|
-| `resolve-core` | automatic (hidden) | shared rules: safe scripting, backups, timecodes, tracks by role, markers, node labels, remote grade versions, delete guard hook |
-| `project-bootstrap` | auto or `/davinci-editor:project-bootstrap [name] [folder] [horizontal\|vertical]` | new project with settings, bins and import; or sorts an open project's media pool |
-| `log-to-rec709` | auto or `/davinci-editor:log-to-rec709 [bin] [gamma]` | Apple Log / Apple Log 2 → Rec.709 via a CST node from a DRX template, as a remote version |
-| `chart-match` | auto or `/davinci-editor:chart-match [scene]` | ColorChecker 24 match in linear light → DCTL on the `CHART` node, ΔE00 report |
-| `natural-skin-grade` | auto or `/davinci-editor:natural-skin-grade [scene] [strength]` | measured neutral balance on `PRIMARY` and skin toward the skin tone line on `SKIN`, verified on a still |
-| `depth-background-blur` | auto or `/davinci-editor:depth-background-blur [scene] [light\|medium\|strong\|off]` | background blur with AI CineFocus or Depth Map, per clip or per scene |
-| `motionvfx-catalog` | auto or `/davinci-editor:motionvfx-catalog [scan\|search words]` | catalog of installed MotionVFX / Fusion templates with exact names and text fields (runs as a forked helper) |
-| `voice-isolation` | auto or `/davinci-editor:voice-isolation [track\|selected] [amount]` | AI Voice Isolation on the Voice track or clips |
-| `uk-transcribe` | auto or `/davinci-editor:uk-transcribe [bin]` | Resolve transcription with a language check, exports JSON/SRT/TXT |
-| `text-based-cut` | auto or `/davinci-editor:text-based-cut [bin] [gentle\|normal\|tight]` | cut list from transcript and markers → approval → new timeline on A-roll + Voice |
-| `dual-video-sync-pip` | auto or `/davinci-editor:dual-video-sync-pip [timeline] [corner] [size]` | camera + screen recording synced by sound, Screen and PiP tracks switched by Purple markers |
-| `marker-edit` | auto or `/davinci-editor:marker-edit [stage] [timeline]` | acts on your colored markers: plan → approval → the matching skills; B-roll inserts and transitions itself |
-| `track-layout` | auto or `/davinci-editor:track-layout [setup\|add\|recolor\|lock\|cleanup]` | role-based tracks, clip colors, cleanup of empty tracks |
-| `sound-design` | auto or `/davinci-editor:sound-design [timeline] [subtle\|normal\|rich]` | cue sheet from transcript and markers → approval → SFX, music and ambience from your library with levels and fades |
-| `audio-finish` | auto or `/davinci-editor:audio-finish [timeline] [LUFS]` | dialogue leveling, Rose fixes, measured loudness to -14 LUFS without clipping |
-| `fusion-motion-graphics` | auto or `/davinci-editor:fusion-motion-graphics [timeline] [markers\|kind text]` | lower thirds, callouts, kinetic phrases, counters in your brand style from Cyan markers |
-| `tutorial-zooms` | auto or `/davinci-editor:tutorial-zooms [timeline] [screen\|punch-in]` | eased zooms onto screen regions from Pink markers; punch-ins that hide jump cuts |
-| `subtitles-uk` | auto or `/davinci-editor:subtitles-uk [timeline] [youtube\|shorts]` | Ukrainian SRT from the transcript; animated word-highlight captions for Shorts |
-| `chapters-markers` | auto or `/davinci-editor:chapters-markers [timeline]` | YouTube chapters from Blue markers and the transcript, checked against YouTube's rules |
-| `shorts-cutdown` | auto or `/davinci-editor:shorts-cutdown [timeline] [count]` | 30–60 s Shorts from Mint markers / the transcript on vertical timelines with Smart Reframe |
-| `thumbnail-frames` | auto or `/davinci-editor:thumbnail-frames [timeline] [count]` | thumbnail candidate stills from Lemon markers and strong moments, ranked and briefed |
-| `pre-delivery-qc` | auto or `/davinci-editor:pre-delivery-qc [timeline] [youtube\|shorts]` | read-only check: black and flash frames, offline media, dropouts, markers, settings, loudness |
-| `deliver` | auto or `/davinci-editor:deliver [youtube\|shorts\|all]` | H.265 renders for YouTube and Shorts after QC, files verified on disk, upload package |
-| `edit-episode` | only `/davinci-editor:edit-episode [name] [stage]` | the whole workflow with approval stops, resumable |
+| [`resolve-core`](docs/skills/resolve-core.md) | automatic (hidden) | shared rules: safe scripting, backups, timecodes, tracks by role, markers, node labels, remote grade versions, delete guard hook |
+| [`project-bootstrap`](docs/skills/project-bootstrap.md) | auto or `/davinci-editor:project-bootstrap [name] [folder] [horizontal\|vertical]` | new project with settings, bins and import; or sorts an open project's media pool |
+| [`log-to-rec709`](docs/skills/log-to-rec709.md) | auto or `/davinci-editor:log-to-rec709 [bin] [gamma]` | Apple Log / Apple Log 2 → Rec.709 via a CST node from a DRX template, as a remote version |
+| [`chart-match`](docs/skills/chart-match.md) | auto or `/davinci-editor:chart-match [scene]` | ColorChecker 24 match in linear light → DCTL on the `CHART` node, ΔE00 report |
+| [`natural-skin-grade`](docs/skills/natural-skin-grade.md) | auto or `/davinci-editor:natural-skin-grade [scene] [strength]` | measured neutral balance on `PRIMARY` and skin toward the skin tone line on `SKIN`, verified on a still |
+| [`depth-background-blur`](docs/skills/depth-background-blur.md) | auto or `/davinci-editor:depth-background-blur [scene] [light\|medium\|strong\|off]` | background blur with AI CineFocus or Depth Map, per clip or per scene |
+| [`motionvfx-catalog`](docs/skills/motionvfx-catalog.md) | auto or `/davinci-editor:motionvfx-catalog [scan\|search words]` | catalog of installed MotionVFX / Fusion templates with exact names and text fields (runs as a forked helper) |
+| [`voice-isolation`](docs/skills/voice-isolation.md) | auto or `/davinci-editor:voice-isolation [track\|selected] [amount]` | AI Voice Isolation on the Voice track or clips |
+| [`uk-transcribe`](docs/skills/uk-transcribe.md) | auto or `/davinci-editor:uk-transcribe [bin]` | Resolve transcription with a language check, exports JSON/SRT/TXT |
+| [`text-based-cut`](docs/skills/text-based-cut.md) | auto or `/davinci-editor:text-based-cut [bin] [gentle\|normal\|tight]` | cut list from transcript and markers → approval → new timeline on A-roll + Voice |
+| [`dual-video-sync-pip`](docs/skills/dual-video-sync-pip.md) | auto or `/davinci-editor:dual-video-sync-pip [timeline] [corner] [size]` | camera + screen recording synced by sound, Screen and PiP tracks switched by Purple markers |
+| [`split-edits`](docs/skills/split-edits.md) | auto or `/davinci-editor:split-edits [timeline] [auto\|markers]` | J- and L-cuts only where the picture source changes, each checked against the transcript and media handles; video never relaid |
+| [`marker-edit`](docs/skills/marker-edit.md) | auto or `/davinci-editor:marker-edit [stage] [timeline]` | acts on your colored markers: plan → approval → the matching skills; B-roll inserts and transitions itself |
+| [`track-layout`](docs/skills/track-layout.md) | auto or `/davinci-editor:track-layout [setup\|add\|recolor\|lock\|unlock\|cleanup]` | role-based tracks, clip colors, stage locks, cleanup of empty tracks |
+| [`sound-design`](docs/skills/sound-design.md) | auto or `/davinci-editor:sound-design [timeline] [subtle\|normal\|rich]` | cue sheet from transcript and markers → approval → SFX, music and ambience from your library with levels and fades |
+| [`audio-finish`](docs/skills/audio-finish.md) | auto or `/davinci-editor:audio-finish [timeline] [LUFS]` | dialogue leveling, Rose fixes, measured loudness to -14 LUFS without clipping |
+| [`fusion-motion-graphics`](docs/skills/fusion-motion-graphics.md) | auto or `/davinci-editor:fusion-motion-graphics [timeline] [markers\|kind text]` | lower thirds, callouts, kinetic phrases, counters in your brand style from Cyan markers |
+| [`tutorial-zooms`](docs/skills/tutorial-zooms.md) | auto or `/davinci-editor:tutorial-zooms [timeline] [screen\|punch-in]` | eased zooms onto screen regions from Pink markers; punch-ins that hide jump cuts |
+| [`subtitles-uk`](docs/skills/subtitles-uk.md) | auto or `/davinci-editor:subtitles-uk [timeline] [youtube\|shorts]` | Ukrainian SRT from the transcript; animated word-highlight captions for Shorts |
+| [`chapters-markers`](docs/skills/chapters-markers.md) | auto or `/davinci-editor:chapters-markers [timeline]` | YouTube chapters from Blue markers and the transcript, checked against YouTube's rules |
+| [`shorts-cutdown`](docs/skills/shorts-cutdown.md) | auto or `/davinci-editor:shorts-cutdown [timeline] [count]` | 30–60 s Shorts from Mint markers / the transcript on vertical timelines with Smart Reframe |
+| [`thumbnail-frames`](docs/skills/thumbnail-frames.md) | auto or `/davinci-editor:thumbnail-frames [timeline] [count]` | thumbnail candidate stills from Lemon markers and strong moments, ranked and briefed |
+| [`pre-delivery-qc`](docs/skills/pre-delivery-qc.md) | auto or `/davinci-editor:pre-delivery-qc [timeline] [youtube\|shorts]` | read-only check: black and flash frames, offline media, dropouts, markers, settings, loudness |
+| [`deliver`](docs/skills/deliver.md) | auto or `/davinci-editor:deliver [youtube\|shorts\|all]` | H.265 renders for YouTube and Shorts after QC, files verified on disk, upload package |
+| [`edit-episode`](docs/skills/edit-episode.md) | only `/davinci-editor:edit-episode [name] [stage]` | the whole workflow with approval stops, resumable |
 
 ## Troubleshooting
 
@@ -344,6 +383,7 @@ python3 skills/resolve-core/scripts/guard.py selftest
 python3 skills/natural-skin-grade/scripts/test_skin_grade.py
 python3 skills/motionvfx-catalog/scripts/test_catalog.py
 python3 skills/dual-video-sync-pip/scripts/pip_plan.py selftest
+python3 skills/split-edits/scripts/split_edits.py selftest
 python3 skills/sound-design/scripts/test_sound_library.py
 python3 skills/audio-finish/scripts/loudness.py selftest
 python3 skills/resolve-core/scripts/timeline_map.py selftest
@@ -355,6 +395,7 @@ python3 skills/chapters-markers/scripts/chapters.py selftest
 python3 skills/thumbnail-frames/scripts/thumbs.py selftest
 python3 skills/pre-delivery-qc/scripts/qc.py selftest
 python3 skills/deliver/scripts/mp4_info.py selftest
+python3 skills/uk-transcribe/scripts/transcript_export.py selftest
 claude plugin validate .
 claude plugin eval . --allow-tools Write,Edit,Bash --scaffold   # eval cases in skills/*/evals (real, billed model runs)
 ```
@@ -370,3 +411,7 @@ The Cowork zip is built from the same `skills/` by `scripts/build_cowork.py`: it
 3. The `release` workflow runs the self-tests, builds `davinci-editor-cowork-<version>.zip` and publishes it on the GitHub release.
 
 Local build: `python3 scripts/build_cowork.py` → `dist/`.
+
+## Credits and trademarks
+
+The plugin's code and documentation are under the [MIT license](LICENSE); the logos and the banner are not. davinci-editor is an independent project, not affiliated with or endorsed by Anthropic or Blackmagic Design. Claude is a trademark of Anthropic. DaVinci Resolve is a trademark of Blackmagic Design. The logos in `assets/logos/` come from Wikimedia Commons: [Claude AI symbol](https://commons.wikimedia.org/wiki/File:Claude_AI_symbol.svg) (CC0) and [DaVinci Resolve Studio](https://commons.wikimedia.org/wiki/File:DaVinci_Resolve_Studio.png) by Blackmagic Design ([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0)). The header banner (`assets/banner.svg`) contains both logos and is shared under CC BY-SA 4.0.

@@ -1,0 +1,39 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - rough cut 2026-11-02",
+ "current_timeline": "Router - rough cut 2026-11-02",
+ "timelines": [
+  "Router - selects",
+  "Router - rough cut 2026-11-02"
+ ],
+ "append_calibration": {
+  "duration": 10,
+  "source_start": 10,
+  "endFrame": "exclusive",
+  "source_offset": 0
+ },
+ "timeline_dump": "resolve-work/Router Setup 2026-11/timeline-Router - rough cut 2026-11-02.json",
+ "media_pool": {
+  "01_Footage/A-Roll": {
+   "IMG_4140": {
+    "FPS": 25.0,
+    "Frames": 3000,
+    "Audio Ch": 2,
+    "unique_id": "A1-4140"
+   },
+   "IMG_4141": {
+    "FPS": 25.0,
+    "Frames": 2000,
+    "Audio Ch": 2,
+    "unique_id": "A1-4141"
+   },
+   "IMG_4142": {
+    "FPS": 25.0,
+    "Frames": 1200,
+    "Audio Ch": 2,
+    "unique_id": "A1-4142"
+   }
+  }
+ },
+ "notes": "Rough cut built by text-based-cut without split edits. The user's Cocoa marker at 01:02:25:00 says 'J 10'."
+}

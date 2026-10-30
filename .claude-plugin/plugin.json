@@ -2,7 +2,7 @@
   "name": "davinci-editor",
   "displayName": "DaVinci Editor",
   "version": "0.4.0",
-  "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: project bootstrap, Apple Log to Rec.709, ColorChecker chart match, natural skin grade, depth background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, MotionVFX catalog, sound design, voice isolation, loudness finish for YouTube, Fusion motion graphics, tutorial zooms, Ukrainian subtitles, Shorts cutdowns, chapters, thumbnail frames, pre-delivery QC and H.265 delivery, edit by colored markers and role-based track layout.",
+  "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: project bootstrap, Apple Log to Rec.709, ColorChecker chart match, natural skin grade, depth background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, J- and L-cuts, MotionVFX catalog, sound design, voice isolation, loudness finish for YouTube, Fusion motion graphics, tutorial zooms, Ukrainian subtitles, Shorts cutdowns, chapters, thumbnail frames, pre-delivery QC and H.265 delivery, edit by colored markers and role-based track layout.",
   "author": {
     "name": "Oleksii Kruhlyk"
   },
@@ -170,6 +170,46 @@
       "default": 0.28,
       "min": 0.1,
       "max": 0.5
+    },
+    "split_j_lead_frames": {
+      "type": "number",
+      "title": "J-cut lead (frames)",
+      "description": "How many frames the next shot's sound starts before its picture.",
+      "default": 12,
+      "min": 1,
+      "max": 100
+    },
+    "split_l_tail_frames": {
+      "type": "number",
+      "title": "L-cut tail (frames)",
+      "description": "How many frames the previous shot's sound runs on under the new picture.",
+      "default": 12,
+      "min": 1,
+      "max": 100
+    },
+    "split_max_frames": {
+      "type": "number",
+      "title": "Split edit max shift (frames)",
+      "description": "Largest J or L shift; beyond it the join becomes a scene overlap.",
+      "default": 50,
+      "min": 5,
+      "max": 250
+    },
+    "split_fade_frames": {
+      "type": "number",
+      "title": "Split edit fade (frames)",
+      "description": "Audio fade on the moved end of a split edit.",
+      "default": 4,
+      "min": 0,
+      "max": 25
+    },
+    "split_max_in_row": {
+      "type": "number",
+      "title": "Split edits in a row",
+      "description": "Most split edits in a row without a plain cut.",
+      "default": 3,
+      "min": 1,
+      "max": 10
     },
     "sfx_library_dir": {
       "type": "directory",

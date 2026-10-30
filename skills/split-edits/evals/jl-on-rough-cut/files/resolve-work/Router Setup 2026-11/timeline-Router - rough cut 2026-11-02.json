@@ -1,0 +1,242 @@
+{
+ "name": "Router - rough cut 2026-11-02",
+ "fps": 25.0,
+ "drop_frame": false,
+ "width": 3840,
+ "height": 2160,
+ "start_frame": 90000,
+ "end_frame": 94500,
+ "start_tc": "01:00:00:00",
+ "markers": {
+  "3625": {
+   "color": "Cocoa",
+   "name": "",
+   "note": "J 10",
+   "duration": 1,
+   "customData": ""
+  },
+  "1250": {
+   "color": "Cream",
+   "name": "cut",
+   "note": "ой стоп ще раз",
+   "duration": 1,
+   "customData": "claude:cut"
+  },
+  "2125": {
+   "color": "Cream",
+   "name": "cut",
+   "note": "clip change",
+   "duration": 1,
+   "customData": "claude:cut"
+  }
+ },
+ "tracks": {
+  "video": [
+   {
+    "index": 1,
+    "name": "Backgrounds",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 2,
+    "name": "A-roll",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "IMG_4140",
+      "clip_id": "A1-4140",
+      "start": 90000,
+      "end": 91250,
+      "source_start": 300,
+      "source_end": 1549,
+      "left_offset": 300,
+      "right_offset": 1450,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Footage/2026-11-02/IMG_4140.mov",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4140",
+      "clip_id": "A1-4140",
+      "start": 91250,
+      "end": 92125,
+      "source_start": 1800,
+      "source_end": 2674,
+      "left_offset": 1800,
+      "right_offset": 325,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Footage/2026-11-02/IMG_4140.mov",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4141",
+      "clip_id": "A1-4141",
+      "start": 92125,
+      "end": 93625,
+      "source_start": 120,
+      "source_end": 1619,
+      "left_offset": 120,
+      "right_offset": 380,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Footage/2026-11-02/IMG_4141.mov",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4142",
+      "clip_id": "A1-4142",
+      "start": 93625,
+      "end": 94500,
+      "source_start": 40,
+      "source_end": 914,
+      "left_offset": 40,
+      "right_offset": 285,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Footage/2026-11-02/IMG_4142.mov",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Blue",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 3,
+    "name": "B-roll",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 4,
+    "name": "Effects",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 5,
+    "name": "Titles",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   }
+  ],
+  "audio": [
+   {
+    "index": 1,
+    "name": "Voice",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "IMG_4140",
+      "clip_id": "A1-4140",
+      "start": 90000,
+      "end": 91250,
+      "source_start": 300,
+      "source_end": 1549,
+      "left_offset": 300,
+      "right_offset": 1450,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Footage/2026-11-02/IMG_4140.mov",
+      "fps": 25.0,
+      "resolution": "",
+      "color": "Green",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4140",
+      "clip_id": "A1-4140",
+      "start": 91250,
+      "end": 92125,
+      "source_start": 1800,
+      "source_end": 2674,
+      "left_offset": 1800,
+      "right_offset": 325,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Footage/2026-11-02/IMG_4140.mov",
+      "fps": 25.0,
+      "resolution": "",
+      "color": "Green",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4141",
+      "clip_id": "A1-4141",
+      "start": 92125,
+      "end": 93625,
+      "source_start": 120,
+      "source_end": 1619,
+      "left_offset": 120,
+      "right_offset": 380,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Footage/2026-11-02/IMG_4141.mov",
+      "fps": 25.0,
+      "resolution": "",
+      "color": "Green",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4142",
+      "clip_id": "A1-4142",
+      "start": 93625,
+      "end": 94500,
+      "source_start": 40,
+      "source_end": 914,
+      "left_offset": 40,
+      "right_offset": 285,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Footage/2026-11-02/IMG_4142.mov",
+      "fps": 25.0,
+      "resolution": "",
+      "color": "Green",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 2,
+    "name": "SFX",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 3,
+    "name": "Music",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   }
+  ],
+  "subtitle": []
+ }
+}

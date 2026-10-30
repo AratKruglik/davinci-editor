@@ -57,10 +57,10 @@ for c in clips:
 Then build readable outputs locally:
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/transcript_export.py "<work>/transcripts"
+python3 ${CLAUDE_SKILL_DIR}/scripts/transcript_export.py "<work>/transcripts" --max-chars ${user_config.subtitle_max_chars}
 ```
 
-It writes `<clip>.srt` (segment-level, max 42 chars/line, 2 lines) and `<clip>.txt` (timecoded paragraphs, speakers if present) next to each JSON and prints a summary with the detected language per clip.
+It writes `<clip>.srt` (segment-level, max `subtitle_max_chars` per line, 2 lines; a longer segment is split into several cues) and `<clip>.txt` (timecoded paragraphs, speakers if present) next to each JSON and prints a summary with the detected language per clip.
 
 ## 5. Check quality
 

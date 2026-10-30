@@ -29,6 +29,7 @@ def build(resolve_mcp, out):
     shutil.copytree(os.path.join(ROOT, "skills"), os.path.join(stage, "skills"),
                     ignore=shutil.ignore_patterns("evals", "__pycache__", "*.pyc"))
     shutil.copy(os.path.join(ROOT, "README.md"), stage)
+    shutil.copy(os.path.join(ROOT, "LICENSE"), stage)
 
     for folder, _, files in os.walk(os.path.join(stage, "skills")):
         for name in files:
