@@ -2,7 +2,7 @@
 
 Detailed documentation for every skill of the `davinci-editor` plugin: what each one does, what it needs, which markers and settings it reads, where it stops for your approval, and example prompts from minimal to a full professional brief.
 
-Installation, settings and troubleshooting: [main README](../../README.md).
+Install: [install.md](../install.md) · Settings: [settings.md](../settings.md) · Troubleshooting: [main README](../../README.md#troubleshooting).
 
 ## How to call a skill
 
