@@ -1,6 +1,6 @@
 ---
 name: marker-edit
-description: Edits by the user's own colored markers in DaVinci Resolve 21+ - reads markers on media pool clips, the timeline and timeline items, maps each color to a task (Red cut, Green keep/best take, Yellow doubt, Sand ColorChecker frame, and later Purple, Fuchsia, Cocoa, Blue, Cyan, Pink, Lavender, Sky, Rose, Mint, Lemon), builds an action plan for approval, dispatches tasks to the matching skills and records progress in marker customData without ever changing the user's markers.
+description: Edits by the user's own colored markers in DaVinci Resolve 21+ - reads markers on media pool clips, the timeline and timeline items, maps each color to a task (Red cut, Green keep/best take, Yellow doubt, Sand ColorChecker frame, Purple camera/screen/PiP, Fuchsia B-roll insert, Cocoa transition, Lavender SFX, Sky music, Rose audio problem; Blue, Cyan, Pink, Mint, Lemon wait for stage-3 skills), builds an action plan for approval, dispatches tasks to the matching skills and records progress in marker customData without ever changing the user's markers.
 when_to_use: User put markers on footage or a timeline and wants Claude to act on them, or asks what the markers say. Triggers - "зроби по маркерах", "пройдись по моїх маркерах", "що там у маркерах", "виконай маркери", "монтаж за маркерами", "marker edit".
 argument-hint: "[stage A|B|C] [timeline name]"
 arguments: [stage, timeline]
@@ -8,6 +8,13 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
   - "mcp__DaVinci_Resolve__search_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_api"
+  - "Bash(python3 *catalog.py *)"
+hooks:
+  PreToolUse:
+    - matcher: "mcp__DaVinci_Resolve__run_script.*"
+      hooks:
+        - type: command
+          command: "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/resolve-core/scripts/guard.py\" || true"
 ---
 
 # Edit by markers
@@ -20,21 +27,21 @@ The user marks material while watching; a marker's **color is the task type**, i
 
 Configured in `${user_config.marker_colors}` (`Color=task` pairs). Defaults and the skill that does the work:
 
-| Color | Task | Point marker | Marker with duration | Skill | Stage-1 status |
+| Color | Task | Point marker | Marker with duration | Skill | Status |
 |---|---|---|---|---|---|
 | Red | cut | the phrase / take around it (bounds from transcript) | exactly this range | `text-based-cut` | active |
 | Green | keep / best take | protects the phrase around it; among repeats this take wins | protects this range | `text-based-cut` | active |
 | Yellow | doubt | Claude proposes options and asks, never decides | same | `text-based-cut` | active |
 | Sand | ColorChecker frame | frame to measure | — | `chart-match` | active |
-| Purple | camera / screen / PiP switch | until next Purple | this range | `dual-video-sync-pip` | later |
-| Fuchsia | insert B-roll (note: what) | Claude picks duration | insert duration | `marker-edit` | later |
-| Cocoa | transition (note: type / MotionVFX name) | — | — | `marker-edit` + `motionvfx-catalog` | later |
+| Purple | camera / screen / PiP switch | until next Purple | this range | `dual-video-sync-pip` | active |
+| Fuchsia | insert B-roll (note: what) | Claude picks duration | insert duration | `marker-edit` (§3) | active |
+| Cocoa | transition (note: type / MotionVFX name) | — | — | `marker-edit` (§3) + `motionvfx-catalog` | active |
 | Blue | chapter start (name = chapter title) | — | — | `chapters-markers` | later |
 | Cyan | title on screen (name = text) | default duration | title duration | `fusion-motion-graphics` | later |
 | Pink | zoom (note: area, strength) | short zoom | zoom duration | `tutorial-zooms` | later |
-| Lavender | SFX (note: which sound) | sound moment | long sound | `sound-design` | later |
-| Sky | music start / mood change / end | change point | music range | `sound-design` | later |
-| Rose | audio problem (note: what) | Claude finds bounds | this range | `audio-finish`, `voice-isolation` | later (voice-isolation can already act on noise) |
+| Lavender | SFX (note: which sound) | sound moment | long sound | `sound-design` | active |
+| Sky | music start / mood change / end | change point | music range | `sound-design` | active |
+| Rose | audio problem (note: what) | Claude finds bounds | this range | `audio-finish`, `voice-isolation` | active |
 | Mint | Shorts candidate | Claude picks 30–60 s | exactly this range | `shorts-cutdown` | later |
 | Lemon | thumbnail frame | this frame | — | `thumbnail-frames` | later |
 | Cream | **Claude's own markers only** (suggestions, problems, questions) | | | | always |
@@ -73,6 +80,11 @@ Ask for approval of the whole table (allow excluding rows by number).
 Hand approved rows to the skills, each with its marker list:
 - Red/Green/Yellow → `text-based-cut` as user decisions (Red = forced cut, Green = protected keep / preferred take, Yellow = must ask). Run it once for all of them, not per marker.
 - Sand → `chart-match` with the clip and frame of the marker as the chart frame.
+- Purple → `dual-video-sync-pip` (name = mode: камера / екран / pip).
+- Lavender, Sky → `sound-design` as fixed cues; Rose → `audio-finish` (noise-type notes go to `voice-isolation` first).
+- Fuchsia and Cocoa are done here, after the rough cut, on the cut timeline (back it up first, `resolve-core` §3):
+  - **Fuchsia** (B-roll insert): find the clip from the note in `01_Footage/B-Roll` (file name, or match the description against clip names and, if transcribed, their transcripts); several candidates or none → ask. Append it with `mediaType: 1` on the `B-roll` track at the marker frame (second overlapping insert → `B-roll 2`), duration = marker duration, or 3–5 s for a point marker, ending in a pause of the speech if possible. Video only: the voice continues underneath.
+  - **Cocoa** (transition): the cut nearest the marker on A-roll/B-roll/Screen. Transition name from the note, matched in the catalog (`python3 ${CLAUDE_SKILL_DIR}/../motionvfx-catalog/scripts/catalog.py search "<catalog>" --category Transitions <words>`; no catalog → run `motionvfx-catalog`); no name → `Cross Dissolve` (category `simple`). `item.AddTransition({"type": name, "category": "fusion" or "simple", "position": "end", "alignment": "center", "duration": 10–20 frames})` on the outgoing item; `None` back means too little handle: say so, don't trim clips to make room.
 - Everything happens on a copy / new timeline per those skills; the original timeline stays untouched.
 
 ## 4. Mark done and report

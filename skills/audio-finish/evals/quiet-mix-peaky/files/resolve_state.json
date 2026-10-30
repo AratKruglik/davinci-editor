@@ -1,0 +1,61 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - rough cut 2026-11-02",
+ "audio_tracks": [
+  {
+   "index": 1,
+   "name": "Voice",
+   "items": [
+    "IMG_4140 a",
+    "IMG_4140 b",
+    "IMG_4141"
+   ],
+   "voice_isolation": {
+    "isEnabled": true,
+    "amount": 55
+   }
+  },
+  {
+   "index": 2,
+   "name": "SFX",
+   "items": [
+    "whoosh_soft_01",
+    "ding_bright"
+   ]
+  },
+  {
+   "index": 3,
+   "name": "Music",
+   "items": [
+    "calm_piano_bed_80bpm a",
+    "calm_piano_bed_80bpm b",
+    "warm_outro_acoustic_96bpm"
+   ]
+  }
+ ],
+ "timeline_markers": [
+  {
+   "tc": "01:00:40:00",
+   "color": "Rose",
+   "note": "гул",
+   "duration": 50
+  },
+  {
+   "tc": "01:02:05:00",
+   "color": "Rose",
+   "note": "перевантаження, тріщить",
+   "duration": 1
+  }
+ ],
+ "fairlight_presets": [],
+ "plugin_config": {
+  "fairlight_preset": ""
+ },
+ "normalize_audio_modes": [
+  "Sample Peak Program",
+  "True Peak Program",
+  "ITU-R BS.1770-4",
+  "EBU R128"
+ ],
+ "note": "The audio-only mixdown has already been rendered to resolve-work/Router Setup 2026-11/audio/mix-check.wav; treat the render steps as done and measure that file."
+}

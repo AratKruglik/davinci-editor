@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: quiet-mix-peaky
+expected_outcome: |
+  Dialogue Leveler and per-clip normalization on Voice only, the Rose hum marker routed to clip voice isolation and the clipping one left to the user with a Cream marker, the mixdown measured with loudness.py, and because the peaks don't allow +5 dB without a limiter preset the whole mix is raised only as far as the -1 dBFS ceiling with 0.5 dB margin allows, reporting the result under -14 LUFS instead of clipping.
+context:
+  scaffold_script: place-files.sh

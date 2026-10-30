@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: new-tutorial-project
+expected_outcome: |
+  The open project is saved, a new project "Router Setup 2026-11" is created, timeline resolution, 25 fps and node-based color science are set and read back before any import, the camera clips, the screen recording and the lav WAV land in A-Roll, Screen and Voice bins, the 30 fps clip is flagged, nothing in ./shoot is modified, a selects timeline is created and proxy generation is explained as a manual step.
+context:
+  scaffold_script: place-files.sh

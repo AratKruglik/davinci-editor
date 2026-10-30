@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: pip-from-purple-markers
+expected_outcome: |
+  Camera and screen recording are aligned by waveform on a scratch timeline that is deleted afterwards, the offset is computed, pip_plan.py turns the A-roll items and Purple markers into Screen and PiP segments, the empty tracks above A-roll are re-roled to Screen and PiP, A-roll and Voice stay untouched, and PiP items get transform properties that are read back and checked on a still.
+context:
+  scaffold_script: place-files.sh

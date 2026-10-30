@@ -1,3 +1,12 @@
 eval-workspace/
 .idea/
 dist/
+__pycache__/
+
+# eval fixture media (fake inputs for claude plugin eval), kept local only
+skills/*/evals/**/*.wav
+skills/*/evals/**/*.WAV
+skills/*/evals/**/*.mov
+skills/*/evals/**/*.MOV
+skills/*/evals/**/*.png
+skills/*/evals/**/*.tif

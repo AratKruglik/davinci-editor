@@ -1,0 +1,19 @@
+{
+ "resolve_version": "21.1.1.5",
+ "open_project": {
+  "name": "Garden Vlog 2026-10",
+  "settings": {"timelineResolutionWidth": "3840", "timelineResolutionHeight": "2160", "timelineFrameRate": 25.0, "colorScienceMode": "davinciYRGB"},
+  "timelines": ["Garden - rough"],
+  "media_pool": {
+   "root_clips": [
+    {"name": "IMG_5001.MOV", "File Path": "/Volumes/Shoot/Garden/IMG_5001.MOV", "Type": "Video + Audio", "Resolution": "3840x2160", "FPS": 25.0, "markers": 4, "transcribed": true},
+    {"name": "IMG_5002.MOV", "File Path": "/Volumes/Shoot/Garden/IMG_5002.MOV", "Type": "Video + Audio", "Resolution": "3840x2160", "FPS": 25.0, "markers": 1, "transcribed": true},
+    {"name": "IMG_5003.MOV", "File Path": "/Volumes/Shoot/Garden/IMG_5003.MOV", "Type": "Video + Audio", "Resolution": "3840x2160", "FPS": 25.0, "markers": 0, "transcribed": false},
+    {"name": "Screen Recording 2026-10-28 at 14.02.11.mov", "File Path": "/Users/me/Movies/Screen Recording 2026-10-28 at 14.02.11.mov", "Type": "Video + Audio", "Resolution": "3024x1964", "FPS": 60.0},
+    {"name": "lav_take1.wav", "File Path": "/Volumes/Shoot/Garden/lav_take1.wav", "Type": "Audio"},
+    {"name": "acoustic_morning_96bpm.mp3", "File Path": "/Users/me/Music/Library/Acoustic/acoustic_morning_96bpm.mp3", "Type": "Audio"}
+   ],
+   "bins": {"01_Footage": {"clips": [], "bins": {}}, "Old stuff": {"clips": ["IMG_4000.MOV"], "bins": {}}}
+  }
+ }
+}

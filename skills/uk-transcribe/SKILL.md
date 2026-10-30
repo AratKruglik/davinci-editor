@@ -10,6 +10,12 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_docs"
   - "Bash(python3 *transcript_export.py *)"
+hooks:
+  PreToolUse:
+    - matcher: "mcp__DaVinci_Resolve__run_script.*"
+      hooks:
+        - type: command
+          command: "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/resolve-core/scripts/guard.py\" || true"
 ---
 
 # Transcription in DaVinci Resolve

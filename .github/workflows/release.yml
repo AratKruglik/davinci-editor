@@ -24,6 +24,12 @@ jobs:
           python3 skills/resolve-core/scripts/tc.py selftest
           python3 skills/chart-match/scripts/test_chart_match.py
           python3 skills/text-based-cut/scripts/test_cut_candidates.py
+          python3 skills/resolve-core/scripts/guard.py selftest
+          python3 skills/natural-skin-grade/scripts/test_skin_grade.py
+          python3 skills/motionvfx-catalog/scripts/test_catalog.py
+          python3 skills/dual-video-sync-pip/scripts/pip_plan.py selftest
+          python3 skills/sound-design/scripts/test_sound_library.py
+          python3 skills/audio-finish/scripts/loudness.py selftest
       - name: Build Cowork plugin zip
         run: python3 scripts/build_cowork.py --out dist
       - name: Publish release

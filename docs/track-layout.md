@@ -32,6 +32,7 @@
 | Доріжка | Коли з'являється | Хто додає | Колір кліпів |
 |---|---|---|---|
 | **Screen** (над A-roll) | Відеоурок із записом екрану | `dual-video-sync-pip` | Navy |
+| **PiP** (над Screen) | Камера в кутку поверх запису екрану | `dual-video-sync-pip` | Violet |
 | **B-roll 2**, **Titles 2** … | Вставки або титри перекриваються в часі | `marker-edit`, `fusion-motion-graphics` | як у базової ролі |
 | **Voice 2** | Другий спікер або окремий мікрофон | `text-based-cut`, `dual-video-sync-pip` | Lime |
 | **Ambience** | Атмосферний фон (кімната, вулиця) | `sound-design` | Olive |

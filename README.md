@@ -1,6 +1,6 @@
 # davinci-editor
 
-A Claude Code and Claude Desktop (Cowork) plugin that edits in DaVinci Resolve Studio 21+ through Resolve's MCP server: Apple Log → Rec.709, ColorChecker chart match, Ukrainian transcription, text-based rough cut, editing by colored markers, role-based tracks and AI Voice Isolation.
+A Claude Code and Claude Desktop (Cowork) plugin that edits in DaVinci Resolve Studio 21+ through Resolve's MCP server: project bootstrap, Apple Log → Rec.709, ColorChecker chart match, natural skin grade, background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, editing by colored markers, role-based tracks, sound design, AI Voice Isolation and loudness finish for YouTube.
 
 Plan and roadmap: [docs/davinci-plugin-skills.md](docs/davinci-plugin-skills.md) · markers: [docs/marker-color-system.md](docs/marker-color-system.md) · tracks: [docs/track-layout.md](docs/track-layout.md) (in Ukrainian).
 
@@ -251,30 +251,53 @@ The defaults suit Ukrainian-language YouTube tutorials; change only what differs
 | `audio_tracks` | `Voice:Green,SFX:Yellow,Music:Purple` | audio tracks |
 | `protected_tracks` | `A-roll,Voice` | tracks never deleted, even when empty |
 | `track_template` | — | `.drt` template of an empty timeline with track names and header colors |
+| `timeline_format` | `horizontal` | new projects: `horizontal` or `vertical` |
+| `timeline_resolution` | `3840x2160` | new projects, horizontal size (vertical swaps it) |
+| `timeline_fps` | `25` | new projects' frame rate |
+| `skin_strength` | `0.6` | share of the skin hue error `natural-skin-grade` corrects |
+| `skin_max_saturation` | `0.35` | skin saturation cap (chroma/luma) |
+| `depth_strength` | `medium` | background blur: `medium` = template node; `light`/`strong` = group DRX |
+| `pip_layout` | `corner-br` | PiP corner for the camera |
+| `pip_size` | `0.28` | PiP width as a share of the frame |
+| `sfx_library_dir` | — | your sound effects folder (indexed by `sound-design`) |
+| `music_library_dir` | — | your licensed music folder |
+| `music_bed_lufs` | `-30` | music under speech |
+| `music_solo_lufs` | `-20` | music without speech |
+| `sfx_peak_db` | `-12` | SFX peak level |
+| `loudness_target_lufs` | `-14` | final mix loudness (YouTube) |
+| `true_peak_db` | `-1` | final mix peak ceiling |
+| `fairlight_preset` | — | optional Fairlight preset (bus limiter, music ducking) |
 
 ## Step 4. First run
 
-1. **Node template (once).** The Resolve API can't create nodes, so on its first run `log-to-rec709` asks you to build 5 serial nodes on one clip, labeled `CHART` → `CST` → `PRIMARY` → `DEPTH` → `LOOK`, set up the CST and say "done". It saves that as a DRX template in `templates_dir` and applies it by itself from then on. Apple Log and Apple Log 2 get separate templates.
-2. **Markers.** While reviewing footage, place markers (`M` in Resolve) in the colors from `marker_colors`: Red = cut, Green = keep / best take, Yellow = doubt, Sand = ColorChecker frame. Details: [docs/marker-color-system.md](docs/marker-color-system.md).
-3. **Full workflow:** `/davinci-editor:edit-episode Episode name` runs color before the cut → transcript, tracks, rough cut → sound. After each stage Claude stops and waits for your go-ahead.
-4. Or single steps in plain language: "convert A-Roll from Apple Log to 709", "make a rough cut of these clips", "clean up the voice, the air conditioner hums".
+1. **Node template (once).** The Resolve API can't create nodes, so on its first run `log-to-rec709` asks you to build 6 serial nodes on one clip, labeled `CHART` → `CST` → `PRIMARY` → `SKIN` → `DEPTH` → `LOOK`: set up the CST, a skin-hue qualifier on `SKIN`, AI CineFocus (or Depth Map + Lens Blur) on `DEPTH` and disable `DEPTH`, then say "done". It saves that as a DRX template in `templates_dir` and applies it by itself from then on. Apple Log and Apple Log 2 get separate templates. A stage-1 template without `SKIN`/`DEPTH` is upgraded in place, keeping the chart correction.
+2. **Markers.** While reviewing footage, place markers (`M` in Resolve) in the colors from `marker_colors`: Red = cut, Green = keep / best take, Yellow = doubt, Sand = ColorChecker frame, Purple = camera / screen / PiP, Fuchsia = B-roll, Cocoa = transition, Lavender = SFX, Sky = music, Rose = audio problem. Details: [docs/marker-color-system.md](docs/marker-color-system.md).
+3. **Sound library (once).** Set `sfx_library_dir` and `music_library_dir`; `sound-design` indexes them and asks once per music source whether it's cleared for your channel (YouTube Content ID).
+4. **Full workflow:** `/davinci-editor:edit-episode Episode name` runs project and color before the cut → transcript, tracks, rough cut, PiP → sound. After each step Claude stops and waits for your go-ahead; progress is kept in `episode.md`, so `/davinci-editor:edit-episode` in a new session resumes where you stopped.
+5. Or single steps in plain language: "convert A-Roll from Apple Log to 709", "make a rough cut of these clips", "clean up the voice, the air conditioner hums".
 
-What Claude never does without confirmation: delete clips, timelines, grades, LUTs or markers; change the source timeline (the rough cut goes to a new one); change project-wide color management; touch your markers (it only writes the hidden `customData` field and uses Cream for its own markers).
+What Claude never does without confirmation: delete clips, timelines, grades, LUTs or markers (a hook in every editing skill turns any delete/reset script into a permission prompt); change the source timeline (the rough cut goes to a new one); change project-wide color management; touch your markers (it only writes the hidden `customData` field and uses Cream for its own markers).
 
 ## Skills
 
 | Skill | How to invoke | What it does |
 |---|---|---|
-| `resolve-core` | automatic (hidden) | shared rules: safe scripting, backups, timecodes, tracks by role, markers, node labels, remote grade versions |
+| `resolve-core` | automatic (hidden) | shared rules: safe scripting, backups, timecodes, tracks by role, markers, node labels, remote grade versions, delete guard hook |
+| `project-bootstrap` | auto or `/davinci-editor:project-bootstrap [name] [folder] [horizontal\|vertical]` | new project with settings, bins and import; or sorts an open project's media pool |
 | `log-to-rec709` | auto or `/davinci-editor:log-to-rec709 [bin] [gamma]` | Apple Log / Apple Log 2 → Rec.709 via a CST node from a DRX template, as a remote version |
 | `chart-match` | auto or `/davinci-editor:chart-match [scene]` | ColorChecker 24 match in linear light → DCTL on the `CHART` node, ΔE00 report |
+| `natural-skin-grade` | auto or `/davinci-editor:natural-skin-grade [scene] [strength]` | measured neutral balance on `PRIMARY` and skin toward the skin tone line on `SKIN`, verified on a still |
+| `depth-background-blur` | auto or `/davinci-editor:depth-background-blur [scene] [light\|medium\|strong\|off]` | background blur with AI CineFocus or Depth Map, per clip or per scene |
+| `motionvfx-catalog` | auto or `/davinci-editor:motionvfx-catalog [scan\|search words]` | catalog of installed MotionVFX / Fusion templates with exact names and text fields (runs as a forked helper) |
 | `voice-isolation` | auto or `/davinci-editor:voice-isolation [track\|selected] [amount]` | AI Voice Isolation on the Voice track or clips |
 | `uk-transcribe` | auto or `/davinci-editor:uk-transcribe [bin]` | Resolve transcription with a language check, exports JSON/SRT/TXT |
 | `text-based-cut` | auto or `/davinci-editor:text-based-cut [bin] [gentle\|normal\|tight]` | cut list from transcript and markers → approval → new timeline on A-roll + Voice |
-| `marker-edit` | auto or `/davinci-editor:marker-edit [stage] [timeline]` | acts on your colored markers: plan → approval → the matching skills |
+| `dual-video-sync-pip` | auto or `/davinci-editor:dual-video-sync-pip [timeline] [corner] [size]` | camera + screen recording synced by sound, Screen and PiP tracks switched by Purple markers |
+| `marker-edit` | auto or `/davinci-editor:marker-edit [stage] [timeline]` | acts on your colored markers: plan → approval → the matching skills; B-roll inserts and transitions itself |
 | `track-layout` | auto or `/davinci-editor:track-layout [setup\|add\|recolor\|lock\|cleanup]` | role-based tracks, clip colors, cleanup of empty tracks |
-| `edit-episode` | only `/davinci-editor:edit-episode [name] [stage]` | the whole workflow with approval stops |
-| `resolve-project-setup` | auto | bin structure for a new project (replaced by `project-bootstrap` in stage 2) |
+| `sound-design` | auto or `/davinci-editor:sound-design [timeline] [subtle\|normal\|rich]` | cue sheet from transcript and markers → approval → SFX, music and ambience from your library with levels and fades |
+| `audio-finish` | auto or `/davinci-editor:audio-finish [timeline] [LUFS]` | dialogue leveling, Rose fixes, measured loudness to -14 LUFS without clipping |
+| `edit-episode` | only `/davinci-editor:edit-episode [name] [stage]` | the whole workflow with approval stops, resumable |
 
 ## Troubleshooting
 
@@ -296,6 +319,12 @@ What Claude never does without confirmation: delete clips, timelines, grades, LU
 python3 skills/resolve-core/scripts/tc.py selftest
 python3 skills/chart-match/scripts/test_chart_match.py
 python3 skills/text-based-cut/scripts/test_cut_candidates.py
+python3 skills/resolve-core/scripts/guard.py selftest
+python3 skills/natural-skin-grade/scripts/test_skin_grade.py
+python3 skills/motionvfx-catalog/scripts/test_catalog.py
+python3 skills/dual-video-sync-pip/scripts/pip_plan.py selftest
+python3 skills/sound-design/scripts/test_sound_library.py
+python3 skills/audio-finish/scripts/loudness.py selftest
 claude plugin validate .
 claude plugin eval . --allow-tools Write,Edit,Bash --scaffold   # eval cases in skills/*/evals (real, billed model runs)
 ```

@@ -13,6 +13,12 @@ allowed-tools:
   - "Bash(python3 *cut_candidates.py *)"
   - "Bash(python3 *tc.py *)"
   - "Read"
+hooks:
+  PreToolUse:
+    - matcher: "mcp__DaVinci_Resolve__run_script.*"
+      hooks:
+        - type: command
+          command: "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/resolve-core/scripts/guard.py\" || true"
 ---
 
 # Text-based rough cut

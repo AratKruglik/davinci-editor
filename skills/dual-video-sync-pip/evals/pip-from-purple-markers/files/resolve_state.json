@@ -1,0 +1,124 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - selects - rough cut 2026-11-02",
+ "timeline_settings": {
+  "timelineFrameRate": 25.0,
+  "timelineResolutionWidth": "3840",
+  "timelineResolutionHeight": "2160",
+  "start_frame": 90000
+ },
+ "video_tracks": [
+  {
+   "index": 1,
+   "name": "Backgrounds",
+   "items": 0
+  },
+  {
+   "index": 2,
+   "name": "A-roll",
+   "items": 3
+  },
+  {
+   "index": 3,
+   "name": "B-roll",
+   "items": 0
+  },
+  {
+   "index": 4,
+   "name": "Effects",
+   "items": 0
+  },
+  {
+   "index": 5,
+   "name": "Titles",
+   "items": 0
+  }
+ ],
+ "audio_tracks": [
+  {
+   "index": 1,
+   "name": "Voice",
+   "items": 3
+  },
+  {
+   "index": 2,
+   "name": "SFX",
+   "items": 0
+  },
+  {
+   "index": 3,
+   "name": "Music",
+   "items": 0
+  }
+ ],
+ "a_roll_items": [
+  {
+   "clip": "IMG_4140",
+   "start": 90000,
+   "duration": 1250,
+   "source_start": 300
+  },
+  {
+   "clip": "IMG_4140",
+   "start": 91250,
+   "duration": 875,
+   "source_start": 1800
+  },
+  {
+   "clip": "IMG_4141",
+   "start": 92125,
+   "duration": 1500,
+   "source_start": 120
+  }
+ ],
+ "media_pool": {
+  "01_Footage/A-Roll": {
+   "IMG_4140": {
+    "FPS": 25.0,
+    "Frames": 9304
+   },
+   "IMG_4141": {
+    "FPS": 25.0,
+    "Frames": 7011
+   }
+  },
+  "01_Footage/Screen": {
+   "Запис екрана 2026-10-30 о 10.15.32": {
+    "FPS": 60.0,
+    "Frames": 39751,
+    "Audio": "mic captured"
+   }
+  }
+ },
+ "timeline_markers": [
+  {
+   "frame": 500,
+   "color": "Purple",
+   "name": "екран",
+   "note": "",
+   "duration": 1
+  },
+  {
+   "frame": 1625,
+   "color": "Purple",
+   "name": "pip",
+   "note": "обличчя в правому нижньому куті",
+   "duration": 1
+  }
+ ],
+ "expected_autoalign_result": {
+  "IMG_4140": {
+   "cam_start": 86400,
+   "cam_src_s": 0.0,
+   "scr_start": 86125,
+   "scr_src_s": 0.0
+  },
+  "IMG_4141": {
+   "cam_start": 86400,
+   "cam_src_s": 0.0,
+   "scr_start": 76400,
+   "scr_src_s": 0.0
+  }
+ },
+ "note": "Both camera clips were recorded during one continuous screen recording."
+}

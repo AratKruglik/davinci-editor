@@ -1,0 +1,14 @@
+{
+ "resolve_version": "21.1.1.5",
+ "open_project": {"name": "Untitled Project 3", "unsaved_changes": true, "timelines": 0},
+ "projects_in_current_folder": ["Kitchen Tutorial 2026-10", "Untitled Project 3"],
+ "note": "Files in ./shoot are empty placeholders; their real properties as Resolve reads them are below.",
+ "media_info": {
+  "IMG_4140.MOV": {"Type": "Video + Audio", "Resolution": "3840x2160", "FPS": 25.0, "Video Codec": "H.265 Main 10 L5.1", "Duration": "00:06:12:04", "Camera": "iPhone 16 Pro", "Gamma Notes": "Apple Log"},
+  "IMG_4141.MOV": {"Type": "Video + Audio", "Resolution": "3840x2160", "FPS": 25.0, "Video Codec": "H.265 Main 10 L5.1", "Duration": "00:04:40:11", "Camera": "iPhone 16 Pro", "Gamma Notes": "Apple Log"},
+  "IMG_4142.MOV": {"Type": "Video + Audio", "Resolution": "3840x2160", "FPS": 30.0, "Video Codec": "H.265 Main 10 L5.1", "Duration": "00:01:05:20", "Camera": "iPhone 16 Pro", "Gamma Notes": "Apple Log"},
+  "Запис екрана 2026-10-30 о 10.15.32.mov": {"Type": "Video + Audio", "Resolution": "2940x1912", "FPS": 60.0, "Video Codec": "H.264 High", "Duration": "00:11:02:31"},
+  "ZOOM0001.WAV": {"Type": "Audio", "Audio Ch": "2", "Sample Rate": "48000", "Duration": "00:11:30:00"},
+  "logo.png": {"Type": "Still", "Resolution": "1200x1200"}
+ }
+}

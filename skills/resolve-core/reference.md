@@ -31,6 +31,20 @@ Checked against the MCP server's stubs for 21.1.1. When in doubt, re-check with 
 | Selection | `tl.GetSelectedClips()` (21.0.4+), `mp.GetSelectedClips()` | |
 | Fairlight presets | `resolve.GetFairlightPresets()`, `project.ApplyFairlightPresetToCurrentTimeline(name)` | |
 | Background tasks | `resolve.DisableBackgroundTasksForCurrentResolveSession()` | |
+| Read a CDL back | not possible: there is no `GetCDL`; verify a CDL by exporting a still and measuring it | trusting `SetCDL`'s `True` |
+| Enable / disable node | `graph.SetNodeEnabled(i, bool)`; there is no getter, so record what you set | |
+| Color group graphs | `group.GetPreClipNodeGraph()`, `group.GetPostClipNodeGraph()`, `group.GetClipsInTimeline(tl)`, `item.GetColorGroup()` | |
+| New project | `pm.CreateProject(name, mediaLocationPath=None)` (switches the open project; `None` if the name exists), `pm.SaveProject()` | |
+| Bins, import | `mp.AddSubFolder(parent, name)`, `mp.SetCurrentFolder(f)`, `mp.ImportMedia([{"FilePath": p}])` or `mp.ImportMedia([path, …])` → items in the current folder | |
+| Proxies | project settings `perfProxyMediaMode`, `perfProxyResolutionRatio`; `clip.LinkProxyMedia(path)`; **no API to generate proxies** | |
+| Sync two clips by sound | `tl.AutoAlignClips(items, {"SyncUsing": resolve.AUTO_ALIGN_CLIPS_USING_WAVEFORM})` on a timeline; `mp.AutoSyncAudio(items, {"syncMode": resolve.AUDIO_SYNC_WAVEFORM})` merges separate audio into a video clip | own cross-correlation |
+| Transform / PiP | `item.SetProperties({"ZoomX", "ZoomY", "Pan", "Tilt", "CropLeft", "CropRight", "CropTop", "CropBottom", "CropSoftness", "Opacity"})`, re-read `GetProperties()` | |
+| Fades | `item.SetFades({"FadeIn": frames, "FadeOut": frames})`, `GetFades()` (video or audio fader) | volume keyframes: **no API** |
+| Loudness | `tl.GetNormalizeAudioModes()`, `tl.NormalizeAudioLevel(items, {"normalizationMode": m, "targetLoudness": -14.0, "setLevelMode": resolve.NORMALIZE_AUDIO_SET_LEVEL_INDEPENDENT})` | |
+| Dialogue leveler | item properties `AudioDialogueLevelerEnabled`, `AudioDialogueLevelerMode` (`resolve.DIALOGUE_LEVELER_MODE_*`), `…ReduceLoudDialogue`, `…LiftSoftDialogue`, `…BackgroundReduction`, `…OutputGain` 0–6; active timeline only | |
+| Titles / generators | `tl.InsertFusionTitleIntoTimeline(name)`, `tl.InsertTitleIntoTimeline(name)`, `tl.InsertFusionGeneratorIntoTimeline(name)` (at the playhead) | |
+| Fusion inputs | `comp = item.GetFusionCompByIndex(1)`, `tool = comp.FindTool(name)` or `comp.GetToolList()`, `tool.GetInputList()`, `tool.SetInput(id, value, time)` | |
+| Audio-only mixdown | `project.SetCurrentRenderFormatAndCodec(fmt, codec)` (discover with `GetRenderFormats()`, `GetRenderCodecs(ext)`), `SetRenderSettings({"ExportVideo": False, "ExportAudio": True, "TargetDir": d, "CustomName": n, "SelectAllFrames": True})`, `AddRenderJob()`, `StartRendering([job])`, poll `IsRenderingInProgress()`, `GetRenderJobStatus(job)` | |
 
 ## Extras downloads
 
@@ -64,3 +78,23 @@ These values are not documented for 21.1.1; discover them on the running app, ne
 - the exact `Input Color Space` strings for Apple Log / Apple Log 2: read `GetClipProperty()["Input Color Space"]` from a clip the user already set in the UI;
 - whether a transcript word's `end` timecode is its last frame or the first frame after it (`text-based-cut` assumes last frame; check one word against the waveform);
 - valid `colorScienceMode` / `colorSpace*` strings: read current values with `project.GetSettings()[key]` before writing.
+- units and signs of `Pan`/`Tilt` (pixels from center; is positive Tilt up?) and whether `ZoomX` 1.0 = 100 %: set one item, export a still, check it before laying out the rest;
+- the track `InsertFusionTitleIntoTimeline` uses (expected: the highest enabled video track at the playhead) and whether it accepts the template's file name as shown in the Effects library;
+- whether `ApplyFairlightPresetToCurrentTimeline` replaces the timeline's tracks and busses (apply it on a duplicate timeline first);
+- the `normalizationMode` string for integrated loudness in `GetNormalizeAudioModes()` (expected to mention BS.1770 / LUFS);
+- whether timeline items built by `AppendToTimeline` keep the media pool clip's color group.
+
+## Upgrading a stage-1 template
+
+```python
+for item in items:                                   # remote "claude" version loaded
+    g = item.GetNodeGraph()
+    chart = next(i for i in range(1, g.GetNumNodes() + 1) if g.GetNodeLabel(i) == "CHART")
+    lut = g.GetLUT(chart)
+    ok = g.ApplyGradeFromDRX(NEW_TEMPLATE, 0)
+    chart = next(i for i in range(1, g.GetNumNodes() + 1) if g.GetNodeLabel(i) == "CHART")
+    if lut:
+        g.SetLUT(chart, lut)
+    rows.append({"clip": item.GetName(), "ok": ok, "lut": g.GetLUT(chart), "labels": [g.GetNodeLabel(i) for i in range(1, g.GetNumNodes() + 1)]})
+result = rows
+```

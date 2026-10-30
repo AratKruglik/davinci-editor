@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: cues-and-licenses
+expected_outcome: |
+  The library is indexed with sound_library.py, music from the source without a license file is asked about and not placed without a yes, a cue sheet with the user's Lavender and Sky markers first is shown for approval before anything is placed, SFX land on SFX and music on Music with levels from the config and fades, the music is split at speech borders for the intro/outro levels, and nothing touches Voice or A-roll.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,82 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - rough cut 2026-11-02",
+ "duration_tc": "00:04:00:00",
+ "timeline_start": "01:00:00:00",
+ "audio_tracks": [
+  {
+   "index": 1,
+   "name": "Voice",
+   "items": 9
+  },
+  {
+   "index": 2,
+   "name": "SFX",
+   "items": 0
+  },
+  {
+   "index": 3,
+   "name": "Music",
+   "items": 0
+  }
+ ],
+ "titles": [
+  {
+   "tc": "01:00:12:00",
+   "name": "lower third"
+  },
+  {
+   "tc": "01:01:10:00",
+   "name": "chapter card"
+  }
+ ],
+ "timeline_markers": [
+  {
+   "tc": "01:03:30:00",
+   "color": "Lavender",
+   "name": "",
+   "note": "дзинь, результат",
+   "duration": 1
+  },
+  {
+   "tc": "01:03:50:00",
+   "color": "Sky",
+   "name": "",
+   "note": "фінал, тепло",
+   "duration": 1
+  }
+ ],
+ "normalize_audio_modes": [
+  "Sample Peak Program",
+  "True Peak Program",
+  "ITU-R BS.1770-4",
+  "EBU R128"
+ ],
+ "plugin_config_overrides": {
+  "sfx_library_dir": "./library/sfx",
+  "music_library_dir": "./library/music"
+ },
+ "voice_items": [
+  {
+   "start": "01:00:00:00",
+   "end": "01:01:08:10"
+  },
+  {
+   "start": "01:01:10:00",
+   "end": "01:02:38:00"
+  },
+  {
+   "start": "01:02:40:00",
+   "end": "01:03:28:12"
+  },
+  {
+   "start": "01:03:30:00",
+   "end": "01:03:46:00"
+  },
+  {
+   "start": "01:03:50:00",
+   "end": "01:03:54:20"
+  }
+ ],
+ "note": "Speech-free stretches: 01:03:46-01:03:50 and 01:03:54:20 to the end (01:04:00:00)."
+}

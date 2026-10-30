@@ -38,6 +38,7 @@ Every davinci-editor skill follows these rules. They exist because a wrong edit 
 - Structural edits (adding, removing, moving or trimming clips; deleting tracks): first `tl.DuplicateTimeline(f"{tl.GetName()} - backup {YYYY-MM-DD HH-MM}")`, then `project.SetCurrentTimeline(original)` and edit the original; for cuts, build a *new* timeline instead and never modify the source one.
 - Reversible toggles (voice isolation, track lock/enable, clip color, a new local/remote grade version) don't need a timeline copy: save the project before and record the previous value so you can restore it.
 - Never delete clips, timelines, bins, grades, LUTs or DCTLs unless the user asked for that exact deletion. `DeleteClips`, `DeleteTimelines`, `ResetAllGrades`, `delete_lut`, `delete_dctl` require explicit confirmation naming the objects.
+- Skills that change the project carry a `PreToolUse` hook (`scripts/guard.py`) that turns any `run_script*` call with a delete/reset/clear API into a permission prompt. A prompt from it is not an error: say what the script deletes and why, then let the user decide. Never split or rename calls to slip past it.
 - Changing project-wide color science or color management on a project with existing grades/titles needs an explicit yes after warning that everything may re-render differently.
 
 ## 4. Frames and timecode
@@ -62,13 +63,18 @@ The API cannot create nodes or change node tools. All grading skills therefore s
 
 | # | Label | Content | Written by |
 |---|---|---|---|
-| 1 | `CHART` | empty, receives chart-match LUT/DCTL (works in camera log / linear) | `chart-match` |
-| 2 | `CST` | Color Space Transform camera log → Rec.709 | `log-to-rec709` |
-| 3 | `PRIMARY` | balance / exposure / skin | `natural-skin-grade` |
-| 4 | `DEPTH` | depth map background blur | `depth-background-blur` |
-| 5 | `LOOK` | creative look | user |
+| 1 | `CHART` | empty, receives chart-match LUT/DCTL (works in camera log / linear) | `chart-match` (`SetLUT`) |
+| 2 | `CST` | Color Space Transform camera log → Rec.709 | `log-to-rec709` (template) |
+| 3 | `PRIMARY` | neutral balance / exposure | `natural-skin-grade` (`SetCDL`) |
+| 4 | `SKIN` | HSL qualifier on skin tones, corrections inside it | `natural-skin-grade` (`SetCDL`) |
+| 5 | `DEPTH` (+ `DEPTH BLUR`) | AI CineFocus, or Depth Map → keyed Lens Blur; **disabled** in the template | `depth-background-blur` (`SetNodeEnabled`) |
+| 6 | `LOOK` | creative look | user |
 
 Find nodes by label (`graph.GetNodeLabel(i)` for `i in 1..graph.GetNumNodes()`), never by hard index: users insert nodes. If a label is missing, stop and tell the user which node to label.
+
+`ApplyGradeFromDRX` replaces the whole node tree of the graph it is applied to. So after the template is on a clip, skills change it **only** with per-node calls (`SetLUT`, `SetCDL`, `SetNodeEnabled`) and never re-apply a DRX to add a feature: that would wipe the chart LUT and skin CDLs.
+
+**Template upgrade** (stage-1 templates have no `SKIN`/`DEPTH`): the user adds the missing nodes on the template clip and re-captures the template (`log-to-rec709` §2). Then, per clip on its remote `claude` version: read `GetLUT` of `CHART`, `ApplyGradeFromDRX(new_template, 0)`, `SetLUT` the same path back on `CHART`, re-read. CDLs from an earlier skin grade are not readable (no `GetCDL`), so run `natural-skin-grade` again afterwards. Ask before upgrading; show the clip list.
 
 Templates live in `${user_config.templates_dir}`. If that setting is empty, ask the user for a folder once and suggest setting it in the plugin config.
 

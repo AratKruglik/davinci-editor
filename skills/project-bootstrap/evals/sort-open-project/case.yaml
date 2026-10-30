@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: sort-open-project
+expected_outcome: |
+  Works in the open project without creating a new one, reuses the existing 01_Footage bin and leaves the user's "Old stuff" bin alone, moves the clips already in the media pool into A-Roll, Screen, Voice and Music bins with MoveClips instead of re-importing them, and does not change frame rate or resolution because a timeline already exists.
+context:
+  scaffold_script: place-files.sh

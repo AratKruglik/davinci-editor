@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: magenta-face-green-wall
+expected_outcome: |
+  Skin and neutral boxes inside the face and on the wall, skin_grade.py analysis showing skin off the line toward magenta and a green cast on the wall, a PRIMARY CDL that removes the green cast and a SKIN CDL that rotates skin part-way to the line, verified on a re-exported still, then SetCDL on PRIMARY and SKIN of the three kitchen clips on the remote claude version, recorded in a JSON file, with no DRX re-applied to the clips.
+context:
+  scaffold_script: place-files.sh

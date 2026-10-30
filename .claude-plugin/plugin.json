@@ -1,8 +1,8 @@
 {
   "name": "davinci-editor",
   "displayName": "DaVinci Editor",
-  "version": "0.2.0",
-  "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: Apple Log to Rec.709, ColorChecker chart match, voice isolation, Ukrainian transcription, text-based rough cut, edit by colored markers and role-based track layout.",
+  "version": "0.3.0",
+  "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: project bootstrap, Apple Log to Rec.709, ColorChecker chart match, natural skin grade, depth background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, MotionVFX catalog, sound design, voice isolation, loudness finish for YouTube, edit by colored markers and role-based track layout.",
   "author": {
     "name": "Oleksii Kruhlyk"
   },
@@ -115,6 +115,118 @@
       "type": "file",
       "title": "Timeline template (.drt)",
       "description": "Optional empty timeline exported as .drt with track names and header colors; new timelines are created from it.",
+      "default": ""
+    },
+    "timeline_format": {
+      "type": "string",
+      "title": "Timeline format",
+      "description": "'horizontal' (YouTube) or 'vertical' (Shorts/Reels-first shoots) for new projects.",
+      "default": "horizontal"
+    },
+    "timeline_resolution": {
+      "type": "string",
+      "title": "Timeline resolution",
+      "description": "Horizontal resolution WIDTHxHEIGHT for new projects; vertical swaps it.",
+      "default": "3840x2160"
+    },
+    "timeline_fps": {
+      "type": "string",
+      "title": "Timeline frame rate",
+      "description": "Frame rate for new projects, as Resolve writes it: '25', '29.97', '30', '50'…",
+      "default": "25"
+    },
+    "skin_strength": {
+      "type": "number",
+      "title": "Skin correction strength",
+      "description": "Share of the skin hue offset from the skin tone line that natural-skin-grade corrects, 0-1.",
+      "default": 0.6,
+      "min": 0,
+      "max": 1
+    },
+    "skin_max_saturation": {
+      "type": "number",
+      "title": "Skin saturation cap",
+      "description": "Chroma/luma ratio above which skin saturation is reduced.",
+      "default": 0.35,
+      "min": 0.1,
+      "max": 1
+    },
+    "depth_strength": {
+      "type": "string",
+      "title": "Background blur strength",
+      "description": "'medium' = the DEPTH node of the base template; 'light' or 'strong' use depth-<strength>.drx on the Color Group post-clip graph.",
+      "default": "medium"
+    },
+    "pip_layout": {
+      "type": "string",
+      "title": "PiP corner",
+      "description": "Where the camera sits in PiP sections: corner-br, corner-bl, corner-tr, corner-tl.",
+      "default": "corner-br"
+    },
+    "pip_size": {
+      "type": "number",
+      "title": "PiP size",
+      "description": "PiP camera width as a share of the frame width.",
+      "default": 0.28,
+      "min": 0.1,
+      "max": 0.5
+    },
+    "sfx_library_dir": {
+      "type": "directory",
+      "title": "SFX library folder",
+      "description": "Folder with sound effects to index for sound-design.",
+      "default": ""
+    },
+    "music_library_dir": {
+      "type": "directory",
+      "title": "Music library folder",
+      "description": "Folder with licensed music to index for sound-design.",
+      "default": ""
+    },
+    "music_bed_lufs": {
+      "type": "number",
+      "title": "Music under speech (LUFS)",
+      "description": "Integrated loudness of music beds under dialogue.",
+      "default": -30,
+      "min": -45,
+      "max": -15
+    },
+    "music_solo_lufs": {
+      "type": "number",
+      "title": "Music without speech (LUFS)",
+      "description": "Integrated loudness of music in intro, outro and pauses.",
+      "default": -20,
+      "min": -35,
+      "max": -10
+    },
+    "sfx_peak_db": {
+      "type": "number",
+      "title": "SFX peak (dBFS)",
+      "description": "Sample peak level sound effects are normalized to.",
+      "default": -12,
+      "min": -30,
+      "max": -3
+    },
+    "loudness_target_lufs": {
+      "type": "number",
+      "title": "Mix loudness target (LUFS)",
+      "description": "Integrated loudness of the final mix; YouTube plays back at -14.",
+      "default": -14,
+      "min": -24,
+      "max": -9
+    },
+    "true_peak_db": {
+      "type": "number",
+      "title": "Peak ceiling (dBFS)",
+      "description": "Highest allowed peak of the final mix.",
+      "default": -1,
+      "min": -3,
+      "max": 0
+    },
+    "fairlight_preset": {
+      "type": "string",
+      "title": "Fairlight preset",
+      "description": "Optional Fairlight preset (bus limiter, music ducking) that audio-finish applies; created once by the user.",
       "default": ""
     }
   }

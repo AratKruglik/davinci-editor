@@ -8,6 +8,12 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
   - "mcp__DaVinci_Resolve__search_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_api"
+hooks:
+  PreToolUse:
+    - matcher: "mcp__DaVinci_Resolve__run_script.*"
+      hooks:
+        - type: command
+          command: "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/resolve-core/scripts/guard.py\" || true"
 ---
 
 # Track layout by role
@@ -20,7 +26,7 @@ Video, bottom to top — order matters, higher tracks cover lower ones: `${user_
 Audio, top to bottom: `${user_config.audio_tracks}`
 Never deleted, even when empty: `${user_config.protected_tracks}`
 
-Each entry is `Name:ClipColor`. On-demand roles and their clip colors: Screen (above A-roll):Navy, B-roll 2 / Titles 2: same as base role, Voice 2:Lime, Ambience:Olive, Subtitles UA (subtitle track).
+Each entry is `Name:ClipColor`. On-demand roles and their clip colors: Screen (above A-roll):Navy, PiP (above Screen):Violet, B-roll 2 / Titles 2: same as base role, Voice 2:Lime, Ambience:Olive, Subtitles UA (subtitle track).
 
 Why this order: Backgrounds under everything (PiP plates), A-roll is the base, B-roll covers A-roll, Effects (adjustment clips) affect picture but not titles, Titles always on top.
 
@@ -58,7 +64,7 @@ Only `create=True` for roles that belong on top (Titles 2, B-roll 2 when nothing
 
 1. Timeline template: if `${user_config.track_template}` is set (a `.drt` exported from an empty timeline the user styled once — names, header colors, order), create new timelines with `mp.ImportTimelineFromFile(path)` and rename. Whether `.drt` keeps header colors is unverified — check once and tell the user.
 2. Otherwise on an **empty** timeline: add tracks up to the configured count and name them in order. On a timeline that already has clips: only rename tracks whose content clearly matches a role (ask when unsure), add missing roles on top only if their place is on top, and list the rest for the user to add manually.
-3. Look ahead before placing content: transcript type and markers tell what this episode needs (Purple → Screen, overlapping Fuchsia → B-roll 2, two speakers → Voice 2). Create those tracks now, in order.
+3. Look ahead before placing content: transcript type and markers tell what this episode needs (Purple → Screen and PiP, overlapping Fuchsia → B-roll 2, two speakers → Voice 2, Lavender/Sky with room tone → Ambience). Create those tracks now, in order.
 4. Verify by reading back every track name and report the final layout table (index, type, name, clip count).
 
 ## recolor

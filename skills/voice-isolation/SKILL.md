@@ -8,6 +8,12 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
   - "mcp__DaVinci_Resolve__search_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_api"
+hooks:
+  PreToolUse:
+    - matcher: "mcp__DaVinci_Resolve__run_script.*"
+      hooks:
+        - type: command
+          command: "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/resolve-core/scripts/guard.py\" || true"
 ---
 
 # AI Voice Isolation

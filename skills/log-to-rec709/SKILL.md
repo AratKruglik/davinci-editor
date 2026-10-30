@@ -10,6 +10,12 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_docs"
   - "mcp__DaVinci_Resolve__get_whats_new"
+hooks:
+  PreToolUse:
+    - matcher: "mcp__DaVinci_Resolve__run_script.*"
+      hooks:
+        - type: command
+          command: "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/resolve-core/scripts/guard.py\" || true"
 ---
 
 # Apple Log / Apple Log 2 → Rec.709
@@ -61,10 +67,14 @@ Show the table: clip → detected format → confidence (`metadata` / `file prob
 
 ## 2. Get the template
 
-Look in `${user_config.templates_dir}` for `base-apple-log.drx` / `base-apple-log-2.drx` (base tree with labels `CHART`, `CST`, `PRIMARY`, `DEPTH`, `LOOK`, CST set as above).
+Look in `${user_config.templates_dir}` for `base-apple-log.drx` / `base-apple-log-2.drx` (base tree with labels `CHART`, `CST`, `PRIMARY`, `SKIN`, `DEPTH`, `LOOK`, CST set as above; see `resolve-core` §6).
 
 Missing → one-time capture, because the API cannot create nodes:
-1. Ask the user to build the 5-node serial tree on one clip of that log version on the Color page, set the CST, and label the nodes (right-click → Node Label). Wait for "готово".
+1. Ask the user to build the serial tree on one clip of that log version on the Color page and label the nodes (right-click → Node Label). Wait for "готово". Give them this checklist:
+   - `CHART` empty; `CST` set as above; `PRIMARY` empty;
+   - `SKIN`: HSL qualifier on skin hue (Hue only, wide soft edges, Clean Black/White ~5), no correction;
+   - `DEPTH`: Resolve FX **AI CineFocus** with a moderate background blur (or Depth Map → key output into a node `DEPTH BLUR` with Lens Blur), then **disable the node(s)** (Ctrl/Cmd+D) — `depth-background-blur` turns them on per clip;
+   - `LOOK` empty.
 2. Make that clip current, then with `run_script_unsafe`:
    ```python
    tl = project.GetCurrentTimeline(); still = tl.GrabStill()

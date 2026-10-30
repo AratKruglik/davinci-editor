@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: strong-blur-skips-screen
+expected_outcome: |
+  Strong strength means the Color Group post-clip route: the talking-head clips' DEPTH nodes stay disabled, depth-strong.drx (captured once, after asking) goes on the desk group's post-clip graph after checking it is empty, the screen recording is excluded, no DRX is applied to any clip graph, and a record is written.
+context:
+  scaffold_script: place-files.sh

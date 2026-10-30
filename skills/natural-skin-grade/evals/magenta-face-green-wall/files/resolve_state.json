@@ -1,0 +1,80 @@
+{
+ "project": "Kitchen Tutorial 2026-10",
+ "resolve_version": "21.1.1.5",
+ "timeline": "Kitchen - selects",
+ "templates_dir": "./templates",
+ "base_template": "./templates/base-apple-log.drx",
+ "color_groups": {
+  "kitchen": [
+   "IMG_4127",
+   "IMG_4128",
+   "IMG_4129"
+  ]
+ },
+ "clips": {
+  "IMG_4127": {
+   "current_version": {
+    "versionName": "claude",
+    "versionType": 1
+   },
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "SKIN",
+    "DEPTH",
+    "LOOK"
+   ],
+   "CHART_lut": "MCP/chart-kitchen.dctl",
+   "format": "Apple Log"
+  },
+  "IMG_4128": {
+   "current_version": {
+    "versionName": "claude",
+    "versionType": 1
+   },
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "SKIN",
+    "DEPTH",
+    "LOOK"
+   ],
+   "CHART_lut": "MCP/chart-kitchen.dctl",
+   "format": "Apple Log"
+  },
+  "IMG_4129": {
+   "current_version": {
+    "versionName": "claude",
+    "versionType": 1
+   },
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "SKIN",
+    "DEPTH",
+    "LOOK"
+   ],
+   "CHART_lut": "MCP/chart-kitchen.dctl",
+   "format": "Apple Log"
+  }
+ },
+ "note": "The still below was already exported from a temporary local version (template + chart DCTL, DEPTH/LOOK off) on IMG_4127; treat it as the result of that export. Pixel boxes are in full resolution 320x180.",
+ "stills": {
+  "kitchen-skin.tif": "after CST, PRIMARY/SKIN at identity",
+  "kitchen-skin.png": "same frame for viewing"
+ },
+ "scene_layout": {
+  "face_ellipse_center": [
+   200,
+   80
+  ],
+  "face_radii": [
+   40,
+   52
+  ],
+  "wall": "light grey wall fills the rest of the frame"
+ }
+}

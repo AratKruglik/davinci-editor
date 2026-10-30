@@ -1,0 +1,48 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - selects",
+ "templates_dir": "./templates",
+ "templates_present": [
+  "base-apple-log.drx"
+ ],
+ "color_groups": {
+  "desk": {
+   "clips": [
+    "IMG_4140",
+    "IMG_4141",
+    "Запис екрана 2026-10-30 о 10.15.32"
+   ],
+   "post_clip_graph_nodes": 0
+  }
+ },
+ "clips": {
+  "IMG_4140": {
+   "type": "talking head, presenter at desk, bookshelf behind",
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "SKIN",
+    "DEPTH",
+    "LOOK"
+   ],
+   "DEPTH_enabled_in_template": false
+  },
+  "IMG_4141": {
+   "type": "talking head",
+   "node_labels": [
+    "CHART",
+    "CST",
+    "PRIMARY",
+    "SKIN",
+    "DEPTH",
+    "LOOK"
+   ],
+   "DEPTH_enabled_in_template": false
+  },
+  "Запис екрана 2026-10-30 о 10.15.32": {
+   "type": "screen recording",
+   "node_labels": []
+  }
+ }
+}
