@@ -1,7 +1,7 @@
 ---
 name: sound-design
 description: Atmospheric sound design for a cut timeline in DaVinci Resolve Studio 21+ - reads the transcript, timeline structure and the user's Lavender (SFX) and Sky (music) markers, proposes a cue sheet (time, sound, music mood per section) for approval, picks files from the user's indexed SFX and music library with license sources checked for YouTube Content ID, and places them on the SFX, Music and Ambience tracks with base levels and fades.
-when_to_use: User wants sound effects, background music, whooshes on titles and transitions, ambience or a music bed for a cut; stage C of edit-episode after voice-isolation; Lavender or Sky markers. Triggers - "саунд-дизайн", "додай музику", "підбери звуки", "звуки на переходи", "фонова музика", "атмосфера", "sound design", "music bed".
+when_to_use: User wants sound effects, background music, whooshes on titles and transitions, ambience or a music bed for a cut; stage C of edit-episode after voice-isolation; Lavender or Sky markers. Triggers - "саунд-дизайн", "додай музику", "підбери звуки", "звуки на переходи", "фонова музика", "атмосфера", "sound design", "music bed". Effects on clips already placed (live-sounding music, reverb, pan, vocals out of a song) → `audio-effects`.
 argument-hint: "[timeline] [subtle|normal|rich]"
 arguments: [timeline, density]
 effort: high

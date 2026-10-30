@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: live-song-in-bar
+expected_outcome: |
+  Backs up the timeline, then pastes EQ and effects from the LIVE track of the "Audio FX Templates" timeline onto the song on the Music track with CopyAttributes using only audioEqualizer and audioPlugins (no volume, no markers); pastes onto one clip first and asks the user to confirm it in the Inspector before any other clip; Voice and SFX untouched; offers crowd sounds via sound-design instead of placing them.
+context:
+  scaffold_script: place-files.sh

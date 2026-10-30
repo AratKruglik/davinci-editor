@@ -48,6 +48,7 @@ The order follows [`edit-episode`](edit-episode.md), which runs the whole workfl
 |---|---|
 | [`voice-isolation`](voice-isolation.md) | AI Voice Isolation on the Voice track or clips |
 | [`sound-design`](sound-design.md) | cue sheet → approval → SFX, music and ambience from your library |
+| [`audio-effects`](audio-effects.md) | live music, room reverb on SFX, pan sweeps, Music Remixer, Expander; EQ and effects pasted from reference clips |
 | [`audio-finish`](audio-finish.md) | dialogue leveling, Rose fixes, measured loudness to the target |
 
 ### Stage D: graphics, derivatives, delivery

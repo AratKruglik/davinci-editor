@@ -40,6 +40,8 @@ Checked against the MCP server's stubs for 21.1.1. When in doubt, re-check with 
 | Sync two clips by sound | `tl.AutoAlignClips(items, {"SyncUsing": resolve.AUTO_ALIGN_CLIPS_USING_WAVEFORM})` on a timeline; `mp.AutoSyncAudio(items, {"syncMode": resolve.AUDIO_SYNC_WAVEFORM})` merges separate audio into a video clip | own cross-correlation |
 | Transform / PiP | `item.SetProperties({"ZoomX", "ZoomY", "Pan", "Tilt", "CropLeft", "CropRight", "CropTop", "CropBottom", "CropSoftness", "Opacity"})`, re-read `GetProperties()` | |
 | Fades | `item.SetFades({"FadeIn": frames, "FadeOut": frames})`, `GetFades()` (video or audio fader) | volume keyframes: **no API** |
+| Clip EQ / audio effects | `src.CopyAttributes([targets], {"audioEqualizer": True, "audioPlugins": True})` (Paste Attributes); no setter or getter for EQ, plugins, Music Remixer or track Dynamics | `allAudioAttributes` (also pastes volume) |
+| Clip pan | `item.SetProperties({"AudioPanEnabled": True, "AudioPan": -100…100})`, re-read `GetProperties()` | pan keyframes: **no API** |
 | Loudness | `tl.GetNormalizeAudioModes()`, `tl.NormalizeAudioLevel(items, {"normalizationMode": m, "targetLoudness": -14.0, "setLevelMode": resolve.NORMALIZE_AUDIO_SET_LEVEL_INDEPENDENT})` | |
 | Dialogue leveler | item properties `AudioDialogueLevelerEnabled`, `AudioDialogueLevelerMode` (`resolve.DIALOGUE_LEVELER_MODE_*`), `…ReduceLoudDialogue`, `…LiftSoftDialogue`, `…BackgroundReduction`, `…OutputGain` 0–6; active timeline only | |
 | Titles / generators | `tl.InsertFusionTitleIntoTimeline(name)`, `tl.InsertTitleIntoTimeline(name)`, `tl.InsertFusionGeneratorIntoTimeline(name)` (at the playhead) | |
@@ -83,6 +85,7 @@ These values are not documented for 21.1.1; discover them on the running app, ne
 - whether `ApplyFairlightPresetToCurrentTimeline` replaces the timeline's tracks and busses (apply it on a duplicate timeline first);
 - the `normalizationMode` string for integrated loudness in `GetNormalizeAudioModes()` (expected to mention BS.1770 / LUFS);
 - whether timeline items built by `AppendToTimeline` keep the media pool clip's color group;
+- `CopyAttributes` (`audio-effects`): whether a source item on another timeline works, whether pasted plugins replace or stack on existing ones, whether it carries Music Remixer state; which `AudioPan` sign is left; whether `GetProperties()` on a music item shows any Remixer/stem key;
 - Fusion: the comp frame that matches a timeline item's first frame (`comp.GetAttrs()["COMPN_RenderStart"]`, `["COMPN_GlobalStart"]`), the input ids of `TextPlus`, `Background`, `Transform`, `Merge` (`tool.GetInputList()`), and whether `SetInput(id, value, time)` keys an input only after `tool.AddModifier(id, "BezierSpline")` (`"XYPath"` for point inputs such as `Center`; the builder's `mismatches` shows it);
 - the track `InsertFusionCompositionIntoTimeline()` uses and the length of the item it creates (the user preference *Standard generator duration*; there is no API to trim an item);
 - how `mp.ImportMedia([srt])` + `AppendToTimeline` places an SRT on a subtitle track, and whether SRT time 0 lands on the timeline start or on 00:00:00:00;
@@ -157,11 +160,19 @@ for t in spec["tools"]:
     tool = made[t["name"]]
     for k, v in t.get("inputs", {}).items():
         tool.SetInput(k, fix(v))
-    for k, frames in t.get("keys", {}).items():
-        point = isinstance(next(iter(frames.values())), dict)
-        tool.AddModifier(k, "XYPath" if point else "BezierSpline")   # point inputs animate on a path
-        for f, v in frames.items():
-            tool.SetInput(k, fix(v), float(f))
+    for k, m in t.get("modifiers", {}).items():
+        tool.AddModifier(k, m["id"])   # the input's current value (e.g. the text) moves into the modifier
+        mod = getattr(tool, k).GetConnectedOutput().GetTool()
+        made[f"{t['name']}.{k}"] = mod
+        for mk, v in m.get("inputs", {}).items():
+            mod.SetInput(mk, fix(v))
+    for target, keys in [(tool, t.get("keys", {}))] + \
+            [(made[f"{t['name']}.{k}"], m.get("keys", {})) for k, m in t.get("modifiers", {}).items()]:
+        for k, frames in keys.items():
+            point = isinstance(next(iter(frames.values())), dict)
+            target.AddModifier(k, "XYPath" if point else "BezierSpline")   # point inputs animate on a path
+            for f, v in frames.items():
+                target.SetInput(k, fix(v), float(f))
     for k, src in t.get("connect", {}).items():
         name, out = src.split(".")
         target = made.get(name) or comp.FindTool(name)
@@ -174,7 +185,9 @@ result, bad = {}, []
 for t in spec["tools"]:
     tool = made[t["name"]]
     result[t["name"]] = {k: tool.GetInput(k) for k in t.get("inputs", {})}
-    for k, frames in t.get("keys", {}).items():
+    keyed = [(tool, k, f) for k, f in t.get("keys", {}).items()] + \
+        [(made[f"{t['name']}.{mk}"], k, f) for mk, m in t.get("modifiers", {}).items() for k, f in m.get("keys", {}).items()]
+    for tool, k, frames in keyed:
         # first, middle, last key: ends are often the rest state, only the middle proves the keys landed
         order = sorted(frames, key=float)
         probe = [order[0], order[len(order) // 2], order[-1]]
@@ -189,7 +202,7 @@ for t in spec["tools"]:
 result["mismatches"] = bad
 ```
 
-Vector inputs (`Center`, `Pivot`) take `{1: x, 2: y}` tables in Python and are animated with an `XYPath` modifier; numbers use `BezierSpline`. A non-empty `mismatches` means keys didn't land: stop and report, don't continue to the next item. `MediaIn1`/`MediaOut1` already exist in a clip's comp; connect the last tool to `MediaOut1.Input`. Use `comp.Lock()`/`Unlock()` so Fusion doesn't open dialogs mid-build.
+Vector inputs (`Center`, `Pivot`) take `{1: x, 2: y}` tables in Python and are animated with an `XYPath` modifier; numbers use `BezierSpline`. A non-empty `mismatches` means keys didn't land: stop and report, don't continue to the next item. `MediaIn1`/`MediaOut1` already exist in a clip's comp; connect the last tool to `MediaOut1.Input`. Use `comp.Lock()`/`Unlock()` so Fusion doesn't open dialogs mid-build. Verified in 21.1.1: a spec's `modifiers` (`TextScramble`, `StyledTextFollower` on `StyledText`) take the text along into their own `InputText` / `Text`, and keys on modifier inputs land like tool keys; Text+ and Follower `SelectTransform` is 0 characters / 1 words / 2 lines, Follower `Order` 1 = left to right. Not yet confirmed on a render: that a `RectangleMask`'s `Width` / `Height` / `SoftEdge` are frame-width units (`fade-reveal` assumes it; the first stills show it).
 
 ## Upgrading a stage-1 template
 

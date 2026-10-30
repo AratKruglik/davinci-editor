@@ -1,7 +1,7 @@
 """Timing, easing and Fusion build specs for on-screen graphics (lower thirds, callouts, kinetic phrases, counters).
 
 python3 motion.py build --kind lower-third --text "Олексій" [--sub "автор каналу"] --fps 25 --width 3840 --height 2160 \
-    [--at X Y] [--count FROM TO] [--hold-s S] [--comp-start 0] [--font Montserrat --style Bold] \
+    [--at X Y] [--count FROM TO] [--hold-s S] [--comp-start 0] [--anim slide] [--font Montserrat --style Bold] \
     [--text-color #FFFFFF --accent #FFD400 --plate #000000 --plate-opacity 0.7] --out spec.json
 python3 motion.py selftest
 
@@ -19,6 +19,12 @@ MIN_HOLD_S = {"lower-third": 3.0, "callout": 2.0, "kinetic": 1.2, "counter": 1.0
 CPS = 14          # comfortable reading speed for Ukrainian on screen, characters per second
 MAX_HOLD_S = 7.0
 SAFE = 0.06       # margin from the frame edge inside the 90 % action-safe area
+ANIMS = ("slide", "swipe-down", "pop", "flicker", "fade-reveal", "spin", "scramble", "word-grow")
+# intro length in seconds; word-grow adds the follower's per-character delay on top
+ANIM_IN_S = {"slide": 0.4, "swipe-down": 0.16, "pop": 0.16, "flicker": 0.6, "fade-reveal": 1.0, "spin": 1.0,
+             "scramble": 1.0, "word-grow": 0.4}
+FOLLOW_DELAY = 2  # frames between characters in word-grow
+MOTION_BLUR = {"MotionBlur": 1, "Quality": 10, "ShutterAngle": 250}
 
 
 def hex_rgb(value):
@@ -55,9 +61,11 @@ def merge_keys(*parts):
     return {str(k): v for k, v in sorted(out.items())}
 
 
-def timing(kind, text, fps, hold_s=None, count_s=0.0):
-    intro, outro = round(0.4 * fps), round(0.3 * fps)
+def timing(kind, text, fps, hold_s=None, count_s=0.0, anim="slide"):
     chars = len(text.replace("\n", " "))
+    intro, outro = round(ANIM_IN_S[anim] * fps), round(0.3 * fps)
+    if anim == "word-grow":
+        intro += FOLLOW_DELAY * max(0, chars - 1)
     hold = hold_s if hold_s else max(MIN_HOLD_S[kind] + count_s, min(MAX_HOLD_S, 0.5 + chars / CPS))
     hold_f = round(hold * fps)
     return {"in": intro, "hold": hold_f, "out": outro, "total": intro + hold_f + outro}
@@ -84,25 +92,72 @@ def plate(tool, color, opacity, pad=0.25):
     return tool
 
 
+def animate(anim, txt, a0, a1, fps, offset, size_in, aspect):
+    """Intro keys of one element: (Center, Size, Blend, extra Transform inputs, extra tools).
+    Text-level effects (spin, scramble, word-grow, fade-reveal) are written into the Text+ spec `txt` itself."""
+    home = (0.5, 0.5)
+    appear = ramp(a0, a0 + max(1, round(0.12 * fps)), 0.0, 1.0, "out")
+    center, size = ramp(a0, a1, home, home, "out"), ramp(a0, a1, 1.0, 1.0, "out")
+    if anim == "slide":
+        return (ramp(a0, a1, (0.5 + offset[0], 0.5 + offset[1]), home, "out"), ramp(a0, a1, size_in, 1.0, "out"),
+                ramp(a0, a1, 0.0, 1.0, "out"), {}, [])
+    if anim == "swipe-down":
+        return ramp(a0, a1, (0.5, 0.55), home, "out"), size, appear, MOTION_BLUR, []
+    if anim == "pop":
+        return center, ramp(a0, a1, 1.25, 1.0, "inout"), appear, MOTION_BLUR, []
+    if anim == "flicker":
+        step = max(1, round(fps / 12))
+        blink = {f: 0.0 if (f - a0) // step % 2 else 1.0 for f in range(a0, a1)}
+        blink[a1] = 1.0
+        return center, size, blink, {}, []
+    inputs, extra = txt["inputs"], []
+    if anim == "spin":
+        inputs.update({"SelectTransform": 2, **MOTION_BLUR})   # 0 characters, 1 words, 2 lines
+        txt["keys"] = {"LineAngleY": merge_keys(ramp(a0, a1, 0.0, 360.0, "out"))}
+    elif anim == "scramble":
+        # substitute only the phrase's own letters: same case and alphabet, glyphs the brand font surely has
+        text = inputs["StyledText"]
+        letters = "".join(sorted({c for c in text if c.isalpha()} or set(text) - {" ", "\n"}))
+        txt["modifiers"] = {"StyledText": {"id": "TextScramble", "inputs": {"SubstituteChars": letters},
+                                           "keys": {"Randomness": merge_keys(ramp(a0, a1, 1.2, 0.0, "inout"))}}}
+    elif anim == "word-grow":
+        grow = merge_keys(ramp(a0, a0 + round(ANIM_IN_S[anim] * fps), 0.0, 1.0, "out"))
+        txt["modifiers"] = {"StyledText": {"id": "StyledTextFollower",
+                                           "inputs": {"SelectTransform": 1, "Order": 1, "Delay": FOLLOW_DELAY},  # Order 1 = left to right
+                                           "keys": {"WordSizeX": grow, "WordSizeY": grow}}}
+    else:
+        tsize, (cx, cy) = inputs["Size"], (inputs["Center"][1], inputs["Center"][2])
+        h = 2 * tsize * (inputs["StyledText"].count("\n") + 1)
+        soft = tsize * 0.5
+        drop = (h + soft) * aspect   # mask sizes are in frame-width units, centers in frame-height units
+        name = f"REVEAL_{txt['name']}"
+        extra.append({"name": name, "id": "RectangleMask",
+                      "inputs": {"Width": est_width(inputs["StyledText"], tsize) * 1.2 + 4 * soft, "Height": h, "SoftEdge": soft},
+                      "keys": {"Center": merge_keys(ramp(a0, a1, (cx, cy - drop), (cx, cy), "inout"))}})
+        txt["connect"] = {"EffectMask": f"{name}.Mask"}
+        appear = {a0: 1.0}
+    return center, size, appear, {}, extra
+
+
 def build(a):
     fps, kind = a.fps, a.kind
     text_c, accent, plate_c = hex_rgb(a.text_color), hex_rgb(a.accent), hex_rgb(a.plate)
     count_s = 1.0 if kind == "counter" else 0.0
-    t = timing(kind, a.text if kind != "counter" else "", fps, a.hold_s, count_s)
+    t = timing(kind, a.text if kind != "counter" else "", fps, a.hold_s, count_s, a.anim)
     s0 = a.comp_start
     f_in, f_hold, f_out, f_end = s0, s0 + t["in"], s0 + t["in"] + t["hold"], s0 + t["total"]
     tools = [{"name": "CLEAR", "id": "Background", "inputs": {"Width": a.width, "Height": a.height, "TopLeftAlpha": 0.0}}]
-    moves = []   # (name, source tool, home, slide offset, delay frames, start size)
+    moves = []   # (name, source tool, home, slide offset, delay frames, start size, animation)
 
     if kind == "lower-third":
         size = 0.055
         home = (min(0.5, SAFE + 0.02 + est_width(a.text, size) / 2), 0.2)
         tools.append(plate(text_tool("TXT", a.text, a.font, a.style, size, text_c, home, 1), plate_c, a.plate_opacity))
-        moves.append(("MOVE", "TXT", home, (-0.03, 0), 0, 1.0))
+        moves.append(("MOVE", "TXT", home, (-0.03, 0), 0, 1.0, a.anim))
         if a.sub:
             sub_home = (min(0.5, SAFE + 0.02 + est_width(a.sub, 0.034) / 2), home[1] - 0.06)
             tools.append(text_tool("SUB", a.sub, a.font, a.sub_style, 0.034, accent, sub_home, 1))
-            moves.append(("MOVE2", "SUB", sub_home, (-0.03, 0), round(0.12 * fps), 1.0))
+            moves.append(("MOVE2", "SUB", sub_home, (-0.03, 0), round(0.12 * fps), 1.0, a.anim))
     elif kind == "callout":
         fx, fy = a.at[0], 1 - a.at[1]
         size = 0.04
@@ -113,12 +168,12 @@ def build(a):
         spot = (round(lx, 4), round(ly, 4))
         tools.append(plate(text_tool("TXT", a.text, a.font, a.style, size, text_c, spot, 1), plate_c, a.plate_opacity))
         tools.append(text_tool("DOT", "●", a.font, "Regular", 0.03, accent, (fx, fy), 1))
-        moves.append(("MOVE_DOT", "DOT", (fx, fy), (0, 0), 0, 0.6))
-        moves.append(("MOVE", "TXT", spot, (0, 0.015 if ly < fy else -0.015), round(0.08 * fps), 0.9))
+        moves.append(("MOVE_DOT", "DOT", (fx, fy), (0, 0), 0, 0.6, "slide"))
+        moves.append(("MOVE", "TXT", spot, (0, 0.015 if ly < fy else -0.015), round(0.08 * fps), 0.9, a.anim))
     elif kind == "kinetic":
         spot = (0.5, 0.3)
         tools.append(text_tool("TXT", a.text, a.font, a.style, 0.085, text_c, spot, 1))
-        moves.append(("MOVE", "TXT", spot, (0, -0.02), 0, 0.92))
+        moves.append(("MOVE", "TXT", spot, (0, -0.02), 0, 0.92, a.anim))
     else:
         lo, hi = a.count
         spot = (0.5, 0.3)
@@ -129,23 +184,26 @@ def build(a):
             f"Text(string.format('%d', math.floor({lo} + ({hi} - {lo}) * "
             f"(1 - (1 - math.min(math.max((time - {f_hold}) / {dur}, 0), 1)) ^ 3) + 0.5)))")}
         tools.append(txt)
-        moves.append(("MOVE", "TXT", spot, (0, 0), 0, 0.85))
+        moves.append(("MOVE", "TXT", spot, (0, 0), 0, 0.85, a.anim))
 
     layer = "CLEAR"
-    for mv, src, home, offset, d, size_in in moves:
+    by_name = {x["name"]: x for x in tools}
+    for mv, src, home, offset, d, size_in, anim in moves:
+        a0, a1 = f_in + d, f_hold + d
+        center, size, blend, xf, extra = animate(anim, by_name[src], a0, a1, fps, offset, size_in, a.width / a.height)
+        blend.setdefault(a0 - 1, 0.0)   # a delayed element stays hidden until its own intro
+        tools.extend(extra)
         # Pivot on the element itself, so scaling doesn't drag it across the frame
         tools.append({"name": mv, "id": "Transform", "connect": {"Input": f"{src}.Output"},
-                      "inputs": {"Pivot": {1: home[0], 2: home[1]}}, "keys": {
-            "Center": merge_keys(ramp(f_in + d, f_hold + d, (0.5 + offset[0], 0.5 + offset[1]), (0.5, 0.5), "out"),
-                                 ramp(f_out, f_end, (0.5, 0.5), (0.5, 0.5), "in")),
-            "Size": merge_keys(ramp(f_in + d, f_hold + d, size_in, 1.0, "out"), ramp(f_out, f_end, 1.0, 1.0, "in"))}})
+                      "inputs": {"Pivot": {1: home[0], 2: home[1]}, **xf}, "keys": {
+            "Center": merge_keys(center, ramp(f_out, f_end, (0.5, 0.5), (0.5, 0.5), "in")),
+            "Size": merge_keys(size, ramp(f_out, f_end, 1.0, 1.0, "in"))}})
         merge = f"MIX_{mv}"
         tools.append({"name": merge, "id": "Merge", "connect": {"Background": f"{layer}.Output", "Foreground": f"{mv}.Output"},
-                      "keys": {"Blend": merge_keys(ramp(f_in + d, f_hold + d, 0.0, 1.0, "out"),
-                                                   ramp(f_out, f_end, 1.0, 0.0, "in"))}})
+                      "keys": {"Blend": merge_keys(blend, ramp(f_out, f_end, 1.0, 0.0, "in"))}})
         layer = merge
     tools.append({"name": "MediaOut1", "id": "MediaOut", "connect": {"Input": f"{layer}.Output"}})
-    return {"kind": kind, "fps": fps, "timing_frames": t, "comp_start": s0, "visible": [f_in, f_end], "tools": tools}
+    return {"kind": kind, "anim": a.anim, "fps": fps, "timing_frames": t, "comp_start": s0, "visible": [f_in, f_end], "tools": tools}
 
 
 def parser():
@@ -162,6 +220,7 @@ def parser():
     b.add_argument("--count", type=int, nargs=2, default=(0, 100))
     b.add_argument("--hold-s", type=float)
     b.add_argument("--comp-start", type=int, default=0)
+    b.add_argument("--anim", choices=ANIMS, default="slide")
     b.add_argument("--font", default="Montserrat")
     b.add_argument("--style", default="Bold")
     b.add_argument("--sub-style", default="Regular")
@@ -219,6 +278,44 @@ def selftest():
     n = build(parser().parse_args(["build", "--kind", "counter", "--count", "0", "1200", "--fps", "25",
                                    "--width", "1920", "--height", "1080", "--out", "-"]))
     assert "1200" in n["tools"][1]["expressions"]["StyledText"] and n["timing_frames"]["hold"] == 50
+
+    def kinetic(anim, text="Не вимикайте роутер"):
+        s = build(parser().parse_args(["build", "--kind", "kinetic", "--text", text, "--anim", anim, "--fps", "25",
+                                       "--width", "1920", "--height", "1080", "--comp-start", "100", "--out", "-"]))
+        tools = {x["name"]: x for x in s["tools"]}
+        assert tools["MediaOut1"]["connect"] == {"Input": "MIX_MOVE.Output"}, anim
+        return s, tools, 100 + s["timing_frames"]["in"]
+
+    s, tl, hold = kinetic("swipe-down")
+    assert s["timing_frames"]["in"] == 4 and tl["MOVE"]["inputs"]["MotionBlur"] == 1
+    assert tl["MOVE"]["keys"]["Center"]["100"] == {1: 0.5, 2: 0.55} and tl["MOVE"]["keys"]["Center"][str(hold)] == {1: 0.5, 2: 0.5}
+    s, tl, hold = kinetic("pop")
+    assert tl["MOVE"]["keys"]["Size"]["100"] == 1.25 and tl["MOVE"]["keys"]["Size"][str(hold)] == 1.0
+    s, tl, hold = kinetic("flicker")
+    blend = [tl["MIX_MOVE"]["keys"]["Blend"][str(f)] for f in range(99, hold + 1)]
+    assert blend[0] == 0.0 and blend[-1] == 1.0 and blend[1:].count(0.0) >= 4, blend
+    s, tl, hold = kinetic("spin")
+    assert tl["TXT"]["inputs"]["SelectTransform"] == 2 and tl["TXT"]["keys"]["LineAngleY"][str(hold)] == 360.0
+    s, tl, hold = kinetic("scramble")
+    mod = tl["TXT"]["modifiers"]["StyledText"]
+    assert mod["id"] == "TextScramble" and set(mod["inputs"]["SubstituteChars"]) <= set("Не вимикайте роутер")
+    assert mod["keys"]["Randomness"]["100"] == 1.2 and mod["keys"]["Randomness"][str(hold)] == 0.0
+    s, tl, hold = kinetic("scramble", "+40 %")
+    assert set(tl["TXT"]["modifiers"]["StyledText"]["inputs"]["SubstituteChars"]) == set("+40%"), "no letters: own characters"
+    s, tl, hold = kinetic("word-grow", "Два слова")
+    mod = tl["TXT"]["modifiers"]["StyledText"]
+    assert s["timing_frames"]["in"] == 10 + FOLLOW_DELAY * 8 and mod["inputs"]["Order"] == 1
+    assert mod["keys"]["WordSizeX"]["100"] == 0.0 and mod["keys"]["WordSizeY"]["110"] == 1.0
+    s, tl, hold = kinetic("fade-reveal")
+    mask = tl["REVEAL_TXT"]
+    assert tl["TXT"]["connect"] == {"EffectMask": "REVEAL_TXT.Mask"}
+    start, end = mask["keys"]["Center"]["100"], mask["keys"]["Center"][str(hold)]
+    gap = (start[2] + mask["inputs"]["Height"] * 1920 / 1080 / 2) - (0.3 - 0.085 * 1920 / 1080 / 2)
+    assert end == {1: 0.5, 2: 0.3} and gap < 0, "mask starts fully below the text"
+    lt = build(parser().parse_args(["build", "--kind", "lower-third", "--text", "Олексій", "--sub", "автор", "--anim", "flicker",
+                                    "--fps", "25", "--width", "1920", "--height", "1080", "--comp-start", "100", "--out", "-"]))
+    sub_blend = next(x for x in lt["tools"] if x["name"] == "MIX_MOVE2")["keys"]["Blend"]
+    assert sub_blend["102"] == 0.0 and sub_blend["103"] == 1.0, "delayed second line hidden until its flicker"
     print("motion selftest ok")
 
 
@@ -228,6 +325,8 @@ def main():
     a = parser().parse_args()
     if a.kind in ("lower-third", "callout", "kinetic") and not a.text.strip():
         raise SystemExit(f"--text is required for {a.kind}")
+    if a.kind == "counter" and a.anim in ("scramble", "word-grow"):
+        raise SystemExit(f"--anim {a.anim} replaces the counter's own text expression; pick another animation")
     spec = build(a)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     with open(a.out, "w", encoding="utf-8") as f:

@@ -73,7 +73,7 @@ Missing → one-time capture, because the API cannot create nodes:
 1. Ask the user to build the serial tree on one clip of that log version on the Color page and label the nodes (right-click → Node Label). Wait for "готово". Give them this checklist:
    - `CHART` empty; `CST` set as above; `PRIMARY` empty;
    - `SKIN`: HSL qualifier on skin hue (Hue only, wide soft edges, Clean Black/White ~5), no correction;
-   - `DEPTH`: Resolve FX **AI CineFocus** with a moderate background blur (or Depth Map → key output into a node `DEPTH BLUR` with Lens Blur), then **disable the node(s)** (Ctrl/Cmd+D) — `depth-background-blur` turns them on per clip;
+   - `DEPTH`: Resolve FX **AI CineFocus** with a moderate background blur (or Depth Map → key output into a node `DEPTH BLUR` with Lens Blur), set up with the step list in `depth-background-blur` "DEPTH node setup", then **disable the node(s)** (Ctrl/Cmd+D) — `depth-background-blur` turns them on per clip;
    - `LOOK` empty.
 2. Make that clip current, then with `run_script_unsafe`:
    ```python

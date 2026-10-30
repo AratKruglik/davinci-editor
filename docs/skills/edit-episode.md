@@ -67,7 +67,7 @@ All footage is graded before cutting, in remote versions, so the grade follows e
 ### Stage C: sound
 
 1. `voice-isolation` on the cut timeline's Voice track (and Rose markers about noise). Then A-roll and Voice are locked (`track-layout lock sound`) for the rest of the stage.
-2. `sound-design` with your Lavender / Sky markers (its own cue-sheet approval and license check).
+2. `sound-design` with your Lavender / Sky markers (its own cue-sheet approval and license check). If you ask for live-sounding music, room on SFX, pan sweeps or vocals out of a song, [`audio-effects`](audio-effects.md) runs after it.
 3. `audio-finish`: Rose markers, dialogue leveling, measured loudness to the target. The tracks are unlocked after it (`track-layout unlock sound`).
 
 ### Stage D: graphics, derivatives and delivery

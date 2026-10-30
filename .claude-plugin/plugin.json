@@ -2,7 +2,7 @@
   "name": "davinci-editor",
   "displayName": "DaVinci Editor",
   "version": "0.5.1",
-  "description": "Video editing in DaVinci Resolve Studio 21+ via its MCP server: project setup, Apple Log to Rec.709, chart match, skin grade, depth blur, Ukrainian transcription and subtitles, text-based cut, camera + screen PiP sync, J/L-cuts, MotionVFX, sound design, voice isolation, YouTube loudness, Fusion graphics, tutorial zooms, Shorts, chapters, thumbnails, QC and H.265 delivery, marker-driven edits.",
+  "description": "Video editing in DaVinci Resolve Studio 21+ via its MCP server: project setup, Apple Log to Rec.709, chart match, skin grade, depth blur, Ukrainian transcription and subtitles, text-based cut, camera + screen PiP sync, J/L-cuts, MotionVFX, sound design, audio effects, voice isolation, YouTube loudness, Fusion graphics, tutorial zooms, Shorts, chapters, thumbnails, QC and H.265 delivery, marker-driven edits.",
   "author": {
     "name": "Oleksii Kruhlyk"
   },
@@ -306,6 +306,12 @@
       "default": 0.7,
       "min": 0,
       "max": 1
+    },
+    "brand_text_anim": {
+      "type": "string",
+      "title": "Title animation",
+      "description": "Intro animation of titles: slide, swipe-down, pop, flicker, fade-reveal, spin, scramble or word-grow.",
+      "default": "slide"
     },
     "zoom_default_scale": {
       "type": "number",

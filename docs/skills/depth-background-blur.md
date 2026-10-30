@@ -10,7 +10,7 @@ Why it works this way: the API can't add Resolve FX or change their parameters. 
 
 ## When it triggers
 
-Automatically when you ask for background blur, bokeh, a "cinematic" or "portrait mode" look, to separate the speaker from a busy background, or to compare CineFocus with Depth Map. Ukrainian trigger phrases: «розмий фон», «боке», «розмиття заднього плану», «як портретний режим». English ones: "depth blur", "CineFocus". In `edit-episode` it is stage A, step 5, after `natural-skin-grade`.
+Automatically when you ask for background blur, bokeh, a "cinematic" or "portrait mode" look, to separate the speaker from a busy background, or to compare CineFocus with Depth Map. It also answers rack focus requests, with manual steps (see "Setting up the DEPTH node"). Ukrainian trigger phrases: «розмий фон», «боке», «розмиття заднього плану», «як портретний режим», «перевід фокусу». English ones: "depth blur", "CineFocus", "rack focus". In `edit-episode` it is stage A, step 5, after `natural-skin-grade`.
 
 Explicit call:
 
@@ -25,7 +25,7 @@ Explicit call:
 
 ## Before you start
 
-- The clips have the base template on their remote `claude` grade version (`log-to-rec709`), with the node `DEPTH` (and `DEPTH BLUR` for the Depth Map variant), set up and **disabled**. If the label is missing, the skill offers the template upgrade from `resolve-core`: you configure the `DEPTH` node once on the template clip (checklist in `log-to-rec709`), and Claude shows the clip list and asks before upgrading.
+- The clips have the base template on their remote `claude` grade version (`log-to-rec709`), with the node `DEPTH` (and `DEPTH BLUR` for the Depth Map variant), set up and **disabled**. If the label is missing, the skill offers the template upgrade from `resolve-core`: you configure the `DEPTH` node once on the template clip (see "Setting up the DEPTH node" below), and Claude shows the clip list and asks before upgrading.
 - The scene's clips are in a Color Group, or you confirm a list.
 - For `light` or `strong` only: `depth-light.drx` / `depth-strong.drx` in `templates_dir`. If the file is missing, Claude asks you to capture it once: a clip with **only** the depth node(s) at that strength (no CST, no other nodes), grabbed and exported as a still DRX, then renamed to the exact file name. If `templates_dir` is empty, Claude asks for a folder once.
 
@@ -50,6 +50,30 @@ CineFocus or Depth Map:
 - **Depth Map + Lens Blur** is lighter on the GPU and friendlier to older projects.
 
 If you haven't chosen, Claude offers the A/B.
+
+## Setting up the DEPTH node
+
+You do this once per template (the API can't set effect parameters). Claude gives you the same list when a template is missing.
+
+**AI CineFocus**, one node `DEPTH`:
+
+1. Effects → `CineFocus` onto `DEPTH`.
+2. **Focus** button → click the speaker's eyes. In the preview, in-focus areas stay clear and out-of-focus areas turn white: the face and hair must stay clear.
+3. **Focus Distance** and **Depth of Field** until only the background is white. The blur amount is the strength.
+4. **Quality and Speed** → **Skip foreground blur** on, so hands, mic and desk in front of you stay sharp.
+5. **Result → Aperture**: bokeh shape, modest for a talking head.
+6. Make sure the viewer shows the normal picture, not the white highlight, before you capture.
+
+**Depth Map + Lens Blur**, `DEPTH` before `DEPTH BLUR`:
+
+1. `Lens Blur` onto `DEPTH BLUR` (its blur is the strength), `Depth Map` onto `DEPTH`.
+2. Blue key output of `DEPTH` → blue key input of `DEPTH BLUR`.
+3. Depth Map **Quality → Faster**; turn on **Invert** (in focus black, out of focus white); set the map levels so you are completely black and the background completely white.
+4. Turn the depth map preview **off**, or the template outputs the grey map.
+
+Then disable the node(s) for the base template; leave them on in `depth-light.drx` / `depth-strong.drx`.
+
+**Rack focus** (focus pull between two subjects) needs keyframes, which the API can't set, so it stays manual. Claude gives you the steps: Depth Map → Lens Blur on a separate node pair, **Isolate specific depth** on, keyframe **Target Depth** at the start and change it at the end, preview off.
 
 ## Settings
 
@@ -78,7 +102,7 @@ Any setting can be overridden in the prompt: "strong blur for this scene", "turn
    - **clip:** enables the `DEPTH*` nodes and turns on node caching (depth estimation is slow), in batches of up to 50 clips;
    - **group:** first makes sure the clip-level `DEPTH*` nodes are disabled, so the blur isn't doubled, then applies the template to the group's post-clip graph. **Asks first** if that graph already has nodes, because they would be replaced;
    - **off:** disables `DEPTH*` on the clips from the record. For the group route it **asks** before replacing the post-clip graph with an empty one.
-6. Verifies on a still from the real version (background visibly softer, face sharp, no halo). Then it **asks you to play 5–10 s.** Flicker in the blur means the depth estimate jumps, and Claude suggests CineFocus or the `light` strength.
+6. Verifies on a still from the real version (background visibly softer, face sharp, no halo). A grey map, a white overlay, no blur, a soft face or blurred hands each point to a specific template setting, and Claude names it. Then it **asks you to play 5–10 s.** Flicker in the blur means the depth estimate jumps, and Claude suggests CineFocus or the `light` strength.
 7. Reports the route, strength, clips changed and skipped (and why), cache state, and where the blur sits in the grade.
 
 Any script that deletes or resets something becomes a permission prompt (the `guard.py` hook), so read what you approve.
@@ -88,6 +112,7 @@ Any script that deletes or resets something becomes a permission prompt (the `gu
 - Re-apply the base template on a graded clip just to get the depth node. That happens only as a template upgrade, with the chart LUT restored.
 - Blur clips without a foreground subject.
 - Use Magic Mask: it needs manual strokes and is out of scope for automation.
+- Fake a rack focus with node toggles: it needs keyframes, so it stays manual.
 - Apply a DRX to a clip's own node graph to change the strength. Other strengths go to the Color Group post-clip graph.
 
 ## Place in the workflow
@@ -121,6 +146,10 @@ Grade before the cut: the clip route lives in the remote `claude` version and fo
 
 > Background blur for the desk scene (Color Group "desk"), medium strength from the template. Skip the screen recordings and the keyboard close-ups in that group. I haven't decided between CineFocus and Depth Map: do the A/B on one talking-head clip and show me both stills next to the no-blur one, with notes on hair and glasses edges. Turn on caching so playback stays real time. At the end list the clips changed and skipped with the reason, and the cache state.
 
+**Rack focus (manual steps, no changes to the project):**
+
+> Make a rack focus in the desk scene from me to the plant behind me.
+
 **Weak vs strong:**
 
 | Weak | Strong |
@@ -132,6 +161,15 @@ The strong prompt names the scene and the strength, which picks the route, and s
 ## What to check afterwards
 
 - Look at 2–3 clips per scene in the viewer: background softer, face sharp, no halo around hair, glasses or hands.
+- If a clip looks wrong, the cause is in the template, so fix it there (see "Setting up the DEPTH node") and capture the template again:
+
+  | You see | Cause |
+  |---|---|
+  | a grey depth map instead of the picture | the depth map preview was left on in `DEPTH` |
+  | a white overlay on the background | the CineFocus focus highlight was left on |
+  | no blur at all (Depth Map variant) | the key output of `DEPTH` isn't connected to `DEPTH BLUR`, or Invert is off |
+  | a soft face or hair | the focus point isn't on the eyes, or the map levels leave you grey |
+  | blurred hands, mic or desk | Skip foreground blur is off |
 - Play 5–10 s of each scene: flicker in the blur means the depth estimate jumps. Try CineFocus or `light`.
 - Group route: check that a vignette or grain in `LOOK` hasn't gone soft.
 - Playback stays real time. If not, check the node cache.

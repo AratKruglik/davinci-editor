@@ -53,6 +53,7 @@ The defaults suit Ukrainian-language YouTube tutorials; change only what differs
 | `brand_font` / `brand_font_style` | `Montserrat` / `Bold` | font of titles and Shorts captions (needs Cyrillic) |
 | `brand_text_color` / `brand_accent_color` | `#FFFFFF` / `#FFD400` | title text and accent (second line, counters, spoken word in captions) |
 | `brand_plate_color` / `brand_plate_opacity` | `#000000` / `0.7` | box behind lower thirds and callouts |
+| `brand_text_anim` | `slide` | title intro: `slide`, `swipe-down`, `pop`, `flicker`, `fade-reveal`, `spin`, `scramble`, `word-grow` |
 | `zoom_default_scale` / `zoom_max_scale` | `1.6` / `2.5` | screen zoom strength and its limit |
 | `zoom_ease_s` | `0.5` | zoom move duration, seconds |
 | `punch_in_scale` | `1.12` | punch-in on alternate A-roll segments (hides jump cuts) |

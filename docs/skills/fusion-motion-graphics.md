@@ -10,7 +10,7 @@ Principle: graphics serve the viewer's attention, not decoration. A tutorial nee
 
 ## When it triggers
 
-Automatically when you ask for titles, name plates, lower thirds, callouts, captions for key ideas, animated numbers or chapter cards on a cut timeline, or when you have Cyan markers. Ukrainian trigger phrases: «додай титри», «плашка з іменем», «лоуер терд», «виноска», «покажи цифру анімовано», «кінетична типографіка», «заставка розділу». In `edit-episode` it is stage D, step 1.
+Automatically when you ask for titles, name plates, lower thirds, callouts, captions for key ideas, animated numbers or chapter cards on a cut timeline, or when you have Cyan markers. Ukrainian trigger phrases: «додай титри», «плашка з іменем», «лоуер терд», «виноска», «покажи цифру анімовано», «кінетична типографіка», «заставка розділу», «анімація тексту», «анімований текст». In `edit-episode` it is stage D, step 1.
 
 Explicit call:
 
@@ -71,11 +71,28 @@ Besides your markers and request, the skill may **suggest** graphics from the tr
 | Rule | Value |
 |---|---|
 | Easing | ease-out on the way in, ease-in on the way out |
-| In / out | about 0.4 s / 0.3 s; slide about 3 % of the frame |
+| In / out | about 0.4 s / 0.3 s for `slide` (other animations below); slide about 3 % of the frame |
 | Hold | reading time: 0.5 s + characters / 14 per second; at least 3 s for a name plate, at most 7 s |
 | Second line | enters 0.12 s after the first |
 | On screen | never more than one graphic at a time, except a callout on a screen recording |
 | Consistency | same kind = same position, size and motion all video long |
+
+## Animations
+
+The intro comes from `brand_text_anim`; a marker note can override it for one graphic (`kinetic scramble`, or just `pop` to keep the usual kind).
+
+| Animation | Looks like |
+|---|---|
+| `slide` | slides about 3 %, scales up and fades in (default) |
+| `swipe-down` | drops into place in 4 frames with motion blur |
+| `pop` | shrinks from 125 % into place with an S-curve and motion blur |
+| `flicker` | blinks on and off, then stays |
+| `fade-reveal` | a soft-edged mask rises from below and reveals the text |
+| `spin` | each line spins a full turn around Y |
+| `scramble` | random letters settle into the phrase |
+| `word-grow` | words grow in one after another, left to right |
+
+`scramble` and `word-grow` don't apply to counters.
 
 ## Settings
 
@@ -87,6 +104,7 @@ Besides your markers and request, the skill may **suggest** graphics from the tr
 | `brand_accent_color` | `#FFD400` | accent: second lines, callout dots, counters |
 | `brand_plate_color` | `#000000` | box behind lower thirds and callouts |
 | `brand_plate_opacity` | `0.7` | opacity of that box |
+| `brand_text_anim` | `slide` | intro animation of every title (see Animations) |
 | `work_dir` | `resolve-work` | where the MotionVFX catalog, specs and stills live |
 
 Any setting can be overridden in the prompt: "accent #00C2FF for this episode", "second lines bold too".

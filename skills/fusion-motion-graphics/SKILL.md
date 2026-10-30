@@ -1,7 +1,7 @@
 ---
 name: fusion-motion-graphics
 description: Builds on-screen graphics in DaVinci Resolve Studio 21+ with Fusion - lower thirds (name plates), callouts pointing at a spot on screen, kinetic key phrases, number counters and chapter cards - from the user's Cyan markers (name = text) and Blue chapter markers, in the brand style from the plugin config (font, text, accent and plate colors), with eased timing and reading-time holds computed by a script, placed on the Titles track and checked on an exported still. Uses an installed MotionVFX title instead when the marker names one.
-when_to_use: User wants titles, name plates, lower thirds, callouts, captions for key ideas, animated numbers or chapter cards on a cut timeline, or has Cyan markers; the graphics step of edit-episode stage D. Triggers - "додай титри", "плашка з іменем", "лоуер терд", "виноска", "покажи цифру анімовано", "кінетична типографіка", "заставка розділу", "motion graphics", "lower third".
+when_to_use: User wants titles, name plates, lower thirds, callouts, captions for key ideas, animated numbers or chapter cards on a cut timeline, or has Cyan markers; the graphics step of edit-episode stage D. Triggers - "додай титри", "плашка з іменем", "лоуер терд", "виноска", "покажи цифру анімовано", "кінетична типографіка", "заставка розділу", "анімація тексту", "анімований текст", "motion graphics", "lower third", "text animation", "text scramble", "pop-in".
 argument-hint: "[timeline] [markers|<kind> <text>]"
 arguments: [timeline, request]
 effort: high
@@ -25,7 +25,7 @@ hooks:
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Request: `$request` (default: the Cyan and Blue markers).
 
-Brand (plugin config): font `${user_config.brand_font}` `${user_config.brand_font_style}`, text `${user_config.brand_text_color}`, accent `${user_config.brand_accent_color}`, plate `${user_config.brand_plate_color}` at `${user_config.brand_plate_opacity}`.
+Brand (plugin config): font `${user_config.brand_font}` `${user_config.brand_font_style}`, text `${user_config.brand_text_color}`, accent `${user_config.brand_accent_color}`, plate `${user_config.brand_plate_color}` at `${user_config.brand_plate_opacity}`, animation `${user_config.brand_text_anim}`.
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/motion.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/motion.py selftest`).
 
@@ -34,7 +34,7 @@ Principle: graphics serve the viewer's attention, not decoration. A tutorial nee
 ## 1. What to build
 
 Sources, in this order:
-- **Cyan** markers (timeline and timeline items, `marker-edit` rules; skip `claude:done:*`): name = the text, exactly as the user wrote it; note = kind or a MotionVFX template name; marker duration = how long it stays (point marker: reading time).
+- **Cyan** markers (timeline and timeline items, `marker-edit` rules; skip `claude:done:*`): name = the text, exactly as the user wrote it; note = kind or a MotionVFX template name, optionally followed by an animation from §4 (`kinetic scramble`). Match animation names first: a note that is only an animation (`pop`) sets the animation and leaves the kind to the default rule below, never a MotionVFX search; marker duration = how long it stays (point marker: reading time).
 - **Blue** markers = chapter starts → a chapter card (kind `kinetic`, the chapter name) only if the user wants cards; ask once per episode.
 - The request in `$request` (e.g. `lower-third Олексій Круглик / автор каналу`).
 - Proposals from the transcript (`<work>/words-<timeline>.json`, see `resolve-core` §4): the speaker's name on first appearance, a number worth a counter ("на 40 відсотків"), a term defined on screen. These are **suggestions** only: show them, place nothing unasked.
@@ -43,7 +43,7 @@ Kinds: `lower-third` (name / role, lower left), `callout` (short label + accent 
 
 Text: keep the user's wording. Fix only obvious typography: Ukrainian apostrophe `ʼ`, quotes «», dash —, no full stop at the end of a title. A typo you suspect → ask, don't fix silently.
 
-Show the plan before building: `# | TC | kind | text | duration | route (Fusion / MotionVFX name) | track`. Wait for the yes.
+Show the plan before building: `# | TC | kind | anim | text | duration | route (Fusion / MotionVFX name) | track`. Wait for the yes.
 
 ## 2. Route
 
@@ -57,7 +57,7 @@ Show the plan before building: `# | TC | kind | text | duration | route (Fusion 
 3. Spec:
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/scripts/motion.py build --kind <kind> --text "<text>" [--sub "<line 2>"] [--at X Y] [--count FROM TO] \
-     --fps <fps> --width <w> --height <h> [--hold-s <marker duration s>] --comp-start <comp frame of the item start> \
+     --fps <fps> --width <w> --height <h> [--hold-s <marker duration s>] --comp-start <comp frame of the item start> --anim <anim> \
      --font "${user_config.brand_font}" --style "${user_config.brand_font_style}" --text-color "${user_config.brand_text_color}" \
      --accent "${user_config.brand_accent_color}" --plate "${user_config.brand_plate_color}" --plate-opacity ${user_config.brand_plate_opacity} \
      --out "<work>/graphics/<n>.json"
@@ -66,17 +66,32 @@ Show the plan before building: `# | TC | kind | text | duration | route (Fusion 
 4. Insert on the `Titles` track: playhead to the marker, temporarily lock every other video track so the insert can only land on `Titles` (read each track's `GetIsTrackLocked` first and keep it in the script's result; afterwards set each track back to that recorded value, not simply unlocked), `item = tl.InsertFusionCompositionIntoTimeline()`. Check `item.GetTrackTypeAndIndex()` is the Titles track, `item.GetStart()` is the marker frame. Another title still visible at that frame → use `Titles 2` (`track_index(..., create=True)` from `track-layout`).
 5. Item length is the user's *Standard generator duration* preference; the API can't trim items. The animation fades out at `visible[1]`, so a longer item is just transparent. If the hold needs more than the item length, tell the user to raise the preference (Preferences → User → Editing) or trim by hand; never shorten the hold to fit.
 6. Apply the spec with the builder in `resolve-core/reference.md` (Fusion builds from a spec). First build of the session: discover the comp's start frame and the Text+ / Transform / Merge input ids (`tool.GetInputList()`), as listed under runtime discovery there, and pass `--comp-start` accordingly; the Text+ box behind the text uses shading element 3 (`Enabled3`, `Alpha3`, `ExtendHorizontal3`…), check those ids exist. A different id → adjust the spec and say so.
-7. Verify every graphic: export stills at `visible[0] + in` (fully in) and `visible[1]` (gone), Read them. Check: Cyrillic glyphs render in the brand font (no boxes, no fallback font), text inside the action-safe area, plate behind the whole text, nothing covers the face or the demo, alpha 0 at the end.
+7. Verify every graphic: export stills at `visible[0] + in` (fully in) and `visible[1]` (gone), Read them. For any `--anim` but `slide` also export `visible[0] + in // 2` (mid-intro), which must show the effect working: `scramble` different letters, `word-grow` later words smaller, `fade-reveal` the lower part of the text hidden, `spin` a line turned toward edge-on, `pop` the text larger, `swipe-down` the text higher; for `flicker` compare two frames one step apart (one with text, one without). `scramble` can also be read without a still: the modifier's `ScrambledText` output (`txt.StyledText.GetConnectedOutput().GetTool().GetOutputList()`, `.GetValue(frame)`) differs from the phrase mid-intro and equals it at the hold. Check: Cyrillic glyphs render in the brand font (no boxes, no fallback font), text inside the action-safe area, plate behind the whole text, nothing covers the face or the demo, alpha 0 at the end.
 
 Counter: the number is driven by a Fusion expression on `StyledText`; read `GetInput("StyledText", t)` at the start and end of the count to confirm it runs.
 
 ## 4. Motion rules (why the script does what it does)
 
 - Ease-out on the way in (fast start, soft landing), ease-in on the way out. Linear motion looks mechanical.
-- In ≈ 0.4 s, out ≈ 0.3 s; slide distance ≈ 3 % of the frame. Bigger, longer moves pull attention from the speaker.
+- In ≈ 0.4 s (for `slide`; other animations in the table below), out ≈ 0.3 s; slide distance ≈ 3 % of the frame. Bigger, longer moves pull attention from the speaker.
 - Hold = reading time: 0.5 s + characters / 14 per second, at least 3 s for a name plate, at most 7 s. Viewers read a title about twice before it may go.
 - A second line enters 0.12 s after the first. Never more than one graphic on screen, except a callout on a screen recording.
 - Same kind = same position, size and motion all video long.
+
+Animations (`--anim`; default `${user_config.brand_text_anim}`, a marker note may override it for one graphic, but warn when that breaks the one-motion-per-kind rule):
+
+| anim | intro | how |
+|---|---|---|
+| `slide` | 0.4 s | slide ~3 %, scale up, fade in (the default) |
+| `swipe-down` | 4 frames @25 | drops 5 % into place, motion blur |
+| `pop` | 4 frames @25 | from 125 % down to 100 %, S-curve, motion blur |
+| `flicker` | 0.6 s | on/off every ~2 frames, then on |
+| `fade-reveal` | 1 s | soft-edged rectangle mask rises from below the text |
+| `spin` | 1 s | each line spins 360° around Y, motion blur |
+| `scramble` | 1 s | Text Scramble modifier, randomness 1.2 → 0, substitutes only the phrase's own letters |
+| `word-grow` | 0.4 s + 2 frames per character | Follower modifier, words grow 0 → 100 % left to right |
+
+`scramble` and `word-grow` take over the text input, so they don't apply to a `counter`; the dot of a callout always uses `slide`. Spin, scramble, word-grow and fade-reveal act on the Text+ itself (the plate moves with it), check them on the step 7 stills: a reveal mask that clips the plate, or a follower that jitters inside words → report and fall back to `slide` for that graphic.
 
 ## 5. Finish
 

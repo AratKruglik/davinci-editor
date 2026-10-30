@@ -57,7 +57,7 @@ Approval: the user watches the rough cut using the Cream `cut` markers.
 ## Stage C — sound
 
 1. `voice-isolation` on the cut timeline's Voice track (and Rose markers about noise). Then lock A-roll and Voice with `track-layout lock sound` for the rest of the stage.
-2. `sound-design` with the Lavender/Sky markers (its own cue-sheet approval and license check).
+2. `sound-design` with the Lavender/Sky markers (its own cue-sheet approval and license check). Only if the user asks for live-sounding music, room on SFX, pan sweeps or vocals out of a song: `audio-effects` after it.
 3. `audio-finish` — Rose markers, dialogue leveling, measured loudness to the target. Unlock them after it (`track-layout unlock sound`).
 
 ## Stage D — graphics, derivatives and delivery
