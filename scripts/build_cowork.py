@@ -68,7 +68,9 @@ def check(archive):
         for n in skills:
             text = z.read(n).decode("utf-8")
             assert TOOL_PREFIX_FROM not in text, f"{n}: tool names not rewritten"
-        assert json.loads(z.read(".claude-plugin/plugin.json"))["name"] == NAME
+        manifest = json.loads(z.read(".claude-plugin/plugin.json"))
+        assert manifest["name"] == NAME
+        assert len(manifest["description"]) <= 500, "Cowork rejects descriptions over 500 characters"
 
 
 if __name__ == "__main__":
