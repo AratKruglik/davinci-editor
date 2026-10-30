@@ -9,11 +9,13 @@ python3 guard.py selftest
 import json
 import re
 import sys
+import unicodedata
 
 # Any reference counts, not only a call: `f = mp.DeleteTimelines; f(x)` must still prompt.
 DESTRUCTIVE = re.compile(r"\b(Delete\w*|Clear\w*|Reset\w*|ReplaceClip|UnlinkProxyMedia)\b")
 # Names built at run time can't be checked statically, so they always prompt.
-DYNAMIC = re.compile(r"\b(getattr|setattr|delattr|eval|exec|compile|__getattribute__|__dict__)\b")
+DYNAMIC = re.compile(r"\b(getattr\w*|setattr|delattr|eval|exec|compile|__getattribute__|__dict__|__import__|__builtins__"
+                     r"|builtins|importlib|inspect|operator|attrgetter|methodcaller|vars|globals|locals)\b")
 # Claude's own scratch work, created in the same session: never worth a prompt. Only the exact literal call is exempt.
 SAFE = [
     re.compile(r"\.DeleteMarkersByColor\s*\(\s*['\"]Cream['\"]\s*\)"),
@@ -22,6 +24,8 @@ SAFE = [
 
 
 def findings(script):
+    # Python folds identifiers with NFKC, so `mp.Ｄelete…` runs as DeleteTimelines.
+    script = unicodedata.normalize("NFKC", script)
     for safe in SAFE:
         script = safe.sub("", script)
     hits = {m.group(1) for m in DESTRUCTIVE.finditer(script)}
@@ -54,7 +58,10 @@ def selftest():
     assert decide({"tool_input": {"script": "g.ResetAllGrades ()"}})
     for bypass in ['tl.DeleteMarkersByColor("Cream" if False else "Red")', 'getattr(mp, "Delete" + "Timelines")([tl])',
                    "f = mp.DeleteTimelines; f([tl])", "project.DeleteAllRenderJobs()", "gal.DeleteGalleryStillAlbum(a)",
-                   "item.DeleteVersionByName('claude-measure', 1)"]:
+                   "item.DeleteVersionByName('claude-measure', 1)", "mp.\uff24eleteTimelines([tl])",
+                   'import operator; operator.methodcaller("Del" + "eteTimelines", [tl])(mp)',
+                   'vars(type(mp))["Del" + "eteTimelines"](mp, [tl])', '__import__("op" + "erator")',
+                   'inspect.getattr_static(mp, "Del" + "ete")', '__builtins__["get" + "attr"](mp, n)']:
         assert decide({"tool_input": {"script": bypass}}), bypass
     print("guard selftest ok")
 
