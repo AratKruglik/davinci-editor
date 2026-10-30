@@ -1,0 +1,91 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - rough cut 2026-11-02",
+ "timeline_start": "01:00:00:00",
+ "fps": 25,
+ "resolution": "3840x2160",
+ "append_calibration": {
+  "end_inclusive": false,
+  "source_offset": 0
+ },
+ "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones.",
+ "tracks": {
+  "video": [
+   "V1 Backgrounds",
+   "V2 A-roll",
+   "V3 Screen",
+   "V4 PiP",
+   "V5 Titles"
+  ]
+ },
+ "screen_items": [
+  {
+   "name": "Запис екрана 10.15.32 (1)",
+   "start": "01:00:30:00",
+   "end": "01:01:10:00",
+   "fusion_comps": 0,
+   "inspector": {
+    "ZoomX": 1.04,
+    "ZoomY": 1.04,
+    "Pan": -40,
+    "Tilt": 0,
+    "note": "the user cropped the macOS menu bar out with this Inspector reframe"
+   }
+  },
+  {
+   "name": "Запис екрана 10.15.32 (2)",
+   "start": "01:01:10:00",
+   "end": "01:02:00:00",
+   "fusion_comps": 0,
+   "inspector": {
+    "ZoomX": 1.0,
+    "Pan": 0,
+    "Tilt": 0
+   }
+  },
+  {
+   "name": "Запис екрана 10.15.32 (3)",
+   "start": "01:02:00:00",
+   "end": "01:02:40:00",
+   "fusion_comps": 1,
+   "fusion_comp_tools": [
+    "MediaIn1",
+    "Glow",
+    "MediaOut1"
+   ]
+  }
+ ],
+ "timeline_markers": [
+  {
+   "tc": "01:00:34:00",
+   "color": "Pink",
+   "note": "зум на поле Login",
+   "duration": 75
+  },
+  {
+   "tc": "01:00:37:15",
+   "color": "Pink",
+   "note": "одразу на кнопку Save",
+   "duration": 50
+  },
+  {
+   "tc": "01:01:05:00",
+   "color": "Pink",
+   "note": "у 4 рази на індикатор",
+   "duration": 175
+  },
+  {
+   "tc": "01:02:10:00",
+   "color": "Pink",
+   "note": "зум на меню",
+   "duration": 75
+  }
+ ],
+ "stills_seen": {
+  "01:00:34:00": "Login field at x 0.40-0.60, y 0.45-0.52",
+  "01:00:37:15": "Save button in the top-right corner at x 0.86-0.94, y 0.04-0.09",
+  "01:01:05:00": "small status LED icon at x 0.05-0.08, y 0.90-0.94 (bottom-left corner)",
+  "01:02:10:00": "left menu at x 0.0-0.2, y 0.1-0.8"
+ },
+ "fusion_note": "Comp frame 0 = item start; Transform inputs Center (table {1: x, 2: y}), Size, Pivot; SetInput(id, v, t) keys only after AddModifier(id, 'BezierSpline')."
+}

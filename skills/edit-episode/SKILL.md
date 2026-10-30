@@ -1,8 +1,8 @@
 ---
 name: edit-episode
-description: Orchestrates a full episode edit in DaVinci Resolve Studio 21+ in a fixed order with an approval stop after every step - A) project and color before the cut (project-bootstrap, log-to-rec709, chart-match, natural-skin-grade, depth-background-blur), B) transcript, track layout, text-based rough cut and camera + screen PiP, C) sound (voice-isolation, sound-design, audio-finish); each stage starts from the user's colored markers and the progress is kept in episode.md so a later session can resume.
+description: Orchestrates a full episode edit in DaVinci Resolve Studio 21+ in a fixed order with an approval stop after every step - A) project and color before the cut (project-bootstrap, log-to-rec709, chart-match, natural-skin-grade, depth-background-blur), B) transcript, track layout, text-based rough cut and camera + screen PiP, C) sound (voice-isolation, sound-design, audio-finish), D) graphics, zooms, subtitles, chapters, Shorts, thumbnails, QC and delivery (fusion-motion-graphics, tutorial-zooms, subtitles-uk, chapters-markers, shorts-cutdown, thumbnail-frames, pre-delivery-qc, deliver); each stage starts from the user's colored markers and the progress is kept in episode.md so a later session can resume.
 when_to_use: User invokes /edit-episode to run the whole pipeline on a new shoot or to resume it.
-argument-hint: "[episode name] [from-stage A|B|C]"
+argument-hint: "[episode name] [from-stage A|B|C|D]"
 arguments: [episode, from_stage]
 disable-model-invocation: true
 effort: high
@@ -28,7 +28,7 @@ Run the steps in order, starting from `$from_stage` (default: the first unfinish
 
 Start: follow `resolve-core` §1–3 (connect, confirm project, save). Keep a running checklist in `${user_config.work_dir}/<project>/episode.md` (step, status `done|skipped|failed`, date, timeline names, notes) and update it after every step, so a later session resumes from it.
 
-Every stage starts with `marker-edit` limited to that stage's colors (A: Sand; B: Red, Green, Yellow, Purple, Fuchsia, Cocoa; C: Lavender, Sky, Rose): the user's markers are the brief for the stage. Colors whose skill belongs to stage 3 (Blue, Cyan, Pink, Mint, Lemon) are listed as waiting.
+Every stage starts with `marker-edit` limited to that stage's colors (A: Sand; B: Red, Green, Yellow, Purple, Fuchsia, Cocoa; C: Lavender, Sky, Rose; D: Cyan, Pink, Blue, Mint, Lemon): the user's markers are the brief for the stage.
 
 ## Stage A — project and color before the cut
 
@@ -59,6 +59,21 @@ Approval: the user watches the rough cut using the Cream `cut` markers.
 2. `sound-design` with the Lavender/Sky markers (its own cue-sheet approval and license check).
 3. `audio-finish` — Rose markers, dialogue leveling, measured loudness to the target. Unlock the tracks after it.
 
+## Stage D — graphics, derivatives and delivery
+
+Picture and sound of the episode are locked now: lock A-roll, B-roll and Voice (`track-layout lock` graphics stage) and keep them locked until `deliver`. Steps 2–6 need the words on the cut (`resolve-core` timeline dump): take one dump at the start of the stage and a fresh one after any step that changes items.
+
+1. `fusion-motion-graphics` — Cyan markers, name plates, callouts; chapter cards only if the user wants them (after step 4, from its titles).
+2. `tutorial-zooms` — Pink markers on the screen recording; `punch-in` for jump cuts in talking-head parts if the user wants it (it changes A-roll item transforms: unlock A-roll for this step only, lock it again after).
+3. `subtitles-uk` — YouTube SRT (and the `Subtitles UA` track if wanted).
+4. `chapters-markers` — Blue markers → `chapters.txt`.
+5. `shorts-cutdown` — Mint markers / proposals → vertical timelines; each Short gets `audio-finish` and `subtitles-uk shorts`.
+6. `thumbnail-frames` — Lemon markers → `thumbnail-brief.md`.
+7. `track-layout cleanup` (empty tracks, after confirmation), then `pre-delivery-qc` on the episode and on every Short. Errors go back to the step that owns them.
+8. `deliver all`.
+
+Approval: the user watches the graphics and zooms in context, reads the chapter list, and picks the Shorts and thumbnail before rendering.
+
 ## Finish
 
-Offer `track-layout cleanup` (empty tracks, after confirmation). Save the project, update `episode.md`, and summarize: timelines created, durations, loudness measured, what was skipped and why, what the user should check by eye/ear. Next (stage 3, when available): graphics, subtitles, Shorts, QC and delivery.
+Unlock the tracks. Save the project, update `episode.md`, and summarize: timelines created, durations, loudness measured, QC verdicts, rendered files with their checks, the upload package (video, SRT, chapters, thumbnails, Shorts), what was skipped and why, what the user should check by eye/ear.

@@ -1,0 +1,46 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - rough cut 2026-11-02",
+ "timeline_start": "01:00:00:00",
+ "fps": 25,
+ "resolution": "3840x2160",
+ "append_calibration": {
+  "end_inclusive": false,
+  "source_offset": 0
+ },
+ "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones.",
+ "timelines": [
+  "Router - rough cut 2026-11-02",
+  "Router - short 1 пароль"
+ ],
+ "render_queue": [
+  {
+   "JobId": "J-user-1",
+   "TimelineName": "Old promo",
+   "TargetDir": "/Users/me/Renders",
+   "OutputFilename": "promo.mov",
+   "JobStatus": "Ready"
+  }
+ ],
+ "current_render_format_and_codec": {
+  "format": "mov",
+  "codec": "ProRes422HQ"
+ },
+ "current_render_mode": 0,
+ "render_presets": [
+  "YouTube - 2160p",
+  "H.265 Master",
+  "ProRes 422 HQ"
+ ],
+ "render_codecs_mp4": {
+  "H.264": "H264",
+  "H.265": "H265",
+  "H.265 Apple Silicon": "H265_AppleSilicon"
+ },
+ "video_quality_unit": "integer VideoQuality is kbit/s",
+ "render_output_note": "A render job writes TargetDir/CustomName.mp4. The test harness already placed the outputs of renders named '<timeline> - YouTube' and '<timeline> - Shorts' in resolve-work/Router Setup 2026-11/renders; check those files.",
+ "timeline_durations": {
+  "Router - rough cut 2026-11-02": "91.04 s",
+  "Router - short 1 пароль": "40.00 s"
+ }
+}

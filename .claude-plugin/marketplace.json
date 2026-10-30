@@ -10,7 +10,7 @@
     {
       "name": "davinci-editor",
       "source": "./",
-      "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: color (log, chart, skin, depth blur), transcription, text-based rough cut, screen + camera PiP, sound design, loudness finish, markers, track layout.",
+      "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: color (log, chart, skin, depth blur), transcription, text-based rough cut, screen + camera PiP, sound design, loudness finish, motion graphics, zooms, subtitles, Shorts, chapters, thumbnails, QC and delivery, markers, track layout.",
       "category": "productivity"
     }
   ]

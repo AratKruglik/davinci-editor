@@ -1,0 +1,13 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - rough cut 2026-11-02",
+ "timeline_start": "01:00:00:00",
+ "fps": 25,
+ "resolution": "3840x2160",
+ "append_calibration": {
+  "end_inclusive": false,
+  "source_offset": 0
+ },
+ "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones.",
+ "render_formats_note": "GetRenderFormats has 'wav'; GetRenderCodecs('wav') has {'Linear PCM': 'LinearPCM'}. The audio mixdown requested by a script lands in resolve-work/.../audio/mix-check.wav (already there)."
+}

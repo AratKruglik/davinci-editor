@@ -1,0 +1,55 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - rough cut 2026-11-02",
+ "timeline_start": "01:00:00:00",
+ "fps": 25,
+ "resolution": "3840x2160",
+ "append_calibration": {
+  "end_inclusive": false,
+  "source_offset": 0
+ },
+ "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones.",
+ "timeline_markers": [
+  {
+   "tc": "01:00:05:00",
+   "color": "Cyan",
+   "name": "Олексій Круглик",
+   "note": "плашка, друга лінія: автор каналу",
+   "duration": 1,
+   "customData": ""
+  },
+  {
+   "tc": "01:00:40:00",
+   "color": "Cyan",
+   "name": "Натисни Save",
+   "note": "виноска на кнопку Save",
+   "duration": 75,
+   "customData": ""
+  }
+ ],
+ "tracks": {
+  "video": [
+   "V1 Backgrounds",
+   "V2 A-roll",
+   "V3 Screen",
+   "V4 B-roll",
+   "V5 Effects",
+   "V6 Titles"
+  ],
+  "audio": [
+   "A1 Voice",
+   "A2 SFX",
+   "A3 Music"
+  ]
+ },
+ "items_at": {
+  "01:00:05:00": "A-roll IMG_4140 (talking head; face in the center-right third)",
+  "01:00:40:00": "Screen 'Запис екрана 10.15.32' full frame (router web UI)"
+ },
+ "stills_seen": {
+  "01:00:05:00": "presenter centered slightly right, face at x 0.5-0.7, y 0.2-0.6; lower left is plain wall",
+  "01:00:40:00": "router admin page; the Save button is in the top-right corner at x 0.86-0.94, y 0.04-0.09 (0..1 from top-left)"
+ },
+ "fusion_note": "InsertFusionCompositionIntoTimeline lands on the highest unlocked video track at the playhead; new items are 5 s long (Standard generator duration); comp frame 0 = item start; Text+ has inputs StyledText, Font, Style, Size, Center, HorizontalJustificationNew, Red1..Alpha1, Enabled3, Type3, Level3, Red3..Alpha3, ExtendHorizontal3, ExtendVertical3, Round3.",
+ "transcript_note": "At 01:00:20:00 the presenter says 'швидкість зросла на сорок відсотків'."
+}

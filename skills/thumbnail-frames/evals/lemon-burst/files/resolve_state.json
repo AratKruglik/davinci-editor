@@ -1,0 +1,20 @@
+{
+ "project": "Router Setup 2026-11",
+ "timeline": "Router - rough cut 2026-11-02",
+ "timeline_start": "01:00:00:00",
+ "fps": 25,
+ "resolution": "3840x2160",
+ "append_calibration": {
+  "end_inclusive": false,
+  "source_offset": 0
+ },
+ "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones.",
+ "still_export_note": "ExportCurrentFrameAsStill for a frame at timecode HH:MM:SS:FF has already produced resolve-work/Router Setup 2026-11/frames/HH-MM-SS-FF.tif for the frames listed in frames_seen; frames_seen says what a viewer sees in each (the test images are synthetic).",
+ "frames_seen": {
+  "01:01:22:19": "face, eyes open, mouth closed, neutral",
+  "01:01:22:22": "motion blur, head turning",
+  "01:01:23:00": "eyes half closed (blink), smiling",
+  "01:01:23:03": "eyes open, wide smile, looking into the lens, empty space on the right",
+  "01:01:23:06": "eyes open, smile fading, hand covers chin"
+ }
+}

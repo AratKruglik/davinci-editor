@@ -1,8 +1,8 @@
 ---
 name: marker-edit
-description: Edits by the user's own colored markers in DaVinci Resolve 21+ - reads markers on media pool clips, the timeline and timeline items, maps each color to a task (Red cut, Green keep/best take, Yellow doubt, Sand ColorChecker frame, Purple camera/screen/PiP, Fuchsia B-roll insert, Cocoa transition, Lavender SFX, Sky music, Rose audio problem; Blue, Cyan, Pink, Mint, Lemon wait for stage-3 skills), builds an action plan for approval, dispatches tasks to the matching skills and records progress in marker customData without ever changing the user's markers.
+description: Edits by the user's own colored markers in DaVinci Resolve 21+ - reads markers on media pool clips, the timeline and timeline items, maps each color to a task (Red cut, Green keep/best take, Yellow doubt, Sand ColorChecker frame, Purple camera/screen/PiP, Fuchsia B-roll insert, Cocoa transition, Lavender SFX, Sky music, Rose audio problem, Blue chapter, Cyan title, Pink zoom, Mint Shorts candidate, Lemon thumbnail frame), builds an action plan for approval, dispatches tasks to the matching skills and records progress in marker customData without ever changing the user's markers.
 when_to_use: User put markers on footage or a timeline and wants Claude to act on them, or asks what the markers say. Triggers - "зроби по маркерах", "пройдись по моїх маркерах", "що там у маркерах", "виконай маркери", "монтаж за маркерами", "marker edit".
-argument-hint: "[stage A|B|C] [timeline name]"
+argument-hint: "[stage A|B|C|D] [timeline name]"
 arguments: [stage, timeline]
 allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
@@ -36,17 +36,17 @@ Configured in `${user_config.marker_colors}` (`Color=task` pairs). Defaults and 
 | Purple | camera / screen / PiP switch | until next Purple | this range | `dual-video-sync-pip` | active |
 | Fuchsia | insert B-roll (note: what) | Claude picks duration | insert duration | `marker-edit` (§3) | active |
 | Cocoa | transition (note: type / MotionVFX name) | — | — | `marker-edit` (§3) + `motionvfx-catalog` | active |
-| Blue | chapter start (name = chapter title) | — | — | `chapters-markers` | later |
-| Cyan | title on screen (name = text) | default duration | title duration | `fusion-motion-graphics` | later |
-| Pink | zoom (note: area, strength) | short zoom | zoom duration | `tutorial-zooms` | later |
+| Blue | chapter start (name = chapter title) | — | — | `chapters-markers` | active |
+| Cyan | title on screen (name = text) | default duration | title duration | `fusion-motion-graphics`, `motionvfx-catalog` | active |
+| Pink | zoom (note: area, strength) | short zoom | zoom duration | `tutorial-zooms` | active |
 | Lavender | SFX (note: which sound) | sound moment | long sound | `sound-design` | active |
 | Sky | music start / mood change / end | change point | music range | `sound-design` | active |
 | Rose | audio problem (note: what) | Claude finds bounds | this range | `audio-finish`, `voice-isolation` | active |
-| Mint | Shorts candidate | Claude picks 30–60 s | exactly this range | `shorts-cutdown` | later |
-| Lemon | thumbnail frame | this frame | — | `thumbnail-frames` | later |
+| Mint | Shorts candidate | Claude picks 30–60 s | exactly this range | `shorts-cutdown` | active |
+| Lemon | thumbnail frame | this frame | — | `thumbnail-frames` | active |
 | Cream | **Claude's own markers only** (suggestions, problems, questions) | | | | always |
 
-Stages (for `edit-episode`): A — Sand; B — Red, Green, Yellow, Purple, Fuchsia, Cocoa; C — Lavender, Sky, Rose.
+Stages (for `edit-episode`): A — Sand; B — Red, Green, Yellow, Purple, Fuchsia, Cocoa; C — Lavender, Sky, Rose; D — Cyan, Pink, Blue, Mint, Lemon.
 
 ## Rules that protect the user's work
 
@@ -82,6 +82,7 @@ Hand approved rows to the skills, each with its marker list:
 - Sand → `chart-match` with the clip and frame of the marker as the chart frame.
 - Purple → `dual-video-sync-pip` (name = mode: камера / екран / pip).
 - Lavender, Sky → `sound-design` as fixed cues; Rose → `audio-finish` (noise-type notes go to `voice-isolation` first).
+- Cyan → `fusion-motion-graphics` (name = text, note = kind or MotionVFX template); Pink → `tutorial-zooms` (note = area, strength); Blue → `chapters-markers` (name = chapter title); Mint → `shorts-cutdown`; Lemon → `thumbnail-frames`. These work on the cut timeline; Blue / Mint / Lemon markers left on media pool clips before the cut are mapped through the timeline dump (`resolve-core/reference.md#timeline-dump`), and a marker whose moment was cut out is reported, not moved.
 - Fuchsia and Cocoa are done here, after the rough cut, on the cut timeline (back it up first, `resolve-core` §3):
   - **Fuchsia** (B-roll insert): find the clip from the note in `01_Footage/B-Roll` (file name, or match the description against clip names and, if transcribed, their transcripts); several candidates or none → ask. Append it with `mediaType: 1` on the `B-roll` track at the marker frame (second overlapping insert → `B-roll 2`), duration = marker duration, or 3–5 s for a point marker, ending in a pause of the speech if possible. Video only: the voice continues underneath.
   - **Cocoa** (transition): the cut nearest the marker on A-roll/B-roll/Screen. Transition name from the note, matched in the catalog (`python3 ${CLAUDE_SKILL_DIR}/../motionvfx-catalog/scripts/catalog.py search "<catalog>" --category Transitions <words>`; no catalog → run `motionvfx-catalog`); no name → `Cross Dissolve` (category `simple`). `item.AddTransition({"type": name, "category": "fusion" or "simple", "position": "end", "alignment": "center", "duration": 10–20 frames})` on the outgoing item; `None` back means too little handle: say so, don't trim clips to make room.

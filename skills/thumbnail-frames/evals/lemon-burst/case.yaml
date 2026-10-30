@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: lemon-burst
+expected_outcome: |
+  Titles are hidden during still export and restored; a burst of frames around the Lemon marker is exported (not only the marker frame); the stills are ranked with thumbs.py; the blink at the marker frame and the motion-blurred frame are rejected; the +3 frame (eyes open, wide smile, space for text) is the main pick; a thumbnail brief with TC, file, reason and text space is written; picks are marked with Cream markers, not Lemon.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: cyan-lower-third-and-callout
+expected_outcome: |
+  A plan table is shown before building; motion.py build is used with the brand from config (Montserrat Bold, #FFFFFF, #FFD400, #000000 at 0.7); the name plate keeps the text 'Олексій Круглик' exactly with 'автор каналу' as the second line; the callout points at the Save button read off the still (top-right) and stays inside the frame; graphics are inserted on the Titles track with the other video tracks locked temporarily and restored; a transcript number is only proposed; stills verify the result; markers get customData done without other changes.
+context:
+  scaffold_script: place-files.sh

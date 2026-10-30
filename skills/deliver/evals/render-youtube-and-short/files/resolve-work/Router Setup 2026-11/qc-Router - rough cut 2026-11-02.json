@@ -1,0 +1,67 @@
+{
+ "timeline": "Router - rough cut 2026-11-02",
+ "findings": [
+  {
+   "severity": "info",
+   "kind": "empty-track",
+   "frame": null,
+   "tc": null,
+   "track": "video 1 Backgrounds",
+   "message": "empty track (track-layout cleanup)"
+  },
+  {
+   "severity": "info",
+   "kind": "empty-track",
+   "frame": null,
+   "tc": null,
+   "track": "video 3 B-roll",
+   "message": "empty track (track-layout cleanup)"
+  },
+  {
+   "severity": "info",
+   "kind": "empty-track",
+   "frame": null,
+   "tc": null,
+   "track": "video 4 Effects",
+   "message": "empty track (track-layout cleanup)"
+  },
+  {
+   "severity": "info",
+   "kind": "empty-track",
+   "frame": null,
+   "tc": null,
+   "track": "video 5 Titles",
+   "message": "empty track (track-layout cleanup)"
+  },
+  {
+   "severity": "info",
+   "kind": "empty-track",
+   "frame": null,
+   "tc": null,
+   "track": "audio 2 SFX",
+   "message": "empty track (track-layout cleanup)"
+  },
+  {
+   "severity": "info",
+   "kind": "empty-track",
+   "frame": null,
+   "tc": null,
+   "track": "audio 3 Music",
+   "message": "empty track (track-layout cleanup)"
+  }
+ ],
+ "state": {
+  "end_frame": 92276,
+  "items": {
+   "video": 3,
+   "audio": 3,
+   "subtitle": 0
+  }
+ },
+ "counts": {
+  "error": 0,
+  "warn": 0,
+  "info": 6
+ },
+ "verdict": "PASS"
+}

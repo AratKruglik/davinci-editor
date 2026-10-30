@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: mint-and-proposals
+expected_outcome: |
+  The Mint range (25 s, below the 30 s minimum) is extended on sentence borders to 30-60 s and the user is told; the second Short is chosen for a self-contained hook and payoff and the sentence 'Як я вже казав на початку…' is not used as an opener; shorts.py sentences/plan map ranges back to source clips; each Short is built on a new 1080x1920 timeline with scaleToCrop from the source media (source timeline untouched), with Smart Reframe and a face check; proposals are shown before building and marked with Cream, not Mint.
+context:
+  scaffold_script: place-files.sh

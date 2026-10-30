@@ -1,8 +1,8 @@
 {
   "name": "davinci-editor",
   "displayName": "DaVinci Editor",
-  "version": "0.3.0",
-  "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: project bootstrap, Apple Log to Rec.709, ColorChecker chart match, natural skin grade, depth background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, MotionVFX catalog, sound design, voice isolation, loudness finish for YouTube, edit by colored markers and role-based track layout.",
+  "version": "0.4.0",
+  "description": "Video editing in DaVinci Resolve Studio 21+ via the DaVinci Resolve MCP server: project bootstrap, Apple Log to Rec.709, ColorChecker chart match, natural skin grade, depth background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, MotionVFX catalog, sound design, voice isolation, loudness finish for YouTube, Fusion motion graphics, tutorial zooms, Ukrainian subtitles, Shorts cutdowns, chapters, thumbnail frames, pre-delivery QC and H.265 delivery, edit by colored markers and role-based track layout.",
   "author": {
     "name": "Oleksii Kruhlyk"
   },
@@ -228,6 +228,156 @@
       "title": "Fairlight preset",
       "description": "Optional Fairlight preset (bus limiter, music ducking) that audio-finish applies; created once by the user.",
       "default": ""
+    },
+    "brand_font": {
+      "type": "string",
+      "title": "Brand font",
+      "description": "Font family for titles and Shorts captions, as macOS lists it; must have Cyrillic.",
+      "default": "Montserrat"
+    },
+    "brand_font_style": {
+      "type": "string",
+      "title": "Brand font style",
+      "description": "Style of the brand font for titles, e.g. Bold, Black, SemiBold.",
+      "default": "Bold"
+    },
+    "brand_text_color": {
+      "type": "string",
+      "title": "Title text color",
+      "description": "Main text color of titles and captions, #RRGGBB.",
+      "default": "#FFFFFF"
+    },
+    "brand_accent_color": {
+      "type": "string",
+      "title": "Accent color",
+      "description": "Accent for second lines, counters, callout dots and the spoken word in Shorts captions, #RRGGBB.",
+      "default": "#FFD400"
+    },
+    "brand_plate_color": {
+      "type": "string",
+      "title": "Plate color",
+      "description": "Color of the box behind lower thirds and callouts, #RRGGBB.",
+      "default": "#000000"
+    },
+    "brand_plate_opacity": {
+      "type": "number",
+      "title": "Plate opacity",
+      "description": "Opacity of the box behind lower thirds and callouts, 0-1.",
+      "default": 0.7,
+      "min": 0,
+      "max": 1
+    },
+    "zoom_default_scale": {
+      "type": "number",
+      "title": "Zoom default scale",
+      "description": "Screen zoom when the region gives no better fit (1.6 = 160 %).",
+      "default": 1.6,
+      "min": 1.15,
+      "max": 4
+    },
+    "zoom_max_scale": {
+      "type": "number",
+      "title": "Zoom max scale",
+      "description": "Strongest screen zoom; above it screen text turns soft.",
+      "default": 2.5,
+      "min": 1.2,
+      "max": 4
+    },
+    "zoom_ease_s": {
+      "type": "number",
+      "title": "Zoom ease (s)",
+      "description": "Duration of the zoom-in and zoom-out moves.",
+      "default": 0.5,
+      "min": 0.2,
+      "max": 1.5
+    },
+    "punch_in_scale": {
+      "type": "number",
+      "title": "Punch-in scale",
+      "description": "Scale of alternate A-roll segments that hide jump cuts.",
+      "default": 1.12,
+      "min": 1.05,
+      "max": 1.3
+    },
+    "subtitle_max_chars": {
+      "type": "number",
+      "title": "Subtitle characters per line",
+      "description": "Longest subtitle line for YouTube SRT.",
+      "default": 42,
+      "min": 30,
+      "max": 50
+    },
+    "subtitle_max_cps": {
+      "type": "number",
+      "title": "Subtitle reading speed",
+      "description": "Characters per second a subtitle is stretched toward.",
+      "default": 17,
+      "min": 12,
+      "max": 25
+    },
+    "shorts_min_s": {
+      "type": "number",
+      "title": "Shorts min length (s)",
+      "description": "Shortest Short shorts-cutdown builds.",
+      "default": 30,
+      "min": 10,
+      "max": 180
+    },
+    "shorts_max_s": {
+      "type": "number",
+      "title": "Shorts max length (s)",
+      "description": "Longest Short shorts-cutdown builds.",
+      "default": 60,
+      "min": 15,
+      "max": 180
+    },
+    "shorts_resolution": {
+      "type": "string",
+      "title": "Shorts resolution",
+      "description": "Vertical frame WIDTHxHEIGHT for Shorts timelines and renders.",
+      "default": "1080x1920"
+    },
+    "shorts_caption_words": {
+      "type": "number",
+      "title": "Shorts caption words",
+      "description": "Most words shown at once in animated Shorts captions.",
+      "default": 3,
+      "min": 1,
+      "max": 4
+    },
+    "render_dir": {
+      "type": "string",
+      "title": "Render folder",
+      "description": "Where deliver writes renders; empty = <work folder>/<project>/renders.",
+      "default": ""
+    },
+    "render_preset_youtube": {
+      "type": "string",
+      "title": "YouTube render preset",
+      "description": "Name of your own Resolve render preset for the episode; empty = deliver builds H.265 settings.",
+      "default": ""
+    },
+    "render_preset_shorts": {
+      "type": "string",
+      "title": "Shorts render preset",
+      "description": "Name of your own Resolve render preset for Shorts; empty = deliver builds H.265 settings.",
+      "default": ""
+    },
+    "youtube_bitrate_mbps": {
+      "type": "number",
+      "title": "YouTube bitrate (Mbit/s)",
+      "description": "Video bitrate of the episode render.",
+      "default": 60,
+      "min": 20,
+      "max": 200
+    },
+    "shorts_bitrate_mbps": {
+      "type": "number",
+      "title": "Shorts bitrate (Mbit/s)",
+      "description": "Video bitrate of Shorts renders.",
+      "default": 20,
+      "min": 8,
+      "max": 80
     }
   }
 }

@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: srt-from-cut
+expected_outcome: |
+  Subtitles are built from the uk-transcribe word timings mapped onto the current cut (timeline_map.py + subtitles.py), never with CreateSubtitlesFromAudio; the cut-out first take and "ой, давайте ще раз" don't appear; the filler "е" inside a kept sentence is dropped; recognition fixes like "вай фай" -> Wi-Fi and the spoken IP address as digits are proposed to the user; the SRT starts at 00:00:00 for the timeline start, lines are at most 42 characters and 2 per cue.
+context:
+  scaffold_script: place-files.sh

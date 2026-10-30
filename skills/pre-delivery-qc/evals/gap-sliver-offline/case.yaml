@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: gap-sliver-offline
+expected_outcome: |
+  qc.py finds the 6-frame black hole, the 1-frame sliver, the offline IMG_4141 media, the 30 fps B-roll clip, the open Pink marker, the leftover Cream marker and the empty Ambience track; loudness is measured with audio-finish's loudness.py on the mixdown; the verdict is FAIL with timecodes and owners of each fix; Cream markers are placed on errors; nothing on the timeline is changed, trimmed, deleted or relinked.
+context:
+  scaffold_script: place-files.sh

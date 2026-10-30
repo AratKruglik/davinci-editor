@@ -30,6 +30,15 @@ jobs:
           python3 skills/dual-video-sync-pip/scripts/pip_plan.py selftest
           python3 skills/sound-design/scripts/test_sound_library.py
           python3 skills/audio-finish/scripts/loudness.py selftest
+          python3 skills/resolve-core/scripts/timeline_map.py selftest
+          python3 skills/fusion-motion-graphics/scripts/motion.py selftest
+          python3 skills/tutorial-zooms/scripts/zooms.py selftest
+          python3 skills/subtitles-uk/scripts/subtitles.py selftest
+          python3 skills/shorts-cutdown/scripts/shorts.py selftest
+          python3 skills/chapters-markers/scripts/chapters.py selftest
+          python3 skills/thumbnail-frames/scripts/thumbs.py selftest
+          python3 skills/pre-delivery-qc/scripts/qc.py selftest
+          python3 skills/deliver/scripts/mp4_info.py selftest
       - name: Build Cowork plugin zip
         run: python3 scripts/build_cowork.py --out dist
       - name: Publish release

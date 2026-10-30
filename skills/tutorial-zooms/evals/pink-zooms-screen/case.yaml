@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: pink-zooms-screen
+expected_outcome: |
+  zooms.py plan builds eased Transform keys inside a Fusion comp on the Screen items (Inspector PiP transform untouched); the two markers 0.6 s apart are chained into a pan; the 'у 4 рази' request is capped at the 2.5 maximum and the user is told; the zoom whose range crosses the edit point at 01:01:10:00 ends before the cut; the item that already has the user's Fusion comp is not modified and the user is asked; a table is approved before building; stills verify the result.
+context:
+  scaffold_script: place-files.sh

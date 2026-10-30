@@ -82,7 +82,113 @@ These values are not documented for 21.1.1; discover them on the running app, ne
 - the track `InsertFusionTitleIntoTimeline` uses (expected: the highest enabled video track at the playhead) and whether it accepts the template's file name as shown in the Effects library;
 - whether `ApplyFairlightPresetToCurrentTimeline` replaces the timeline's tracks and busses (apply it on a duplicate timeline first);
 - the `normalizationMode` string for integrated loudness in `GetNormalizeAudioModes()` (expected to mention BS.1770 / LUFS);
-- whether timeline items built by `AppendToTimeline` keep the media pool clip's color group.
+- whether timeline items built by `AppendToTimeline` keep the media pool clip's color group;
+- Fusion: the comp frame that matches a timeline item's first frame (`comp.GetAttrs()["COMPN_RenderStart"]`, `["COMPN_GlobalStart"]`), the input ids of `TextPlus`, `Background`, `Transform`, `Merge` (`tool.GetInputList()`), and whether `SetInput(id, value, time)` keys an input only after `tool.AddModifier(id, "BezierSpline")` (`"XYPath"` for point inputs such as `Center`; the builder's `mismatches` shows it);
+- the track `InsertFusionCompositionIntoTimeline()` uses and the length of the item it creates (the user preference *Standard generator duration*; there is no API to trim an item);
+- how `mp.ImportMedia([srt])` + `AppendToTimeline` places an SRT on a subtitle track, and whether SRT time 0 lands on the timeline start or on 00:00:00:00;
+- the H.265 codec key from `GetRenderCodecs("mp4")` (hardware vs software encoder names) and the unit of `VideoQuality` when it is an integer (kbit/s expected);
+- which items `SmartReframe()` accepts (expected: video items on a timeline whose aspect differs from the source) and how long `GetSmartReframeStatus()` takes per minute.
+
+## Timeline dump
+
+Stage-3 skills read the cut timeline through one JSON dump, written with `run_script_unsafe` to `<work>/timeline-<timeline name>.json`, and pass it to `scripts/timeline_map.py` (words ↔ timeline frames), `pre-delivery-qc` and `shorts-cutdown`. Dump again after any edit: item positions change.
+
+```python
+import json, os
+tl = project.GetCurrentTimeline()
+s = tl.GetSettings()
+
+def items(kind, i):
+    rows = []
+    for it in tl.GetItemListInTrack(kind, i) or []:
+        mpi = it.GetMediaPoolItem()
+        p = mpi.GetClipProperty() if mpi else {}
+        rows.append({"name": it.GetName(), "clip_id": mpi.GetUniqueId() if mpi else None,
+                     "start": it.GetStart(), "end": it.GetEnd(),
+                     "source_start": it.GetSourceStartFrame(), "source_end": it.GetSourceEndFrame(),
+                     "enabled": it.GetClipEnabled(), "speed": (it.GetSpeed() or {}).get("Percentage", 100.0),
+                     "online": p.get("Online Status"), "file": p.get("File Path"), "fps": p.get("FPS"),
+                     "resolution": p.get("Resolution"), "color": it.GetClipColor(),
+                     "fusion_comps": it.GetFusionCompCount() if kind == "video" else 0})
+    return rows
+
+dump = {"name": tl.GetName(), "fps": float(s["timelineFrameRate"]), "drop_frame": s.get("timelineDropFrameTimecode") == "1",
+        "width": int(s["timelineResolutionWidth"]), "height": int(s["timelineResolutionHeight"]),
+        "start_frame": tl.GetStartFrame(), "end_frame": tl.GetEndFrame(), "start_tc": tl.GetStartTimecode(),
+        "markers": {str(f): m for f, m in tl.GetMarkers().items()},
+        "tracks": {k: [{"index": i, "name": tl.GetTrackName(k, i), "enabled": tl.GetIsTrackEnabled(k, i),
+                        "locked": tl.GetIsTrackLocked(k, i), "items": items(k, i)}
+                       for i in range(1, tl.GetTrackCount(k) + 1)] for k in ("video", "audio", "subtitle")}}
+os.makedirs(WORK, exist_ok=True)
+path = os.path.join(WORK, f"timeline-{tl.GetName()}.json")
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(dump, f, ensure_ascii=False, indent=1)
+result = {"path": path, "items": {k: sum(len(t["items"]) for t in v) for k, v in dump["tracks"].items()}}
+```
+
+Timeline markers in the dump are relative to `start_frame` (add it to get absolute frames). Words on the timeline:
+
+```bash
+python3 <plugin>/skills/resolve-core/scripts/timeline_map.py words "<work>/timeline-<name>.json" "<work>/transcripts" \
+  --track Voice --source-offset <calibration offset> --out "<work>/words-<name>.json"
+```
+
+Items with a speed change or disabled are skipped with a warning; report those warnings, don't drop them silently.
+
+## Fusion builds from a spec
+
+`fusion-motion-graphics` and `tutorial-zooms` don't type Fusion node code by hand each time: their scripts write a spec JSON (`{"tools": [{"name", "id", "inputs": {id: value}, "keys": {id: {frame: value}}, "connect": {input: "Tool.Output"}}]}`), and one builder applies it in a Fusion comp:
+
+```python
+def fix(v):
+    """JSON turns {1: x, 2: y} into {"1": x, "2": y}; Fusion wants number keys."""
+    return {int(k): x for k, x in v.items()} if isinstance(v, dict) else v
+
+spec = json.load(open(SPEC, encoding="utf-8"))
+comp = item.GetFusionCompByIndex(1) or item.AddFusionComp()
+comp.Lock()
+made = {}
+for t in spec["tools"]:
+    tool = comp.FindTool(t["name"]) or comp.AddTool(t["id"], -32768, -32768)
+    tool.SetAttrs({"TOOLS_Name": t["name"]})
+    made[t["name"]] = tool
+for t in spec["tools"]:
+    tool = made[t["name"]]
+    for k, v in t.get("inputs", {}).items():
+        tool.SetInput(k, fix(v))
+    for k, frames in t.get("keys", {}).items():
+        point = isinstance(next(iter(frames.values())), dict)
+        tool.AddModifier(k, "XYPath" if point else "BezierSpline")   # point inputs animate on a path
+        for f, v in frames.items():
+            tool.SetInput(k, fix(v), float(f))
+    for k, src in t.get("connect", {}).items():
+        name, out = src.split(".")
+        target = made.get(name) or comp.FindTool(name)
+        tool.ConnectInput(k, target)
+    for k, expr in t.get("expressions", {}).items():
+        inp = next(i for i in tool.GetInputList().values() if i.GetAttrs()["INPS_ID"] == k)
+        inp.SetExpression(expr)
+comp.Unlock()
+result, bad = {}, []
+for t in spec["tools"]:
+    tool = made[t["name"]]
+    result[t["name"]] = {k: tool.GetInput(k) for k in t.get("inputs", {})}
+    for k, frames in t.get("keys", {}).items():
+        # first, middle, last key: ends are often the rest state, only the middle proves the keys landed
+        order = sorted(frames, key=float)
+        probe = [order[0], order[len(order) // 2], order[-1]]
+        got = [tool.GetInput(k, float(f)) for f in probe]
+        result[t["name"]][k] = dict(zip(probe, got))
+        want = fix(frames[probe[1]])
+        mid = got[1]
+        same = (abs(mid[1] - want[1]) < 1e-3 and abs(mid[2] - want[2]) < 1e-3) if isinstance(want, dict) and mid \
+            else (mid is not None and abs(mid - want) < 1e-3)
+        if not same:
+            bad.append(f"{t['name']}.{k} @ {probe[1]}: got {mid}, want {want}")
+result["mismatches"] = bad
+```
+
+Vector inputs (`Center`, `Pivot`) take `{1: x, 2: y}` tables in Python and are animated with an `XYPath` modifier; numbers use `BezierSpline`. A non-empty `mismatches` means keys didn't land: stop and report, don't continue to the next item. `MediaIn1`/`MediaOut1` already exist in a clip's comp; connect the last tool to `MediaOut1.Input`. Use `comp.Lock()`/`Unlock()` so Fusion doesn't open dialogs mid-build.
 
 ## Upgrading a stage-1 template
 

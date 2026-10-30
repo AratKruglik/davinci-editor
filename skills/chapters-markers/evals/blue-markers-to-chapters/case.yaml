@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: blue-markers-to-chapters
+expected_outcome: |
+  Chapters come from the Blue markers, snapped to sentence starts on the cut; an intro chapter is added at 0:00 because the first Blue marker is at 00:00:12; the nameless Blue marker gets a proposed title; the 'Назва мережі' marker only 6 s after 'Wi-Fi' is flagged and merged/moved with the user so every chapter is at least 10 s; chapters.py check passes and chapters.txt is written; no Blue markers are created or renamed.
+context:
+  scaffold_script: place-files.sh

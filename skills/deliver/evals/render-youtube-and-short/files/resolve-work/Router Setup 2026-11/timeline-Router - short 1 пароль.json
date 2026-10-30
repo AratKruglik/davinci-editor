@@ -1,0 +1,172 @@
+{
+ "name": "Router - short 1 пароль",
+ "fps": 25.0,
+ "drop_frame": false,
+ "width": 1080,
+ "height": 1920,
+ "start_frame": 90000,
+ "end_frame": 91000,
+ "start_tc": "01:00:00:00",
+ "markers": {},
+ "tracks": {
+  "video": [
+   {
+    "index": 1,
+    "name": "Backgrounds",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 2,
+    "name": "A-roll",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "IMG_4140.MOV",
+      "clip_id": "mp-4140",
+      "start": 90000,
+      "end": 90073,
+      "source_start": 8,
+      "source_end": 81,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4140.MOV",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4140.MOV",
+      "clip_id": "mp-4140",
+      "start": 90073,
+      "end": 90931,
+      "source_start": 230,
+      "source_end": 1088,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4140.MOV",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4141.MOV",
+      "clip_id": "mp-4141",
+      "start": 90931,
+      "end": 91000,
+      "source_start": 8,
+      "source_end": 1353,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4141.MOV",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Blue",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 3,
+    "name": "B-roll",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 4,
+    "name": "Effects",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 5,
+    "name": "Titles",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   }
+  ],
+  "audio": [
+   {
+    "index": 1,
+    "name": "Voice",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "IMG_4140.MOV",
+      "clip_id": "mp-4140",
+      "start": 90000,
+      "end": 90073,
+      "source_start": 8,
+      "source_end": 81,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4140.MOV",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Green",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4140.MOV",
+      "clip_id": "mp-4140",
+      "start": 90073,
+      "end": 90931,
+      "source_start": 230,
+      "source_end": 1088,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4140.MOV",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Green",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4141.MOV",
+      "clip_id": "mp-4141",
+      "start": 90931,
+      "end": 91000,
+      "source_start": 8,
+      "source_end": 1353,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4141.MOV",
+      "fps": 25.0,
+      "resolution": "3840x2160",
+      "color": "Green",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 2,
+    "name": "SFX",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 3,
+    "name": "Music",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   }
+  ],
+  "subtitle": []
+ }
+}

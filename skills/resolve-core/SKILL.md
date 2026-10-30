@@ -10,6 +10,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_scripting_docs"
   - "mcp__DaVinci_Resolve__get_whats_new"
   - "Bash(python3 *tc.py *)"
+  - "Bash(python3 *timeline_map.py *)"
 ---
 
 # Resolve core conventions
@@ -50,6 +51,7 @@ Every davinci-editor skill follows these rules. They exist because a wrong edit 
 - Do conversions with the bundled helper, not mental arithmetic:
   `python3 ${CLAUDE_SKILL_DIR}/scripts/tc.py to-frames 01:00:02:05 --fps 25`
   Other skills import it: `sys.path.insert(0, "<plugin>/skills/resolve-core/scripts"); from tc import tc_to_frames, frames_to_tc, ms_to_frames`.
+- After the cut, transcript words are not at their clip timecode any more. Skills that need speech on the cut timeline (subtitles, chapters, Shorts, thumbnails, QC) take a fresh [timeline dump](reference.md#timeline-dump) and map words with `python3 ${CLAUDE_SKILL_DIR}/scripts/timeline_map.py words …`; the reverse (a timeline range → source clip ranges, to rebuild it elsewhere) is `timeline_map.py sources …`.
 
 ## 5. Tracks and markers
 

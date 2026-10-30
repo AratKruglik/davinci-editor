@@ -1,6 +1,6 @@
 # davinci-editor
 
-A Claude Code and Claude Desktop (Cowork) plugin that edits in DaVinci Resolve Studio 21+ through Resolve's MCP server: project bootstrap, Apple Log → Rec.709, ColorChecker chart match, natural skin grade, background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, editing by colored markers, role-based tracks, sound design, AI Voice Isolation and loudness finish for YouTube.
+A Claude Code and Claude Desktop (Cowork) plugin that edits in DaVinci Resolve Studio 21+ through Resolve's MCP server: project bootstrap, Apple Log → Rec.709, ColorChecker chart match, natural skin grade, background blur, Ukrainian transcription, text-based rough cut, camera + screen sync with PiP, editing by colored markers, role-based tracks, sound design, AI Voice Isolation, loudness finish for YouTube, Fusion motion graphics, tutorial zooms, Ukrainian subtitles, Shorts, chapters, thumbnail frames, pre-delivery QC and H.265 delivery.
 
 Plan and roadmap: [docs/davinci-plugin-skills.md](docs/davinci-plugin-skills.md) · markers: [docs/marker-color-system.md](docs/marker-color-system.md) · tracks: [docs/track-layout.md](docs/track-layout.md) (in Ukrainian).
 
@@ -267,13 +267,26 @@ The defaults suit Ukrainian-language YouTube tutorials; change only what differs
 | `loudness_target_lufs` | `-14` | final mix loudness (YouTube) |
 | `true_peak_db` | `-1` | final mix peak ceiling |
 | `fairlight_preset` | — | optional Fairlight preset (bus limiter, music ducking) |
+| `brand_font` / `brand_font_style` | `Montserrat` / `Bold` | font of titles and Shorts captions (needs Cyrillic) |
+| `brand_text_color` / `brand_accent_color` | `#FFFFFF` / `#FFD400` | title text and accent (second line, counters, spoken word in captions) |
+| `brand_plate_color` / `brand_plate_opacity` | `#000000` / `0.7` | box behind lower thirds and callouts |
+| `zoom_default_scale` / `zoom_max_scale` | `1.6` / `2.5` | screen zoom strength and its limit |
+| `zoom_ease_s` | `0.5` | zoom move duration, seconds |
+| `punch_in_scale` | `1.12` | punch-in on alternate A-roll segments (hides jump cuts) |
+| `subtitle_max_chars` / `subtitle_max_cps` | `42` / `17` | subtitle line length and reading speed |
+| `shorts_min_s` / `shorts_max_s` | `30` / `60` | Shorts length |
+| `shorts_resolution` | `1080x1920` | Shorts frame |
+| `shorts_caption_words` | `3` | words per animated Shorts caption |
+| `render_dir` | — | render folder (empty = `<work_dir>/<project>/renders`) |
+| `render_preset_youtube` / `render_preset_shorts` | — | your own Resolve render presets; empty = H.265 settings built by `deliver` |
+| `youtube_bitrate_mbps` / `shorts_bitrate_mbps` | `60` / `20` | render bitrates |
 
 ## Step 4. First run
 
 1. **Node template (once).** The Resolve API can't create nodes, so on its first run `log-to-rec709` asks you to build 6 serial nodes on one clip, labeled `CHART` → `CST` → `PRIMARY` → `SKIN` → `DEPTH` → `LOOK`: set up the CST, a skin-hue qualifier on `SKIN`, AI CineFocus (or Depth Map + Lens Blur) on `DEPTH` and disable `DEPTH`, then say "done". It saves that as a DRX template in `templates_dir` and applies it by itself from then on. Apple Log and Apple Log 2 get separate templates. A stage-1 template without `SKIN`/`DEPTH` is upgraded in place, keeping the chart correction.
-2. **Markers.** While reviewing footage, place markers (`M` in Resolve) in the colors from `marker_colors`: Red = cut, Green = keep / best take, Yellow = doubt, Sand = ColorChecker frame, Purple = camera / screen / PiP, Fuchsia = B-roll, Cocoa = transition, Lavender = SFX, Sky = music, Rose = audio problem. Details: [docs/marker-color-system.md](docs/marker-color-system.md).
+2. **Markers.** While reviewing footage, place markers (`M` in Resolve) in the colors from `marker_colors`: Red = cut, Green = keep / best take, Yellow = doubt, Sand = ColorChecker frame, Purple = camera / screen / PiP, Fuchsia = B-roll, Cocoa = transition, Lavender = SFX, Sky = music, Rose = audio problem, Blue = chapter, Cyan = title, Pink = zoom, Mint = Shorts candidate, Lemon = thumbnail frame. Details: [docs/marker-color-system.md](docs/marker-color-system.md).
 3. **Sound library (once).** Set `sfx_library_dir` and `music_library_dir`; `sound-design` indexes them and asks once per music source whether it's cleared for your channel (YouTube Content ID).
-4. **Full workflow:** `/davinci-editor:edit-episode Episode name` runs project and color before the cut → transcript, tracks, rough cut, PiP → sound. After each step Claude stops and waits for your go-ahead; progress is kept in `episode.md`, so `/davinci-editor:edit-episode` in a new session resumes where you stopped.
+4. **Full workflow:** `/davinci-editor:edit-episode Episode name` runs project and color before the cut → transcript, tracks, rough cut, PiP → sound → graphics, zooms, subtitles, chapters, Shorts, thumbnails, QC and render. After each step Claude stops and waits for your go-ahead; progress is kept in `episode.md`, so `/davinci-editor:edit-episode` in a new session resumes where you stopped.
 5. Or single steps in plain language: "convert A-Roll from Apple Log to 709", "make a rough cut of these clips", "clean up the voice, the air conditioner hums".
 
 What Claude never does without confirmation: delete clips, timelines, grades, LUTs or markers (a hook in every editing skill turns any delete/reset script into a permission prompt); change the source timeline (the rough cut goes to a new one); change project-wide color management; touch your markers (it only writes the hidden `customData` field and uses Cream for its own markers).
@@ -297,6 +310,14 @@ What Claude never does without confirmation: delete clips, timelines, grades, LU
 | `track-layout` | auto or `/davinci-editor:track-layout [setup\|add\|recolor\|lock\|cleanup]` | role-based tracks, clip colors, cleanup of empty tracks |
 | `sound-design` | auto or `/davinci-editor:sound-design [timeline] [subtle\|normal\|rich]` | cue sheet from transcript and markers → approval → SFX, music and ambience from your library with levels and fades |
 | `audio-finish` | auto or `/davinci-editor:audio-finish [timeline] [LUFS]` | dialogue leveling, Rose fixes, measured loudness to -14 LUFS without clipping |
+| `fusion-motion-graphics` | auto or `/davinci-editor:fusion-motion-graphics [timeline] [markers\|kind text]` | lower thirds, callouts, kinetic phrases, counters in your brand style from Cyan markers |
+| `tutorial-zooms` | auto or `/davinci-editor:tutorial-zooms [timeline] [screen\|punch-in]` | eased zooms onto screen regions from Pink markers; punch-ins that hide jump cuts |
+| `subtitles-uk` | auto or `/davinci-editor:subtitles-uk [timeline] [youtube\|shorts]` | Ukrainian SRT from the transcript; animated word-highlight captions for Shorts |
+| `chapters-markers` | auto or `/davinci-editor:chapters-markers [timeline]` | YouTube chapters from Blue markers and the transcript, checked against YouTube's rules |
+| `shorts-cutdown` | auto or `/davinci-editor:shorts-cutdown [timeline] [count]` | 30–60 s Shorts from Mint markers / the transcript on vertical timelines with Smart Reframe |
+| `thumbnail-frames` | auto or `/davinci-editor:thumbnail-frames [timeline] [count]` | thumbnail candidate stills from Lemon markers and strong moments, ranked and briefed |
+| `pre-delivery-qc` | auto or `/davinci-editor:pre-delivery-qc [timeline] [youtube\|shorts]` | read-only check: black and flash frames, offline media, dropouts, markers, settings, loudness |
+| `deliver` | auto or `/davinci-editor:deliver [youtube\|shorts\|all]` | H.265 renders for YouTube and Shorts after QC, files verified on disk, upload package |
 | `edit-episode` | only `/davinci-editor:edit-episode [name] [stage]` | the whole workflow with approval stops, resumable |
 
 ## Troubleshooting
@@ -325,6 +346,15 @@ python3 skills/motionvfx-catalog/scripts/test_catalog.py
 python3 skills/dual-video-sync-pip/scripts/pip_plan.py selftest
 python3 skills/sound-design/scripts/test_sound_library.py
 python3 skills/audio-finish/scripts/loudness.py selftest
+python3 skills/resolve-core/scripts/timeline_map.py selftest
+python3 skills/fusion-motion-graphics/scripts/motion.py selftest
+python3 skills/tutorial-zooms/scripts/zooms.py selftest
+python3 skills/subtitles-uk/scripts/subtitles.py selftest
+python3 skills/shorts-cutdown/scripts/shorts.py selftest
+python3 skills/chapters-markers/scripts/chapters.py selftest
+python3 skills/thumbnail-frames/scripts/thumbs.py selftest
+python3 skills/pre-delivery-qc/scripts/qc.py selftest
+python3 skills/deliver/scripts/mp4_info.py selftest
 claude plugin validate .
 claude plugin eval . --allow-tools Write,Edit,Bash --scaffold   # eval cases in skills/*/evals (real, billed model runs)
 ```
@@ -336,7 +366,7 @@ Skill eval cases live in `skills/<skill>/evals/`; the offline fixtures don't nee
 The Cowork zip is built from the same `skills/` by `scripts/build_cowork.py`: it renames the plugin to `davinci-editor-cowork`, bundles `.mcp.json` with Resolve's server, rewrites the skills' pre-approved tool names to the plugin-scoped ones (`mcp__plugin_davinci-editor-cowork_DaVinci_Resolve__*`) and leaves out the eval fixtures.
 
 1. Bump `version` in `.claude-plugin/plugin.json`.
-2. Commit, then tag and push: `git tag v0.3.0 && git push origin v0.3.0` (the tag must match the version).
+2. Commit, then tag and push: `git tag v0.4.0 && git push origin v0.4.0` (the tag must match the version).
 3. The `release` workflow runs the self-tests, builds `davinci-editor-cowork-<version>.zip` and publishes it on the GitHub release.
 
 Local build: `python3 scripts/build_cowork.py` → `dist/`.
