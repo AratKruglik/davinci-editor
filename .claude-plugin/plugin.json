@@ -1,7 +1,7 @@
 {
   "name": "davinci-editor",
   "displayName": "DaVinci Editor",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Video editing in DaVinci Resolve Studio 21+ via its MCP server: project setup, Apple Log to Rec.709, chart match, skin grade, depth blur, Ukrainian transcription and subtitles, text-based cut, camera + screen PiP sync, J/L-cuts, MotionVFX, sound design, audio effects, voice isolation, YouTube loudness, Fusion graphics, tutorial zooms, Shorts, chapters, thumbnails, QC and H.265 delivery, marker-driven edits.",
   "author": {
     "name": "Oleksii Kruhlyk"
