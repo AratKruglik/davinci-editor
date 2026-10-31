@@ -41,7 +41,7 @@ def source_words(data):
     origin = tc_to_frames(data["start_tc"], fps, drop)
     for seg in (data.get("transcription") or {}).get("segments", []):
         for w in seg.get("words", []):
-            if w["text"].strip() and w["text"] != SILENCE:
+            if w["text"].strip() not in ("", SILENCE):
                 start = tc_to_frames(w["start"], fps, drop) - origin
                 end = max(start + 1, tc_to_frames(w["end"], fps, drop) - origin)
                 yield start, end, w["text"].strip(), seg.get("speaker")

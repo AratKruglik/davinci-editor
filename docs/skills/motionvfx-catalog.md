@@ -61,9 +61,10 @@ There are no approval stops: the skill changes nothing.
 |---|---|---|
 | `fusion-motion-graphics` | a Cyan marker whose note names a MotionVFX title | inserted as a Fusion title; the text goes into its text fields |
 | `marker-edit` | the transition named in a Cocoa marker | added as a Fusion transition on the outgoing clip |
-| `dual-video-sync-pip` | a styled frame or corner screen for PiP | effects can't be attached through the API: you get the list of PiP items and the effect name, and drag it on yourself |
-
+| `dual-video-sync-pip` | a styled frame or corner screen for PiP | you get the list of PiP items and the effect name, and drag it on yourself |
 The name passed to Resolve is the `.setting` file name without extension, exactly as in the catalog (spaces, brackets and all).
+
+On Resolve 21.1.2+ a Fusion effect from the catalog can be attached to a clip by script: its id comes from Resolve's own effects list, matched by the catalog name, and its controls are set through the macro the catalog names. Only clips with media take effects, not titles or generators. The skill that attaches it does the backup; this catalog only reads files.
 
 ## What it never does
 

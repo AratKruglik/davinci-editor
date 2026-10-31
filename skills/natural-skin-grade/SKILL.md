@@ -39,12 +39,11 @@ Script: `${CLAUDE_SKILL_DIR}/scripts/skin_grade.py` (pure Python). Self-check: `
 
 ## 1. Measure a clean frame
 
-Pick one representative frame per scene: face large, frontal, evenly lit, no motion blur. Ask the user if several people or lighting changes are in the scene.
+Pick one representative frame per scene: face large, frontal, evenly lit, no motion blur. Ask the user if several people or lighting changes are in the scene. Take `item` = the A-roll video item at that timeline frame and `off = frame − item.GetStart()`.
 
-Export it as a still in "after CST, before skin" state, without touching the user's versions, the same way `chart-match` does:
+Export it as a still in "after CST, before skin" state, without touching the user's versions, the same way `chart-match` does (`item.ExportFrame` on 21.1.2; older Resolve: playhead on the frame + `project.ExportCurrentFrameAsStill`, see `chart-match` §2):
 
 ```python
-item = tl.GetCurrentVideoItem()
 before = item.GetCurrentVersion()
 g0 = item.GetNodeGraph()
 lut = g0.GetLUT(next(i for i in range(1, g0.GetNumNodes() + 1) if g0.GetNodeLabel(i) == "CHART"))
@@ -57,8 +56,8 @@ try:
     for name in ("DEPTH", "DEPTH BLUR", "LOOK"):
         if name in label:
             g.SetNodeEnabled(label[name], False)
-    ok = project.ExportCurrentFrameAsStill(f"{work}/stills/{scene}-skin.tif")
-    project.ExportCurrentFrameAsStill(f"{work}/stills/{scene}-skin.png")
+    ok = item.ExportFrame(off, {"outputType": "file", "filePath": f"{work}/stills/{scene}-skin.tif"})["success"]
+    item.ExportFrame(off, {"outputType": "file", "filePath": f"{work}/stills/{scene}-skin.png"})
 finally:
     item.LoadVersionByName(before["versionName"], before["versionType"])
     item.DeleteVersionByName("claude-measure", 0)

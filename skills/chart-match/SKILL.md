@@ -40,7 +40,7 @@ The user marks the chart frame with a **Sand** marker (color from `${user_config
 
 1. Read `clip.GetMarkers()` for the clips of the scene and keep the Sand markers (skip ones whose `customData` is `claude:done:chart-match:*`). Also accept a timeline/clip marker named or noted `chart` / `таблиця` as a fallback.
 2. Several → one per scene; pick the one for `$scene`. None → ask the user to put a Sand marker on a frame where the chart is sharp, flat-lit, fills ≥ 1/6 of the frame and has no glare (don't place it yourself: user marker colors are theirs; Claude's own markers are Cream only).
-3. Put the playhead on that frame of a timeline that contains the clip: timeline frame = item start + (marker frame − item source start).
+3. Find the item on a timeline that contains the clip: the video item whose `GetMediaPoolItem()` is that clip and whose source range contains the marker frame. Offset into the item: `off = marker frame − item.GetSourceStartFrame()` (timeline frame = `item.GetStart() + off`).
 4. The chart must be in the same light as the scene. A chart shot in different light than the takes makes things worse, not better: say so if the user mentions it.
 
 ## 2. Export an ungraded still
@@ -50,15 +50,15 @@ Color management must be off for the export to contain raw Apple Log: check `pro
 Measure on a throw-away **local** version so the user's grade is never touched (there is no API to read which nodes are enabled, so disabling nodes on the real grade can't be undone exactly):
 
 ```python
-item = tl.GetCurrentVideoItem()
+# item, off: from step 1
 before = item.GetCurrentVersion()                      # e.g. {"versionName": "claude", "versionType": 1}
 item.AddVersion("claude-measure", 0); item.LoadVersionByName("claude-measure", 0)
 g = item.GetNodeGraph(); g.ApplyGradeFromDRX(BASE_TEMPLATE, 0)
 try:
     for i in range(1, g.GetNumNodes() + 1):
         g.SetNodeEnabled(i, False)
-    ok = project.ExportCurrentFrameAsStill(f"{work}/stills/{scene}-chart-log.tif")
-    project.ExportCurrentFrameAsStill(f"{work}/stills/{scene}-chart-log.png")
+    ok = item.ExportFrame(off, {"outputType": "file", "filePath": f"{work}/stills/{scene}-chart-log.tif"})["success"]
+    item.ExportFrame(off, {"outputType": "file", "filePath": f"{work}/stills/{scene}-chart-log.png"})
 finally:
     item.LoadVersionByName(before["versionName"], before["versionType"])
     item.DeleteVersionByName("claude-measure", 0)
@@ -66,6 +66,8 @@ result = {"ok": ok, "restored": item.GetCurrentVersion()}
 ```
 
 `BASE_TEMPLATE` is the base DRX for this log version from `${user_config.templates_dir}`. Confirm `restored` equals `before`.
+
+`item.ExportFrame` (21.1.2, `resolve-core` §10) renders the item's frame with the version loaded on it, at full resolution (`.tif` 16-bit), and leaves the playhead alone; don't add `maxDimension`, the PNG coordinates are used on the TIF. Older Resolve: put the playhead on `item.GetStart() + off` and use `project.ExportCurrentFrameAsStill(path)` for both files instead; it renders whatever is under the playhead, so a playhead off the item gives a black still.
 
 `work` = `${user_config.work_dir}/<project name>`.
 

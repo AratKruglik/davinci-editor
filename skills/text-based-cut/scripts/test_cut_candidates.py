@@ -89,6 +89,15 @@ def run():
         assert red["start"] <= 200 < red["end"] and "важливо" in red["text"], red
         assert all(c["decision"] == "review" for c in marked if c["start"] < 130 and c["end"] > 120 and "y1" in c.get("marker_ids", [])), "yellow"
         assert any("y1" in c.get("marker_ids", []) for c in marked)
+        # Resolve's own words carry a leading space (" слово"), the silence word too
+        native = build([[(" е", 6), (" це", 5), (" важливо", 15), (" (...)", 40), (" далі", 10), (" (...)", 10)]])
+        with open(os.path.join(d, "C001.json"), "w", encoding="utf-8") as f:
+            json.dump({**data, "clip_name": "C001", "clip_id": "C001", "transcription": {"segments": native}}, f, ensure_ascii=False)
+        assert cli("analyze", d, "--out", cuts).returncode == 0
+        with open(cuts, encoding="utf-8") as f:
+            spaced = [c for c in json.load(f)["candidates"] if c["clip"] == "C001"]
+        assert {"filler", "pause"} <= {c["type"] for c in spaced}, spaced
+        assert all("  " not in c["text"] and "(...)" not in c["text"] for c in spaced), spaced
     print("ok", sorted(types), len(plan), "segments")
 
 

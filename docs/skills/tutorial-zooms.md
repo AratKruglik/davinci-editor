@@ -83,7 +83,7 @@ Under `<work_dir>/<project>/` (the work folder from `resolve-core`):
 |---|---|
 | `zooms-before.json` | properties of every item before the change: the undo record |
 | `words-<timeline>.json` | words on the cut, to time zooms to speech (when transcripts exist) |
-| `stills/zoom-<n>.tif` | the still each region is read from |
+| `stills/zoom-<n>.png` | the still each region is read from (`.tif` on Resolve before 21.1.2) |
 | `zooms/<item>.json` | the zooms of one item (frames, regions, scales) |
 | `zooms/<item>-spec.json` | the Fusion keyframe spec built from it |
 
@@ -97,6 +97,10 @@ Under `<work_dir>/<project>/` (the work folder from `resolve-core`):
 4. Per item, all zooms go into one Fusion comp. An item that already has your own Fusion comp is left alone and you are asked; a comp from an earlier run of this skill is rebuilt (it says so).
 5. Plans the keyframes with `zooms.py plan` and reports its warnings, then builds `MediaIn1 → ZOOM (Transform) → MediaOut1`. The clip's Inspector transform (the PiP layout from `dual-video-sync-pip`) stays as it is; the PiP position is checked after the first build.
 6. Verifies each zoom on stills at its middle and 1 s after its end: element centered and readable, no black edge, back to full frame afterwards. Offers Fusion output cache `Auto` for smooth playback of 4K screen recordings.
+
+On Resolve 21.1.2+ stills are exported straight from the timeline at the exact frame, without moving the playhead; older versions move the playhead and export the current frame.
+
+**MotionVFX zoom (on request, Resolve 21.1.2+):** ask for the MotionVFX look and the skill attaches the installed `mHowTo Zoom` effect to the screen item instead of building the Transform, and sets its Zoom Scale and Movement Target. Its scale unit, target coordinates and timing aren't documented, and the effect covers the whole item rather than the zoom range, so the skill tries it on the first zoom, shows you stills from the start, middle and end of the item, and continues only after your yes. Not installed: the Transform route.
 
 **`punch-in`:**
 
@@ -162,4 +166,4 @@ The strong prompt points to your markers and names the elements, so regions come
 - No black edge at any frame of a zoom; back to full frame after it.
 - The PiP camera still sits right on zoomed Screen items.
 - In `punch-in`: the jumps look intentional, the eyes stay in place.
-- Undo: `zooms-before.json` and the Fusion comps named in the report.
+- Undo: `zooms-before.json` and the Fusion comps or MotionVFX effects named in the report.

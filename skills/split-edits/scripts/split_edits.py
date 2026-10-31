@@ -3,7 +3,7 @@
 joins:    python3 split_edits.py joins (--dump <timeline dump> | --rough <plan.json> --frames <clip-frames.json>)
               --transcripts <dir> [--cuts cuts.json] [--source-offset N] [--colors "Red=cut,..."] [--previous split-plan.json]
               [--j-lead 12] [--l-tail 12] [--max 50] [--fade 4] [--max-in-row 3] [--handle-ms 150] --out split-plan.json
-audio:    python3 split_edits.py audio split-plan.json --out split-audio.json
+audio:    python3 split_edits.py audio split-plan.json --out split-audio.json   (dump mode also lists "trims": one edge call per split)
 verify:   python3 split_edits.py verify <fresh dump> split-audio.json
 sections: python3 split_edits.py sections <dump> <transcripts dir> <pip-input.json> [--source-offset N] [--j-lead 12] [--l-tail 12] [--max 50] --out <file>
 ambience: python3 split_edits.py ambience <dump> [--j-lead 12] [--l-tail 12] [--fade 4]
@@ -275,7 +275,21 @@ def apply_plan(plan):
         rows = [changed.get(s["id"]) or {"voice_item": s["id"], "clip_id": s["clip_id"], "current": [s["start"], s["end"]],
                                           "source_start": s["src_start"], "source_end": s["src_end"], "record": s["start"],
                                           "fade_in": 0, "fade_out": 0} for s in plan["segments"]]
-    return {"mode": plan["mode"], "splits": [{"join": j, "type": t, "frames": n} for j, (t, n) in sorted(splits.items())], "audio": rows}
+    out = {"mode": plan["mode"], "splits": [{"join": j, "type": t, "frames": n} for j, (t, n) in sorted(splits.items())], "audio": rows}
+    if plan["mode"] == "dump":
+        out["trims"] = trims(segs, nexts, splits)
+    return out
+
+
+def trims(segs, nexts, splits):
+    """21.1.2 build: one call per split on the Voice item whose sound is extended; the neighbour's edge is overwritten.
+    J: next item SetLeftOffset(lo - frames, False, False); L: previous item SetRightOffset(ro - frames, False, False)."""
+    out = []
+    for j, (kind, n) in sorted(splits.items()):
+        v = nexts[j]["voice_left"] if kind == "J" else segs[j]["voice_right"]
+        out.append({"join": j, "type": kind, "voice_item": v["id"], "clip_id": v["clip_id"], "current": [v["start"], v["end"]],
+                    "edge": "left" if kind == "J" else "right", "frames": n})
+    return out
 
 
 def verify(dump, expected, offset=0):
@@ -459,6 +473,17 @@ def selftest():
         raise AssertionError("an edited shift beyond the handle must be refused")
     except SystemExit as e:
         assert "only 20 frames" in str(e), e
+
+    # trims (dump mode): J extends the next Voice item's head, L the previous one's tail; rough mode has none
+    dplan = {"mode": "dump", "source_offset": 0, "settings": ctx2, "segments": s2, "words": ctx2["words"], "cuts": {}}
+    dplan["proposals"] = [{"id": "p1", "join": 1100, "type": "J", "frames": 12, "decision": "split"}]
+    dout = apply_plan(dplan)
+    assert dout["audio"] == rows and dout["trims"] == [{"join": 1100, "type": "J", "voice_item": "IMG_2@1100", "clip_id": "c2",
+                                                         "current": [1100, 1200], "edge": "left", "frames": 12}], dout
+    dplan["proposals"][0]["type"] = "L"
+    assert apply_plan(dplan)["trims"] == [{"join": 1100, "type": "L", "voice_item": "IMG_1@1000", "clip_id": "c1",
+                                           "current": [1000, 1100], "edge": "right", "frames": 12}]
+    assert "trims" not in out, out
 
     # verify: relaid audio in sync, or reports drift
     built = dict(d2, tracks={"video": d2["tracks"]["video"], "audio": [{"name": "Voice", "items": [

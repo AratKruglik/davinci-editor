@@ -37,14 +37,14 @@ What makes a frame work at 160 px wide: one readable face, eyes open and looking
 ## 2. Clean stills
 
 1. Hide what doesn't belong on a thumbnail: disable the `Titles`, `Subtitles UA` and subtitle tracks and the `Effects` track if it holds text (`tl.SetTrackEnable`). Read each track's state first (`GetIsTrackEnabled`) and keep it in the script's result; at the end set each track back to **that recorded value** (not simply `True`: a track the user had disabled stays disabled), even if an export fails.
-2. Per moment a burst of 5 frames: offsets −6, −3, 0, +3, +6 (a blink lasts ~4 frames at 25 fps). `tl.SetCurrentTimecode(tc)`, `project.ExportCurrentFrameAsStill("<work>/thumbnails/<n>_<offset>.tif")`, one call per still; check the file exists.
+2. Per moment a burst of 5 frames: offsets −6, −3, 0, +3, +6 (a blink lasts ~4 frames at 25 fps). Resolve 21.1.2+ (`resolve-core` §10): `tl.ExportFrame(frame + offset - tl.GetStartFrame(), {"outputType": "file", "filePath": "<work>/thumbnails/<n>_<offset>.tif", "maxDimension": 1280})`, the whole burst in one call, no playhead move; check every `r["success"]`. Paths are Mac paths (`resolve-core` §8). Older: `tl.SetCurrentTimecode(tc)`, `project.ExportCurrentFrameAsStill("<work>/thumbnails/<n>_<offset>.tif")`, one call per still; check the file exists.
 3. Rank: `python3 ${CLAUDE_SKILL_DIR}/scripts/thumbs.py score "<work>/thumbnails" --out "<work>/thumbnails/scores.json"`. It flags soft (motion blur), under/over-exposed and clipped frames; it can't see faces.
 
 ## 3. Look
 
 Read the two best-scored stills of every moment (more if they're close). For each, judge: eyes open and sharp, expression readable, mouth not mid-word in an awkward shape, face size (≥ ~⅓ of frame height is best), head not cut, space for text (left or right third), background not busy. Discard frames that fail on eyes or sharpness, whatever their score.
 
-Pick `$count`. For each pick export a full-resolution PNG next to the TIFF (`ExportCurrentFrameAsStill` with `.png`) for the designer. Put a Cream marker at each pick (`customData` `claude:thumbnail`, name = short description).
+Pick `$count`. For each pick export a full-resolution PNG for the designer, the same call without `maxDimension` and with `.png` (older Resolve: `ExportCurrentFrameAsStill` with `.png`); on 21.1.2+ also a full-resolution 16-bit `.tif` for retouching, into `<work>/thumbnails/full/` (the burst stills in `thumbnails/` stay the 1280 px ones `thumbs.py` scored). Put a Cream marker at each pick (`customData` `claude:thumbnail`, name = short description).
 
 ## 4. Brief
 

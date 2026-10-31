@@ -80,7 +80,7 @@ In Resolve the correction is written as the DCTL `MCP/chart-<scene>.dctl`, or th
 
 ## Workflow and approval stops
 
-1. Finds the Sand marker for the scene and puts the playhead on that frame of a timeline that contains the clip.
+1. Finds the Sand marker for the scene and that frame on a timeline that contains the clip. On Resolve 21.1.2+ the stills are exported straight from the clip, so your playhead isn't moved; older versions move the playhead onto the frame.
 2. Exports an ungraded still on a temporary **local** version `claude-measure` (template applied, every node disabled), then restores your version and deletes the temporary one. Your grade is never touched. Deleting `claude-measure` is exempt from the delete prompt.
 3. Reads the PNG and locates the patches by four of them: 1 (dark skin), 6 (bluish green), 24 (black), 19 (white), whatever the chart's orientation. If it can't tell confidently, it **asks you** for the four pixel coordinates (for example from Resolve's viewer) instead of guessing.
 4. Fits the correction. Patches that don't look uniform mean a position missed: it fixes the coordinates and fits again. Then applies the quality gate above.

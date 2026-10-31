@@ -11,7 +11,7 @@ For video tutorials:
 3. Puts a picture-in-picture camera on the **PiP** track.
 4. Switches between camera, screen and PiP by your Purple markers.
 
-PiP is built with clip transform properties (zoom, pan, tilt). A MotionVFX placeholder frame is offered as an optional manual finish.
+PiP is built with clip transform properties (zoom, pan, tilt). A MotionVFX placeholder frame is offered as an optional finish.
 
 Principle: A-roll is never changed. It stays under everything as the continuous camera, so the cut and its grades are untouched. Screen covers it where the screen should show, and PiP puts the face back on top in PiP sections. Voice keeps the camera audio.
 
@@ -92,7 +92,7 @@ All under `<work_dir>/<project>/`:
 5. **Finds or re-roles the Screen and PiP tracks** (above). **Shows the plan:** sections with timecodes, mode and duration, plus the layout. **Waits for your yes**, then backs up the timeline.
 6. **Places and lays out:** the screen recording on Screen and the camera copy on PiP. PiP items get their transform values, which Claude reads back and compares. On the first PiP item it exports a still and checks the camera really sits in the chosen corner with the margin. If the direction or units are off, it fixes the numbers once and continues. Screen items stay full frame. If the recording's aspect differs (16:10 Mac screens), the timeline scaling handles it, and Claude mentions black bars or crop.
 7. Loads the remote `claude` grade on the PiP items (they are the same camera clips), recolors clips by role with `track-layout`, saves the project.
-8. **Optional MotionVFX placeholder:** for a styled frame instead of a plain corner, Claude searches the MotionVFX catalog. Effects can't be attached through the API, so it lists the PiP items with timecodes and the chosen effect, and you drag it on (Paste Attributes copies it to the rest). Resolve 21's own **Picture in Picture** Resolve FX is the built-in alternative, also manual.
+8. **Optional MotionVFX placeholder:** for a styled frame instead of a plain corner, Claude searches the MotionVFX catalog. On Resolve 21.1.2+ Claude attaches it to every PiP item by script and checks the first on a still. On older versions it lists the PiP items with timecodes and the chosen effect, and you drag it on (Paste Attributes copies it to the rest). Resolve 21's own **Picture in Picture** Resolve FX is the built-in alternative, still manual: its settings can't be set by script.
 9. Reports pairs and offsets, sections per mode (count, total duration), parts without screen recording, layout values, and what to check by eye.
 
 ## What it never does

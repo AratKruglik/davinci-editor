@@ -59,13 +59,16 @@ project = pm.CreateProject(NAME)           # None → name taken: ask for anothe
 ok = project.SetSettings({
     "timelineResolutionWidth": W, "timelineResolutionHeight": H, "timelineFrameRate": FPS,
     "colorScienceMode": "davinciYRGB",     # node-based: the grading skills need an explicit CST, not RCM
-    "transcriptionLanguage": LANG,
 })
+if LANG == "uk" and resolve.GetVersion()[:3] >= [21, 1, 2]:
+    project.SetSettings({"transcriptionExtendedLanguageSupport": "1"})   # first: uk exists only in the extended model
+project.SetSettings({"transcriptionLanguage": LANG})                    # separate call: changing extended resets it to auto
 s = project.GetSettings()
-result = {k: s.get(k) for k in ("timelineResolutionWidth", "timelineResolutionHeight", "timelineFrameRate", "colorScienceMode", "transcriptionLanguage")}
+result = {k: s.get(k) for k in ("timelineResolutionWidth", "timelineResolutionHeight", "timelineFrameRate", "colorScienceMode",
+                                 "transcriptionExtendedLanguageSupport", "transcriptionLanguage")}
 ```
 
-`LANG` = `${user_config.transcription_language}`. Re-read every key; a key that didn't stick → report it with the value Resolve kept (for `transcriptionLanguage`, `uk-transcribe` §1 has the discovery steps). Don't loop on it.
+`LANG` = `${user_config.transcription_language}`. Re-read every key; a key that didn't stick → report it with the value Resolve kept (for `transcriptionLanguage`, `uk-transcribe` §1 has the order and the Extras check: extended not reading back `"1"` means the extended models aren't installed). Don't loop on it.
 
 ## 3. Bins and import
 

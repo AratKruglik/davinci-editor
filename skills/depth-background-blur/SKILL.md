@@ -23,7 +23,7 @@ Follow `resolve-core` first. Scene: `$scene` (ask if empty). Strength: `$strengt
 
 ## Why it works this way
 
-- The API can't add Resolve FX or change their parameters; it can only apply a DRX, enable/disable nodes and set LUT/CDL.
+- The API can't put Resolve FX into a Color node, create nodes, or set Resolve FX parameters and keyframes; on nodes it can only apply a DRX, enable/disable nodes and set LUT/CDL. Resolve 21.1.2 can add OFX such as `CineFocus` or `Depth Map` to a clip as an **Edit-page** effect (`item.AddEffect("ofx", id)`, toggle, reorder, `DeleteEffects`; `resolve-core` §10), but at default settings: the focus can't be aimed at the speaker by script, so that is not a route here.
 - Applying a DRX to a clip replaces its whole node tree (chart LUT and skin CDLs would be lost). So the blur already lives, **disabled**, in the base template as the `DEPTH` node (and `DEPTH BLUR` for the Depth Map variant); this skill only switches it on.
 - A Color Group's post-clip graph is a separate graph, so applying a DRX there doesn't touch clip grades. That's the route for a strength other than the template's.
 
@@ -93,7 +93,7 @@ Group route: make sure the clip-level `DEPTH*` nodes are **disabled** (no double
 
 ## 5. Verify
 
-Export a still of one clip from the real version (playhead on it) and look at it: background visibly softer, face sharp, no halo. Ask the user to play 5–10 s: flicker in the blur means the depth estimate jumps; then suggest CineFocus or the `light` strength.
+Export a still of one clip from the real version and look at it: `tl.ExportFrame(<frame in the clip> - tl.GetStartFrame(), {"outputType": "file", "filePath": "<work>/stills/<scene>-depth.png"})` (Resolve 21.1.2+, `resolve-core` §10: the finished, graded frame, no playhead move; older: playhead on it + `ExportCurrentFrameAsStill`): background visibly softer, face sharp, no halo. Ask the user to play 5–10 s: flicker in the blur means the depth estimate jumps; then suggest CineFocus or the `light` strength.
 
 What a bad still usually means (all fixed in the template per "DEPTH node setup", then re-captured; for the base template that's a template upgrade):
 

@@ -1,6 +1,6 @@
 ---
 name: dual-video-sync-pip
-description: For video tutorials in DaVinci Resolve Studio 21+ - syncs the camera with the screen recording by sound (Resolve's waveform auto-align), then lays the screen recording on the Screen track under the already cut A-roll and a picture-in-picture camera on the PiP track, switching camera / screen / PiP by the user's Purple markers. PiP is built with clip transform properties; MotionVFX placeholders are offered as an optional manual finish.
+description: For video tutorials in DaVinci Resolve Studio 21+ - syncs the camera with the screen recording by sound (Resolve's waveform auto-align), then lays the screen recording on the Screen track under the already cut A-roll and a picture-in-picture camera on the PiP track, switching camera / screen / PiP by the user's Purple markers. PiP is built with clip transform properties; a MotionVFX placeholder frame is offered as an optional finish (attached by script on Resolve 21.1.2+, by hand before).
 when_to_use: Tutorial or screencast with a separate screen recording and a camera; user wants them synced, switching between face and screen, or a face-in-corner PiP; stage B of edit-episode after text-based-cut; Purple markers. Triggers - "синхронізуй екран і камеру", "запис екрану", "картинка в картинці", "PiP", "обличчя в кутку", "перемикай камеру й екран".
 argument-hint: "[timeline] [corner-br|corner-bl|corner-tr|corner-tl] [pip size 0.1-0.5]"
 arguments: [timeline, layout, size]
@@ -93,14 +93,14 @@ Show the plan (sections with timecodes, mode, duration; layout) and get a yes. B
 
 1. Append calibration from `resolve-core` (once per session).
 2. Screen entries → `mediaType: 1`, `trackIndex: screen`, `startFrame`/`endFrame` per calibration, `recordFrame: record`. PiP entries → same with the camera clip on `trackIndex: pip`. Batches ≤ 50.
-3. PiP items: `item.SetProperties(pip_properties)` from the plan, then `GetProperties()` and compare. On the **first** item export a still and check the camera really sits in the chosen corner with the margin; if Tilt or Pan go the wrong way or zoom units differ, fix the numbers once (record it in `resolve-core/reference.md` terms for the user) and continue.
+3. PiP items: `item.SetProperties(pip_properties)` from the plan, then `GetProperties()` and compare. On the **first** item export a still (21.1.2+: `tl.ExportFrame` at a frame inside it, `resolve-core` §10: the composite of Screen and PiP, no playhead move) and check the camera really sits in the chosen corner with the margin; if Tilt or Pan go the wrong way or zoom units differ, fix the numbers once (record it in `resolve-core/reference.md` terms for the user) and continue.
 4. Screen items keep full frame; if the recording's aspect differs (16:10 Mac screens), the timeline's scaling setting handles it — mention black bars or crop to the user.
 5. Load the remote `claude` grade on PiP items (`resolve-core` §7): they are the same camera clips.
 6. `track-layout recolor`, save the project.
 
 ## 6. Optional: MotionVFX placeholder
 
-If the user wants a styled frame instead of a plain corner: `python3 ${CLAUDE_SKILL_DIR}/../motionvfx-catalog/scripts/catalog.py search "<catalog>" --category Effects placeholder corner screen frame` (run `motionvfx-catalog` first if there's no catalog). Effects can't be attached through the API, so list the PiP items (timecodes) and the chosen effect name, and ask the user to drag it on (it can be copied to the rest with Paste Attributes). Resolve 21's own **Picture in Picture** Resolve FX is the built-in alternative, also manual.
+If the user wants a styled frame instead of a plain corner: `python3 ${CLAUDE_SKILL_DIR}/../motionvfx-catalog/scripts/catalog.py search "<catalog>" --category Effects placeholder corner screen frame` (run `motionvfx-catalog` first if there's no catalog). Resolve 21.1.2+ (`resolve-core/reference.md#resolve-2112-editing-calls`): find its `id` in `resolve.GetEffectsList("video")` by name, `item.AddEffect("fusion", id)` on each PiP item (`None` → report it), read the macro's `GetInputList()` before setting any input, and check the first one on a still. Older: list the PiP items (timecodes) and the chosen effect name, and ask the user to drag it on (it can be copied to the rest with Paste Attributes). Resolve 21's own **Picture in Picture** Resolve FX stays manual: OFX effects have no parameter API, so its corner and size can't be set by script.
 
 ## 7. Report
 

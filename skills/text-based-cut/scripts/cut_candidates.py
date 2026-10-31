@@ -45,7 +45,8 @@ def load_clip(path):
     for seg in (data.get("transcription") or {}).get("segments", []):
         first = len(words)
         for w in seg.get("words", []):
-            words.append({"text": w["text"], "norm": norm(w["text"]) if w["text"] != SILENCE else None,
+            text = w["text"].strip()   # Resolve's own words start with a space
+            words.append({"text": text, "norm": norm(text) if text != SILENCE else None,
                           "start": tc_to_frames(w["start"], fps, drop) - origin, "end": tc_to_frames(w["end"], fps, drop) - origin + 1})
         speech = [i for i in range(first, len(words)) if words[i]["norm"]]
         if speech:

@@ -23,8 +23,9 @@ def speech_segments(data):
     fps, drop = data["fps"], data.get("drop_frame", False)
     origin = tc_to_frames(data["start_tc"], fps, drop)
     for seg in (data.get("transcription") or {}).get("segments", []):
-        spoken = [w for w in seg.get("words", []) if w["text"] != SILENCE]
-        text = " ".join(w["text"] for w in spoken).strip() or seg.get("text", "").replace(SILENCE, "").strip()
+        # Resolve's own words carry a leading space (" слово"); words written back by SetTranscription may not
+        spoken = [w for w in seg.get("words", []) if w["text"].strip() not in ("", SILENCE)]
+        text = " ".join(w["text"].strip() for w in spoken) or seg.get("text", "").replace(SILENCE, "").strip()
         if text:
             start, end = (spoken[0]["start"], spoken[-1]["end"]) if spoken else (seg["start"], seg["end"])
             yield (tc_to_frames(start, fps, drop) - origin, tc_to_frames(end, fps, drop) - origin, text, seg.get("speaker"))
@@ -69,6 +70,10 @@ def selftest():
     assert cues[0][0] == 100 and cues[-1][1] == 400 and cues[0][1] == cues[1][0], cues
     assert " ".join(l for c in cues for l in c[2]) == text
     assert list(srt_cues(0, 50, "Коротко.", 42)) == [(0, 50, ["Коротко."])]
+    words = [{"start": "01:00:00:10", "end": "01:00:00:19", "text": " Привіт,"}, {"start": "01:00:00:20", "end": "01:00:01:04", "text": " (...)"},
+             {"start": "01:00:01:05", "end": "01:00:01:14", "text": " друзі!"}, {"start": "01:00:01:15", "end": "01:00:01:20", "text": "Ок"}]
+    data = {"fps": 25, "start_tc": "01:00:00:00", "transcription": {"segments": [{"start": "01:00:00:10", "end": "01:00:01:20", "words": words}]}}
+    assert list(speech_segments(data)) == [(10, 45, "Привіт, друзі! Ок", None)], list(speech_segments(data))
     print("transcript_export selftest ok")
 
 

@@ -101,7 +101,7 @@ Optional: group clips per scene into Color Groups (`project.AddColorGroup(scene)
 
 ## 4. Verify visually
 
-1. Export a still of 2–3 representative clips: `project.ExportCurrentFrameAsStill(f"{work}/stills/{clip}-709.tif")` after moving the playhead onto the clip (`tl.SetCurrentTimecode`). Convert to PNG for viewing only if the user's tools allow; otherwise ask the user to look at the viewer.
+1. Export a still of 2–3 representative clips with `run_script` and Read them: `item.ExportFrame(item.GetDuration() // 2, {"outputType": "file", "filePath": f"{work}/stills/{clip}-709.png", "maxDimension": 1280})` (21.1.2, `resolve-core` §10: graded frame, playhead untouched). Older Resolve: move the playhead onto the clip (`tl.SetCurrentTimecode`) and `project.ExportCurrentFrameAsStill(f"{work}/stills/{clip}-709.tif")`; if you can't view the TIFF, ask the user to look at the viewer.
 2. Check for: clipped highlights, neon saturation or magenta/green shift (wrong log version), crushed blacks.
 3. Titles/generators on the timeline are not affected by clip grades; mention it only if RCM was used.
 

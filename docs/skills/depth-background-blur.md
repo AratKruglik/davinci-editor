@@ -6,7 +6,7 @@
 
 Blurs the background behind the speaker for a "portrait mode" look, fully automated, with no manual masks. The blur is AI CineFocus or Depth Map + Lens Blur, already prepared in the base grade template. The skill switches it on per clip (the `DEPTH` node) or per scene with a chosen strength (the Color Group post-clip graph). It turns on node caching so playback stays real time, and checks the result on a still. An optional A/B still comparison of CineFocus and Depth Map is offered.
 
-Why it works this way: the API can't add Resolve FX or change their parameters. It can only apply a DRX, enable or disable nodes and set LUT/CDL. Applying a DRX to a clip replaces its whole node tree, so the chart LUT and skin CDLs would be lost. That's why the blur already sits, **disabled**, in the base template, and this skill only switches it on.
+Why it works this way: the API can't put Resolve FX into a Color node or set their parameters. On nodes it can only apply a DRX, enable or disable nodes and set LUT/CDL. (Resolve 21.1.2 can add CineFocus or Depth Map to a clip as an Edit-page effect, but only at default settings, with the focus not on the speaker, so the skill doesn't use that.) Applying a DRX to a clip replaces its whole node tree, so the chart LUT and skin CDLs would be lost. That's why the blur already sits, **disabled**, in the base template, and this skill only switches it on.
 
 ## When it triggers
 

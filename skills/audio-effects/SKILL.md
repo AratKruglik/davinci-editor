@@ -1,6 +1,6 @@
 ---
 name: audio-effects
-description: Five sound design treatments on timeline clips in DaVinci Resolve Studio 21+ - "live" music played inside the scene (EQ + Reverb), realistic room for too-clean SFX (light Reverb), a pan sweep that follows a subject across the frame, Music Remixer to mute the vocals (and drums) of a song under speech, and an Expander on the dialogue track for background noise. EQ and effects are pasted from the user's reference clips with CopyAttributes; what the API can't set (pan keyframes, Remixer, track Dynamics) is set as far as possible and finished with exact manual steps.
+description: Five sound design treatments on timeline clips in DaVinci Resolve Studio 21+ - "live" music played inside the scene (EQ + Reverb), realistic room for too-clean SFX (light Reverb), a pan sweep that follows a subject across the frame, Music Remixer to mute the vocals (and drums) of a song under speech, and an Expander on the dialogue track for background noise. EQ and effects are pasted from the user's reference clips with CopyAttributes (21.1.2 without a reference - plugins added with default settings, values by hand); what the API can't set (pan keyframes, Remixer, track Dynamics) is set as far as possible and finished with exact manual steps.
 when_to_use: User wants music to sound like it plays live in the room / at a concert, sound effects to blend into the scene instead of sounding studio-clean, sound that moves left-right with the subject, the song's vocals out of the way of the speaker, or an Expander/gate for noise. Triggers - "звук як наживо", "ніби грає в залі", "музика з концерту", "реверб на звуки", "щоб звук не був стерильним", "звук рухається за людиною", "панорама звуку", "прибери вокал з музики", "music remixer", "експандер", "live audio effect", "pan audio".
 argument-hint: "[live|room|pan|no-vocals|expander] [selected | track name]"
 arguments: [effect, target]
@@ -24,13 +24,13 @@ Follow `resolve-core` first. Effect: `$effect` (none given → pick from the req
 
 | Effect | By script | By hand in Resolve |
 |---|---|---|
-| `live` — song plays inside the scene | EQ + Reverb pasted from the `LIVE` reference clip | — |
-| `room` — SFX blend into the place | Reverb pasted from the `ROOM` reference clip | — |
+| `live` — song plays inside the scene | EQ + Reverb pasted from the `LIVE` reference clip; no reference on 21.1.2 → Reverb + Fairlight EQ added with default settings | defaults route: the plugin values |
+| `room` — SFX blend into the place | Reverb pasted from the `ROOM` reference clip; no reference on 21.1.2 → Reverb added with default settings | defaults route: the plugin values |
 | `pan` — sound follows the subject | start pan `AudioPan` | the keyframes |
 | `no-vocals` — song stops fighting the voice | only if the build exposes a Remixer property (probe below) | Music Remixer |
 | `expander` — background noise on dialogue | — (track Dynamics has no API) | Expander on the track |
 
-There are no setters for EQ, effects, Music Remixer or Dynamics, and no volume/pan keyframes. Say up front which part you do and which the user does; never claim a manual step as done.
+21.1.2 can add and remove audio plugins (`resolve-core` §10: `AddEffect("audio", id)`, `GetEffects("audio")`, `DeleteEffects`), but only with default settings: there is no parameter API for plugins, no setter for the clip Equalizer, Music Remixer or Dynamics, and no volume/pan keyframes. Parameters reach a clip only by pasting from a reference clip or by hand. Say up front which part you do and which the user does; never claim a manual step as done.
 
 ## Reference clips (built once by the user)
 
@@ -41,13 +41,13 @@ There are no setters for EQ, effects, Music Remixer or Dynamics, and no volume/p
 | `LIVE` | Equalizer on: Band 4 on, Band 3 off, shape a band-pass that cuts the lows and the top (small-speaker sound); Effects → Fairlight FX → Reverb: Room Size max, Distance max, Reverb Time min |
 | `ROOM` | Effects → Fairlight FX → Reverb, preset `Vocal Wide`, then tighten it: Distance down, Dry/Wet toward dry, so only a little room is added |
 
-Missing timeline or track → show this table and stop for that effect; don't improvise values (there is no setter to put them anywhere). Find the source item by track name in the reference timeline, never by index.
+Missing timeline or track → show this table and offer two routes: build the reference first (best: tuned once, reused), or, on 21.1.2 (`resolve-core` §10 gate), add the plugins with default settings now and set the values from this table by hand on the first clip (see *Defaults route*). Before 21.1.2 only the first route exists: stop for that effect. Don't improvise values in a script (there is no setter for them). Find the source item by track name in the reference timeline, never by index.
 
 ## Steps
 
 1. **Read.** Project, timeline, target items (name, track, start TC, current `GetProperties()` `AudioPan`, `AudioVolume`). Effects on dialogue (`Voice`) are allowed only for `expander`; `live` goes on `Music`, `room` on `SFX`/`Ambience` items (tracks by role, `track-layout`). A target on another role → say so and ask.
 2. **Plan, then yes.** One table: `# | effect | clip | track | by script | by hand`. Nothing changes before the yes.
-3. **Protect.** Save the project. `live`/`room` add effects that no API call can remove → `tl.DuplicateTimeline(...)` backup first (resolve-core §3). `pan`/`no-vocals` are property changes: record the previous values instead.
+3. **Protect.** Save the project. `live`/`room` by paste → `tl.DuplicateTimeline(...)` backup first (resolve-core §3): plugins could be removed with `DeleteEffects`, but the pasted clip Equalizer has no API to undo it. Defaults route → record each target's `len(item.GetEffects("audio"))`; undo is `DeleteEffects` of the added ones (guarded), no backup needed. `pan`/`no-vocals` are property changes: record the previous values instead.
 4. **Apply** per effect below.
 5. **Listen.** Ask the user to play each changed clip; offer the next step from the effect's notes.
 6. Save. Report per clip: what the script set (re-read values), what the user still has to do by hand.
@@ -62,11 +62,22 @@ src = (ref_tl.GetItemListInTrack("audio", i) or [None])[0] if i else None
 ok = src.CopyAttributes([target], {"audioEqualizer": True, "audioPlugins": True}) if src else None
 ```
 
-`src` is `None` → show the reference table and stop. `ok` is `False`, or the user sees nothing new in the Inspector (pasting from another timeline is unverified) → by hand: select the reference clip, Edit → Copy; select the target, Edit → Paste Attributes; under Audio Attributes tick only Equalizer and Plugins, leave Volume off. The batch afterwards copies from the first target, on the same timeline.
+`src` is `None` → the two routes under *Reference clips* (reference first, or the *Defaults route* on 21.1.2). `ok` is `False`, or the user sees nothing new in the Inspector (pasting from another timeline is unverified) → by hand: select the reference clip, Edit → Copy; select the target, Edit → Paste Attributes; under Audio Attributes tick only Equalizer and Plugins, leave Volume off. The batch afterwards copies from the first target, on the same timeline.
 
 - Only `audioEqualizer` + `audioPlugins`. Never `allAudioAttributes` (it carries `audioVolume` and would undo `sound-design`/`audio-finish` levels) and never clip attributes (markers are the user's instructions).
-- No getter exists, so the return value proves nothing: paste onto **one** target first, ask the user to check its Inspector (Equalizer / Effects present, values as in the reference) and listen. Tweaks ("суші" = less wet, "більше залу" = more distance) the user makes on that first clip; then that clip becomes the source for the rest, pasted in one call. Never paste twice onto the same clip: whether a second paste replaces or stacks the Reverb is unverified.
+- No getter exists for EQ or plugin values, so the return value proves nothing: paste onto **one** target first, ask the user to check its Inspector (Equalizer / Effects present, values as in the reference) and listen. Tweaks ("суші" = less wet, "більше залу" = more distance) the user makes on that first clip; then that clip becomes the source for the rest, pasted in one call. Never paste twice onto the same clip: whether a second paste replaces or stacks the Reverb is unverified.
+- On 21.1.2, also compare `len(target.GetEffects("audio"))` before and after the paste: one more plugin is a sign the Reverb landed (its values still only show in the Inspector). Whether pasted plugins appear there is unverified, so no change is not proof of failure: the Inspector check decides.
 - `live`: also offer crowd/applause from the library via `sound-design` (a cue under the song); don't place it here.
+
+### Defaults route (21.1.2, no reference clip)
+
+```python
+ids = {e["name"]: e["id"] for e in resolve.GetEffectsList("audio")}   # e.g. "Audio FX/Fairlight FX/Reverb"
+fx = target.AddEffect("audio", ids["Reverb"])                          # live: also ids["Fairlight EQ"]
+n = len(target.GetEffects("audio"))                                      # re-read: one more than recorded in step 3
+```
+
+The name isn't in `ids` → show the user the audio effect names and ask. One target first; the user opens Inspector → Effects on it and sets the values from the reference table (`live`: in the Fairlight EQ cut the lows and the top; Reverb Room Size max, Distance max, Reverb Time min; `room`: Reverb `Vocal Wide`, Distance down, toward dry) and listens. Then that clip is the source for the rest: paste as above (`audioPlugins` only, the clip Equalizer was not used). Undo: `target.DeleteEffects([fx])` (guard prompt: say it removes only the plugin you added).
 
 ### pan
 
@@ -93,4 +104,5 @@ Noise on dialogue is `voice-isolation`'s job: AI isolation cleans more with fewe
 
 - Paste `audioVolume`, markers or any non-audio attribute.
 - Paste onto many clips before the user confirmed the first one.
-- Treat a `True` from `CopyAttributes` or `SetProperties` as proof; re-read what has a getter, ask the user for the rest.
+- Treat a `True` from `CopyAttributes` or `SetProperties`, or an `Effect` from `AddEffect`, as proof; re-read what has a getter, ask the user for the rest.
+- Remove plugins the user added themselves: `DeleteEffects` only on the effects this skill added.

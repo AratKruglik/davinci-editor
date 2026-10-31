@@ -6,7 +6,7 @@
 
 Builds Ukrainian subtitles for a cut timeline from the word-level transcript. It maps every word onto the current cut, proofreads terms and names with you, and writes a YouTube-ready SRT (42 characters, 2 balanced lines, reading speed, no dangling prepositions). On request it places the SRT on a `Subtitles UA` track for review in context. For Shorts it builds animated burned-in captions of 2–4 words with the spoken word highlighted in the brand accent color.
 
-Why from the transcript: Resolve's own auto-captions (`CreateSubtitlesFromAudio`) have no Ukrainian; with `AUTO` they pick a neighbouring language and write nonsense. The word timings from `uk-transcribe` are already Ukrainian and already checked.
+Why from the transcript: Resolve's own auto-captions (`CreateSubtitlesFromAudio`) recognize the audio again and ignore the checked transcript and your fixes. Resolve 21.1.2 lists a Ukrainian option, but it hasn't been verified yet; with `AUTO` they pick a neighbouring language and write nonsense. The word timings from `uk-transcribe` are already Ukrainian and already checked.
 
 ## When it triggers
 
@@ -36,6 +36,7 @@ Explicit call:
 
 - Hard fillers from `filler_words` and the `(...)` silence marks are removed; soft fillers stay when they carry meaning.
 - Suspected recognition errors (technical terms, product names, English words in Ukrainian speech, numbers such as "сто дев'яносто два" → `192` in an address) come to you in one table. Only fixes you approve are applied.
+- On Resolve 21.1.2 Studio, Claude offers to write the term and name fixes back into Resolve's own transcripts too (through `uk-transcribe`), so the next export, chapters and Shorts get them.
 - Typography: Ukrainian apostrophe `ʼ` (or `'` if you prefer), «лапки», digits for addresses, versions and prices.
 - What was said is never paraphrased or shortened.
 

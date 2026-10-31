@@ -1,6 +1,6 @@
 schema_version: "1.1"
 name: jl-on-rough-cut
 expected_outcome: |
-  On a duplicate of the rough cut, a 12-frame J-cut is proposed and built at the IMG_4140 → IMG_4141 clip change (01:01:25:00) by relaying only the two Voice items with split_edits.py's ranges; the IMG_4140 → IMG_4140 jump cut at 01:00:50:00 is never split; the user's Cocoa "J 10" at 01:02:25:00 is not built because IMG_4141 still speaks at its end and an L would bring back a cut, and the user is told why; video items are never deleted or re-appended.
+  On a duplicate of the rough cut, a 12-frame J-cut is proposed and built at the IMG_4140 → IMG_4141 clip change (01:01:25:00) with one SetLeftOffset trim on IMG_4141's Voice item (updateLinkedItems False, Resolve 21.1.2), giving split_edits.py's ranges; the IMG_4140 → IMG_4140 jump cut at 01:00:50:00 is never split; the user's Cocoa "J 10" at 01:02:25:00 is not built because IMG_4141 still speaks at its end and an L would bring back a cut, and the user is told why; nothing is deleted or re-appended and video items are never changed.
 context:
   scaffold_script: place-files.sh

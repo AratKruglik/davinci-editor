@@ -58,12 +58,13 @@ All under `<work_dir>/<project>/`:
 | `thumbnails/<n>_<offset>.tif` | the burst stills of every moment |
 | `thumbnails/scores.json` | sharpness and exposure ranking from `thumbs.py` |
 | `thumbnails/*.png` | full-resolution PNG of every pick, next to its TIFF, for the designer |
+| `thumbnails/full/<n>_<offset>.tif` | full-resolution 16-bit TIFF of every pick for retouching (Resolve 21.1.2+) |
 | `thumbnail-brief.md` | the brief: `# | TC | file (PNG) | emotion / moment | why it works | text space | crop note`, plus 2–3 title-text ideas per pick (≤ 4 words, from what is said at that moment) |
 
 ## Workflow and approval stops
 
 1. Collects the moments (Lemon markers and transcript moments).
-2. Records and disables the title and subtitle tracks, exports the bursts, checks each file exists.
+2. Records and disables the title and subtitle tracks, exports the bursts, checks each export succeeded. On Resolve 21.1.2+ the stills come straight from the timeline at the exact frames (1280 px previews), without moving the playhead; older versions move the playhead for every still.
 3. Ranks the stills with `thumbs.py score`.
 4. Looks at the best stills and picks `count` frames; exports a PNG of each and puts a Cream marker at each pick (`customData` `claude:thumbnail`, name = short description).
 5. Writes `thumbnail-brief.md` and tells you the folder. If a thumbnail skill such as `youtube-thumbnail-strategist` is installed, offers the brief to it (optional).

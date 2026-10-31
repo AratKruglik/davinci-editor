@@ -1,6 +1,6 @@
 ---
 name: uk-transcribe
-description: Transcribes clips with DaVinci Resolve 21+ built-in AI transcription in Ukrainian (or the configured language), optionally with speaker detection, waits for the background job, verifies the language actually used, and exports word-level timecodes to JSON, SRT and plain text for text-based editing, subtitles and chapters.
+description: Transcribes clips with DaVinci Resolve 21+ built-in AI transcription in Ukrainian (or the configured language), optionally with speaker detection, waits for the background job, verifies the language actually used, exports word-level timecodes to JSON, SRT and plain text for text-based editing, subtitles and chapters, and (21.1.2 Studio) can write approved term fixes back into Resolve's transcript.
 when_to_use: User needs a transcript, word timings, subtitles source or a "fish" text of the footage; also the first step before text-based-cut. Triggers - "транскрибуй", "розшифруй відео", "зроби транскрипт", "текст з відео", "transcribe", "speaker detection".
 argument-hint: "[bin path | selected] [--speakers]"
 arguments: [scope, speakers]
@@ -24,10 +24,17 @@ Follow `resolve-core` first. Scope: `$scope` (default bin `${user_config.footage
 
 ## 1. Language setup (verify, don't trust)
 
-1. Read `s = project.GetSettings()`; note `s["transcriptionLanguage"]` and `s["speakerDetection"]`.
-2. `project.SetSettings({"transcriptionLanguage": CODE})` and re-read with `GetSettings()`. If the value did not stick, find the accepted code: ask the user to pick the language once in Resolve (Project Settings → General Options → transcription language, or the transcription dialog) and read it back with `GetSettings()`. Tell the user to put that code in the plugin config.
-3. Ukrainian may need the **extended** language models (Resolve menu → Extras Download Manager). Without them Resolve silently falls back to a built-in model — this is why step 4.3 checks the result language.
-4. Speaker detection: `project.SetSettings({"speakerDetection": "1"})` if requested; also pass `useSpeakerDetection=True` below.
+1. Read `s = project.GetSettings()`; note `s["transcriptionLanguage"]`, `s["transcriptionExtendedLanguageSupport"]` and `s["speakerDetection"]`.
+2. **Ukrainian (`uk`) on 21.1.2+** (`resolve-core` §10 gate): Ukrainian exists only in the extended model, and changing the extended switch resets the language to `auto`, so the order is fixed:
+   ```python
+   project.SetSettings({"transcriptionExtendedLanguageSupport": "1"})
+   project.SetSettings({"transcriptionLanguage": "uk"})
+   s = project.GetSettings()   # both must read back: "1" and "uk"
+   ```
+   Extended doesn't read back `"1"` → the extended models are likely not installed: stop and tell the user to install them (Resolve menu → Extras Download Manager), then run again. Never transcribe Ukrainian on `auto`: 2 s of Ukrainian came back as `es`.
+3. Other languages, or Resolve before 21.1.2: `project.SetSettings({"transcriptionLanguage": CODE})` and re-read with `GetSettings()`. If the value did not stick, find the accepted code: ask the user to pick the language once in Resolve (Project Settings → General Options → transcription language, or the transcription dialog) and read it back with `GetSettings()`. Tell the user to put that code in the plugin config.
+4. Even with the settings right, a missing Extras package can make Resolve fall back silently: this is why step 5.1 checks the result language.
+5. Speaker detection: `project.SetSettings({"speakerDetection": "1"})` if requested; also pass `useSpeakerDetection=True` below.
 
 ## 2. Choose clips
 
@@ -64,10 +71,29 @@ It writes `<clip>.srt` (segment-level, max `subtitle_max_chars` per line, 2 line
 
 ## 5. Check quality
 
-1. The `language` field must match the configured language for every clip. If not, extended models are missing: tell the user what to download and stop.
+1. The `language` field must match the configured language for every clip. If not, extended models are missing: tell the user what to download (Extras Download Manager) and stop.
 2. Read 2–3 paragraphs of the `.txt` and flag systematic errors: technical terms, names, English words in Ukrainian speech. If errors are frequent on key terms, tell the user; the plan's fallback is Whisper, but don't install anything without asking.
 3. Words like `(...)` are Resolve's silence markers, not errors.
 
-## 6. Report
+## 6. Write fixes back (optional, 21.1.2 Studio)
 
-Clips transcribed, language detected, total duration, speakers found, output folder, notable recognition problems. Next step: `text-based-cut`.
+When the user approved fixes to recognition errors (names, terms from step 5.2), offer to write them into Resolve's own transcript, so Resolve's text-based editing and every later export carry them. Gate: `resolve-core` §10 and `hasattr(clip, "SetTranscription")`; otherwise the fixes live only in the exported files. Ask first: this replaces the clip's transcript in Resolve.
+
+```python
+FIXES = {"вайфай": "Wi-Fi"}     # the approved {recognized word: fix}
+t = clip.GetTranscription()   # fresh from Resolve, not the export: the user may have corrected it since
+# save t as <work>/transcripts/<clip>.before-fix.json first (run_script_unsafe)
+segs = []
+for seg in t["segments"]:
+    words = [{"text": " " + FIXES.get(w["text"].strip(), w["text"].strip()), "start": w["start"], "end": w["end"]}
+             for w in seg["words"] if w["text"].strip() != "(...)"]   # Resolve derives silence itself
+    if words:
+        segs.append({"start": seg["start"], "end": seg["end"], "words": words, **({"speaker": seg["speaker"]} if seg.get("speaker") else {})})
+ok = clip.SetTranscription({"language": t["language"], "segments": segs})
+```
+
+Every word gets a leading space like Resolve's own (`" слово"`): Resolve builds `segment.text` by plain concatenation, so words without it run together. A fix that splits or merges words: edit that segment's `words` list; a word without `start`/`end` is interpolated. Then re-read `GetTranscription()` (language, the fixed words, segment count) and export again (step 4) so JSON, SRT and TXT match Resolve. To undo, write the `.before-fix.json` transcript back the same way.
+
+## 7. Report
+
+Clips transcribed, language detected, total duration, speakers found, output folder, notable recognition problems, fixes written back (if any). Next step: `text-based-cut`.

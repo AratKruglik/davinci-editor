@@ -47,6 +47,7 @@ Markers already `claude:done:*` are skipped; solved ones are marked `claude:done
 
 ## Dialogue, preset and measurement
 
+- **Quick per-clip levels (Resolve 21.1.2, no render):** before changing anything, every Voice, Music and SFX clip gets a loudness and true-peak reading (`AnalyzeAudioLevels`). It shows at once which voice clips are far apart and which clips peak above the ceiling. It measures single clips, not the mix, so the mixdown below stays the real measurement.
 - **Dialogue Leveler** on Voice items (moderate mode, reduce loud, lift soft; its background reduction stays off where voice isolation is on, so the voice isn't processed twice). For whispery or very dynamic presenters other modes exist; Claude asks if unsure.
 - **Per-clip normalization** of Voice items to 2 LU under the target, to even out clips recorded on different days or distances; music and SFX add the rest. Music and SFX levels come from `sound-design` and are not renormalized here.
 - **Fairlight preset:** applied first to a **duplicate** of the timeline; if track count, names and items stay the same, it is applied to the real timeline and the test copy is deleted (a permission prompt names it as the test copy). If the structure changes, it stops and leaves the real timeline untouched. Without a preset, Claude explains once what it buys and how to make one on the Fairlight page (main bus Limiter at -1 dBTP; a Compressor on Music with sidechain from Voice, ratio 3:1, about 6 dB reduction; Fairlight → Presets → Save), then continues without it.
@@ -72,12 +73,12 @@ All under `<work_dir>/<project>/`:
 
 | File | Contents |
 |---|---|
-| `audio-finish-before.json` | per audio item: track, name and audio properties before any change; everything is reversible from it |
+| `audio-finish-before.json` | per audio item: track, name and audio properties before any change (on 21.1.2 also its quick loudness and true-peak reading); everything is reversible from it |
 | `audio/mix-check.wav` | the audio-only mixdown used for measurement |
 
 ## Workflow and approval stops
 
-1. Makes the timeline active, finds the tracks by role, saves the project and writes `audio-finish-before.json`.
+1. Makes the timeline active, finds the tracks by role, saves the project and writes `audio-finish-before.json` (on 21.1.2 with the quick per-clip loudness and peak readings).
 2. Handles the Rose markers by their note; on noise with track isolation already on, **you choose** whether to raise the track amount.
 3. Dialogue Leveler and per-clip normalization on Voice, read back.
 4. Fairlight preset, tested on a duplicate first (or a one-time explanation if none is set).

@@ -12,7 +12,7 @@
 
 ## Середовище і що вміє API
 
-- DaVinci Resolve Studio 21.1.1, macOS (Apple Silicon).
+- DaVinci Resolve Studio 21.1.2, macOS (Apple Silicon). Що саме додав 21.1.2 і що перевірено вживу: [resolve-21.1.2-api-audit.md](resolve-21.1.2-api-audit.md). Скіли вмикають нові виклики лише з 21.1.2 (`resolve-core` §10).
 - На Mac уже встановлений сервер MCP для DaVinci Resolve (`run_script`, `generate_lut`, `update_dctl`, пошук по API). Скіли працюють через нього, новий сервер не потрібен.
 
 Можливості API, на яких тримається дизайн:
@@ -25,12 +25,14 @@
 | Magic Mask | Потрібні ручні штрихи | Не автоматизується повністю |
 | Voice Isolation | `SetVoiceIsolationState` на кліпі й доріжці, сила 0–100 | Повністю |
 | Гучність кліпу | Властивість `AudioVolume` елемента таймлайну | Рівні звуку й музики виставляються скриптом |
-| Транскрипція | `TranscribeAudio`, `GetTranscription` (кожне слово з таймкодом), мова — параметр проєкту `transcriptionLanguage`; українська доступна через extended-налаштування | Основний спосіб — вбудована транскрипція DaVinci |
-| Склейка | `AppendToTimeline` з `startFrame`/`endFrame`/`trackIndex`/`recordFrame`/`mediaType` | Монтаж за текстом збирається в новий таймлайн; звуки й музика ставляться на свої доріжки в точні місця |
-| Доріжки | `AddTrack` (тільки зверху), `DeleteTrack`, `SetTrackName`, `SetTrackLock`, `SetClipColor`; колір заголовка доріжки й перенесення кліпів між доріжками недоступні | Структура доріжок за ролями; колір — через кліпи і шаблон `.drt` |
+| Транскрипція | `TranscribeAudio`, `GetTranscription` (кожне слово з таймкодом), мова — параметр проєкту `transcriptionLanguage`; українська: спершу `transcriptionExtendedLanguageSupport` `"1"`, потім `"uk"`. З 21.1.2 `SetTranscription` записує виправлений транскрипт назад | Основний спосіб — вбудована транскрипція DaVinci; виправлення імен і термінів повертаються в Resolve |
+| Склейка | `AppendToTimeline` з `startFrame`/`endFrame`/`trackIndex`/`recordFrame`/`mediaType`; з 21.1.2 тріми країв (`SetLeftOffset`/`SetRightOffset`, без ripple; генератори й титри не тримуються), `RippleDeleteSilence` (ripple по всіх незалочених доріжках) | Монтаж за текстом збирається в новий таймлайн; звуки й музика ставляться на свої доріжки в точні місця; J/L-кати — один трим аудіо |
+| Доріжки | `AddTrack` (тільки зверху), `DeleteTrack`, `SetTrackName`, `SetTrackLock`, `SetClipColor`; з 21.1.2 перенесення кліпів `SetPosition`/`MoveItems`; колір заголовка доріжки недоступний | Структура доріжок за ролями; колір — через кліпи і шаблон `.drt` |
 | Маркери | Маркери на кліпі в media pool, на таймлайні й на кліпі таймлайну: колір (16), назва, нотатка, тривалість, приховане `customData` | Монтаж за моїми маркерами; статус обробки без зміни моїх маркерів |
-| Fusion | Повний API нод, параметрів, анімації; `InsertFusionTitleIntoTimeline`, `InsertFusionGeneratorIntoTimeline`, `AddTransition` (категорія `fusion`), `ImportFusionComp` | Motion-графіка генерується кодом; шаблони MotionVFX вставляються за назвою |
-| Кадр для аналізу | `ExportCurrentFrameAsStill`, `GrabStill` | Claude може міряти колір на реальному кадрі |
+| Fusion | Повний API нод, параметрів, анімації; `InsertFusionTitleIntoTimeline` (вставляє з ripple на нижню доріжку), `InsertFusionGeneratorIntoTimeline`, `AddTransition` (категорія `fusion`), `ImportFusionComp` | Motion-графіка генерується кодом; шаблони MotionVFX вставляються за назвою |
+| Ефекти кліпу | З 21.1.2: `GetEffectsList`, `AddEffect`/`GetEffects`/`DeleteEffects`, увімкнення й порядок; параметри Fusion-ефектів (MotionVFX) через `GetFusionComp()`; параметрів OFX і Fairlight FX немає | Ефекти MotionVFX ставляться й налаштовуються скриптом; Resolve FX і аудіоплагіни — лише додаються, параметри вручну або Paste Attributes |
+| Гучність без рендеру | З 21.1.2 `AnalyzeAudioLevels` по кліпу: Integrated LUFS і True Peak | Швидка перевірка кліпів; мікс усе одно міряється рендером |
+| Кадр для аналізу | З 21.1.2 `ExportFrame` (таймлайн або кліп, готовий кадр з грейдом і титрами, 16-bit TIF, без руху playhead); раніше `ExportCurrentFrameAsStill`, `GrabStill` | Claude може міряти колір на реальному кадрі |
 | Color Match по таблиці | Вбудованого виклику в API немає | Корекцію за таблицею Claude рахує сам |
 
 ## Принцип кольорового конвеєра
@@ -131,12 +133,12 @@
 
 - Точне значення `transcriptionLanguage` для української і чи extended — окремий параметр.
 - Чи є Apple Log 2 серед вхідних колірних просторів.
-- Як PiP-шаблони MotionVFX накладаються на кліп через API (`ImportFusionComp` / вставка `.setting`).
+- PiP-шаблони MotionVFX з 21.1.2 накладаються як Fusion-ефект (`AddEffect("fusion", id)`); перевірено вживу лише на `mHowTo Zoom`, решта макросів — за `GetInputList()`.
 - Чи новий таймлайн, зібраний через `AppendToTimeline`, підхоплює remote-версію грейду автоматично.
 - Чи можна призначити окрему гарячу клавішу на кожен колір маркера.
 - Етап 3: ідентифікатори входів Text+ (елемент Border, Write On `Start`/`End`), кадр початку композиції на кліпі, доріжка й довжина `InsertFusionCompositionIntoTimeline`, як SRT лягає на доріжку субтитрів, ключ H.265 і одиниці `VideoQuality`, на яких кліпах працює `SmartReframe`.
 - Чи зберігає `.drt` кольори заголовків доріжок; куди саме `AddTrack` додає доріжку; чи зберігається зв'язок відео й аудіо при розстановці на A-roll і Voice окремими викликами.
-- `split-edits`: `DeleteClips` на одному з залінкованих елементів, `AppendToTimeline` з `recordFrame` у порожнє місце, `GetLeftOffset`/`GetRightOffset`, `SetFades` на аудіо (список — `claude/split-edits.md`).
+- `split-edits`: з 21.1.2 J/L будуються тримом (семантику offset перевірено, `resolve-21.1.2-api-audit.md` §3); лишилось перевірити поведінку кросфейду під тримом і `SetFades` на аудіо. Для старших версій — `DeleteClips` на одному з залінкованих елементів і `AppendToTimeline` у порожнє місце (список — `split-edits.md`).
 
 ## Відкриті питання
 

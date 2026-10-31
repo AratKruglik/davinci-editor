@@ -23,7 +23,7 @@ Before the first change in a session, Claude:
 
 ## How scripts run
 
-- Scripts run in Resolve's sandboxed mode by default (no files or network). The unsafe mode is used only for steps that must read or write files: exporting stills, dumping a transcript to JSON, reading a DRX folder.
+- Scripts run in Resolve's sandboxed mode by default (no files or network). The unsafe mode is used only when the script itself must read or write files: dumping a transcript to JSON, reading a DRX folder. Resolve's own exports (stills via `ExportFrame`, gallery stills) work in sandboxed mode.
 - One step per call. Long loops over hundreds of clips run in batches (for example 50 items per call) with progress reported.
 - After every change Claude reads the value back and reports what Resolve actually holds, not the call's `True`.
 - A call that hangs for more than 60 s: Claude asks you to look at Resolve for a modal dialog. It never blindly re-runs a script that changes something.
@@ -38,11 +38,17 @@ Before the first change in a session, Claude:
 
 ## The delete guard
 
-Every skill that changes the project declares a `PreToolUse` hook that runs `guard.py` on Resolve script calls. If a script calls any delete, clear or reset API (`Delete…`, `Clear…`, `Reset…`, `ReplaceClip`, `UnlinkProxyMedia`), you get a **permission prompt** with the reason, even when the tool is pre-approved. Scripts that build function names at run time (`getattr`, `eval` and similar) always prompt too, because they can't be checked in advance.
+Every skill that changes the project declares a `PreToolUse` hook that runs `guard.py` on Resolve script calls. If a script calls any delete, clear or reset API (`Delete…`, `Clear…`, `Reset…`, `RippleDeleteSilence`, `ReplaceClip`, `UnlinkProxyMedia`), you get a **permission prompt** with the reason, even when the tool is pre-approved. Scripts that build function names at run time (`getattr`, `eval` and similar) always prompt too, because they can't be checked in advance.
 
 A prompt from the guard is not an error. Claude says what the script deletes and why; you decide. It never splits or renames calls to slip past the guard.
 
 Two exact calls are exempt because they only clean up Claude's own scratch work: `DeleteMarkersByColor("Cream")` (Claude's markers) and deleting the temporary local grade version `claude-measure` that color skills measure on.
+
+## Resolve 21.1.2 editing calls
+
+Resolve 21.1.2 added script calls for steps that used to be manual: trimming clip edges, moving clips between tracks, adding effects (including MotionVFX Fusion effects with their parameters), exporting a finished frame without moving your playhead, measuring a clip's loudness without a render, removing silence, and writing a corrected transcript back. Skills use them only on 21.1.2 or newer; on older versions they keep the previous route (often a step you do by hand) and say so. What stays manual: parameters of Resolve FX (OFX) and Fairlight effects, keyframes on clip properties, trimming generators and titles, creating color nodes.
+
+Two of these need care and Claude treats them that way: removing silence ripples every unlocked track (Claude works on a copy and locks what must stay), and trims never rely on linked clips following automatically.
 
 ## Timecode and frames
 

@@ -96,7 +96,7 @@ A-roll and Voice are never deleted, even when empty (`protected_tracks`).
 | Name a track | yes | |
 | Color the track header | no | `.drt` template; clip colors are kept in sync instead |
 | Insert a track at a position | no, new tracks go on top | tracks are planned before clips are placed; for a middle track Claude asks you to add it (right-click the track header → Add Track → position), then names it |
-| Move a clip between tracks | no | never deleted and re-added: that would lose effects, grades and keyframes |
+| Move a clip between tracks | on Resolve 21.1.2+ yes (the item itself moves); before, no | never deleted and re-added: that would lose effects, grades and keyframes |
 | Lock / enable a track | yes | |
 
 ## Settings

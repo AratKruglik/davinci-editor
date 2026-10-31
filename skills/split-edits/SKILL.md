@@ -1,6 +1,6 @@
 ---
 name: split-edits
-description: J-cuts and L-cuts (split edits) in DaVinci Resolve Studio 21+ - finds joins where the picture source really changes (another clip or take on A-roll, camera / screen / PiP switches, B-roll with live sound), proposes J or L with a shift in frames, rejects every proposal that would let cut-out words be heard, leave a mouth moving without sound, clip a word or run past the media, and after approval builds it without touching video items (audio laid with the split while assembling, or relaid on a copy of the cut timeline). Handles the user's Cocoa markers with the note J / L / split.
+description: J-cuts and L-cuts (split edits) in DaVinci Resolve Studio 21+ - finds joins where the picture source really changes (another clip or take on A-roll, camera / screen / PiP switches, B-roll with live sound), proposes J or L with a shift in frames, rejects every proposal that would let cut-out words be heard, leave a mouth moving without sound, clip a word or run past the media, and after approval builds it without touching video items (audio laid with the split while assembling, or trimmed / relaid on a copy of the cut timeline). Handles the user's Cocoa markers with the note J / L / split.
 when_to_use: User wants J/L cuts, split edits, sound leading or trailing the picture, smoother joins between takes or between camera and screen, live sound of B-roll before / after the insert; stage B of edit-episode after text-based-cut and dual-video-sync-pip; Cocoa markers whose note says J, L or split. Triggers - "зроби J-кати", "L-кат", "розділені склейки", "split edit", "хай звук іде раніше картинки", "звук наступного плану заходить раніше", "згладь склейки між дублями", "J/L cuts".
 argument-hint: "[timeline] [auto|markers]"
 arguments: [timeline, scope]
@@ -73,10 +73,8 @@ Cocoa without these words stays a MotionVFX transition (`marker-edit`). The mark
 
 ## Two ways to build
 
-The API cannot trim an item's edge (no roll / ripple trim), so:
-
 - **Mode 1 — while placing (preferred, nothing is deleted).** `text-based-cut` asks for J/L at clip changes before it appends (it runs `joins --rough`, below, and appends Voice from the `audio` result); `dual-video-sync-pip` runs `sections` on its `pip-input.json` before `pip_plan.py`; B-roll live sound is only ever *added* on Ambience.
-- **Mode 2 — on a cut timeline.** Work on a duplicate (`DuplicateTimeline`, `resolve-core` §3); the original stays as it was. Per changed Voice item: record its properties, unlink, delete **only that audio item** (no ripple), append it again with the new range, relink, restore. **Video items are never relaid** — that would erase zooms, Fusion comps, PiP transforms and grades. That's why camera ↔ screen splits on a timeline whose Screen items are already placed are reported, not built: offer to re-run `dual-video-sync-pip` on a copy with the shifted sections, or move the edits by hand.
+- **Mode 2 — on a cut timeline.** Work on a duplicate (`DuplicateTimeline`, `resolve-core` §3); the original stays as it was. Resolve 21.1.2+ (version gate, `resolve-core` §10): one edge trim per split on the Voice item whose sound is extended, in place; its neighbour's edge is overwritten, nothing is deleted. Older: per changed Voice item record its properties, unlink, delete **only that audio item** (no ripple), append it again with the new range, relink, restore. **Video items are never relaid or trimmed** — relaying would erase zooms, Fusion comps, PiP transforms and grades. That's why camera ↔ screen splits on a timeline whose Screen items are already placed are reported, not built: offer to re-run `dual-video-sync-pip` on a copy with the shifted sections, or move the edits by hand.
 
 ## 1. Connect and read
 
@@ -115,14 +113,19 @@ It re-runs the hard checks on what the user decided, so an edited shift that no 
 ## 4. Build (mode 2)
 
 1. Duplicate the timeline (`f"{name} - split {YYYY-MM-DD}"`), make the copy current, work only on it. Dump it again: rows in `split-audio.json` find their Voice item by `current` (record start/end) and `clip_id`.
-2. In this order — an L makes the earlier item reach into the space the next one still occupies, so nothing is appended until every changed item is gone:
+2. **Resolve 21.1.2+: trims** (`resolve-core/reference.md#resolve-2112-editing-calls`). `split-audio.json` → `trims` has one row per split: the Voice item, `edge` and `frames` (k).
+   1. Get every row's item object from the copy *before* the first call (each call moves edges, so `current` stops matching later). Note any audio transition at the moved joins (a 2-frame crossfade from `text-based-cut`): how it behaves under a trim is unverified, re-read it afterwards and report anything odd.
+   2. Per row, read the offset right before the call: `edge` `left` (J) → `item.SetLeftOffset(item.GetLeftOffset() - k, False, False)`; `right` (L) → `item.SetRightOffset(item.GetRightOffset() - k, False, False)`. Always `updateLinkedItems=False`: the video stays where it is.
+   3. After the **first** trim re-read both Voice items and both A-roll neighbours. A video edge that moved, or a `False` back → stop, report, and build all splits with the relay below on a fresh copy.
+   4. `SetFades({"FadeIn": fade_in, "FadeOut": fade_out})` from the `audio` rows on the moved ends; re-read `GetFades()`.
+3. **Older Resolve: relay.** In this order — an L makes the earlier item reach into the space the next one still occupies, so nothing is appended until every changed item is gone:
    1. For every row: read and keep `GetProperties()` (`AudioVolume`, `AudioVolumeEnabled`, pan), `GetFades()`, `GetVoiceIsolationState()`, `GetClipColor()`, the linked video (`GetLinkedItems()`), and any audio transition at its ends (a 2-frame crossfade from `text-based-cut` is lost with the item).
    2. One guarded call: `tl.SetClipsLinked([video, audio], False)` for each, then `tl.DeleteClips(all_changed_audio, False)` (no ripple). The guard asks the user: say which audio items go and that they come back at once with the new ranges.
    3. Re-dump the A-roll track: item count and positions must be unchanged. If any video went with the audio, stop and report (the copy protects the original, but nothing else may run).
    4. Append every row: `mp.AppendToTimeline([{"mediaPoolItem": clip, "startFrame": source_start, "endFrame": <per calibration>, "mediaType": 2, "trackIndex": voice, "recordFrame": record}])` (`source_*` in the file are already API frames).
    5. Relink each to its video item, restore volume, voice isolation and color, `SetFades({"FadeIn": fade_in, "FadeOut": fade_out})` on the moved ends (the old fade at the unmoved end), re-add the crossfades recorded at unmoved ends.
-3. Ambience rows: `track_index(tl, "audio", "Ambience", create=True)` (`track-layout`; `Ambience 2` for `B-roll 2`), append `mediaType: 2` with `recordFrame: record`, fades. Only adding.
-4. Fades vs. crossfade: `SetFades` on the moved ends is the default. If `text-based-cut` already put 2-frame audio crossfades at joins, keep them where the join didn't move. Whether `SetFades` survives relinking is unverified — re-read `GetFades()`.
+   6. Fades vs. crossfade: `SetFades` on the moved ends is the default. If `text-based-cut` already put 2-frame audio crossfades at joins, keep them where the join didn't move. Whether `SetFades` survives relinking is unverified — re-read `GetFades()`.
+4. Ambience rows: `track_index(tl, "audio", "Ambience", create=True)` (`track-layout`; `Ambience 2` for `B-roll 2`), append `mediaType: 2` with `recordFrame: record`, fades. Only adding.
 
 Mode 1 needs none of this: `text-based-cut` appends Voice from `split-audio.json` (`"mode": "rough"`, every segment listed, record frames relative to the timeline start).
 
@@ -134,7 +137,7 @@ Dump the copy again, then:
 python3 ${CLAUDE_SKILL_DIR}/scripts/split_edits.py verify "<work>/timeline-<copy>.json" "<work>/split-audio.json"
 ```
 
-Plus by hand: item counts per track as before (Ambience added), timeline end frame unchanged, every A-roll / Voice pair linked. Anything off → report the item and timecode; never nudge silently.
+Plus by hand: item counts per track as before (Ambience added), timeline end frame unchanged, every A-roll / Voice pair linked. If something is off after trims, the copy is the safety net; to undo one split instead, set both items' recorded offsets back (the extended item first). Anything off → report the item and timecode; never nudge silently.
 
 ## 6. Mark and report
 
@@ -145,7 +148,7 @@ Plus by hand: item counts per track as before (Ambience added), timeline end fra
 
 ## Never
 
-- Change or delete the original timeline, or relay a video item.
+- Change or delete the original timeline, or relay or trim a video item.
 - Build a split that failed a hard check, even when a marker asks for it.
 - Split a join inside one clip.
 - Leave the copy with unlinked or out-of-sync A-roll / Voice pairs.

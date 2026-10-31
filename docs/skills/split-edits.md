@@ -10,7 +10,7 @@ Finds joins where the picture source really changes and proposes a J-cut or L-cu
 - camera / screen / PiP switches;
 - B-roll with live sound.
 
-After your approval it builds them without touching video items. The audio is laid with the split while assembling, or relaid on a copy of the cut timeline. It also handles your Cocoa markers whose note says `J`, `L` or `split`.
+After your approval it builds them without touching video items. The audio is laid with the split while assembling, or trimmed (Resolve 21.1.2+) or relaid on a copy of the cut timeline. It also handles your Cocoa markers whose note says `J`, `L` or `split`.
 
 - **J-cut:** the next shot's sound starts before its picture, so the change feels expected.
 - **L-cut:** the picture has changed and the previous sound runs on under it, so a thought ends without being chopped.
@@ -95,16 +95,15 @@ Craft rules. Claude follows them by default; if you ask to break one, it does an
 
 ## Two ways to build
 
-The API can't trim an item's edge (no roll or ripple trim), so:
-
 - **Mode 1, while placing (preferred, nothing is deleted).**
   - `text-based-cut` asks for J/L at clip changes before it appends, and lays Voice with the split.
   - `dual-video-sync-pip` shifts its camera ↔ screen sections before placing Screen.
   - B-roll live sound is only ever added on Ambience.
 - **Mode 2, on a cut timeline** (what this skill does when you call it):
   - It works on a duplicate; the original stays as it was.
-  - The changed Voice items are unlinked and only those audio items are deleted (no ripple), then appended again with the new ranges. Then they are relinked and their volume, voice isolation, color and fades are restored.
-  - **Video items are never relaid:** that would erase zooms, Fusion comps, PiP transforms and grades.
+  - On Resolve 21.1.2 and later, each split is one trim on the Voice item whose sound is extended: its edge moves into the neighbour's audio, in place, and overwrites that edge. Nothing is deleted, so there is no permission prompt, and volume, voice isolation, color and links stay as they were.
+  - On older Resolve the API can't trim an edge, so the changed Voice items are unlinked and only those audio items are deleted (no ripple), then appended again with the new ranges. Then they are relinked and their volume, voice isolation, color and fades are restored.
+  - **Video items are never relaid or trimmed:** relaying would erase zooms, Fusion comps, PiP transforms and grades.
   - So camera ↔ screen splits on a timeline whose Screen items are already placed are **reported, not built.** Claude offers to re-run `dual-video-sync-pip` on a copy with the shifted sections, or you move those edits by hand.
 
 ## Settings
@@ -137,7 +136,13 @@ All under `<work_dir>/<project>/`:
 1. Says the project and timeline names, saves the project, runs the append calibration once per session, and dumps the timeline.
 2. Computes candidates and runs the hard checks (`split_edits.py joins`). When relevant, it also prepares shifted sections for a tutorial whose Screen isn't placed yet (handed to `dual-video-sync-pip`). For B-roll inserts it proposes Ambience sound: only for clips with audio that you want heard. With scope `markers`, automatic proposals are kept as plain cuts.
 3. **Approval: the plan.** One table in time order: #, timecode, join (clip → clip), type, frames, words around the join (which sound moves), why. Then the rejected proposals with reasons, then questions. Answer in one message: "all except 3; 5 as L 8". If you change a shift and it no longer passes the checks, Claude refuses it and tells you; it doesn't force it.
-4. **Builds on a copy** named `<name> - split <date>`, relaying only the changed Voice items:
+4. **Builds on a copy** named `<name> - split <date>`.
+   On Resolve 21.1.2 and later:
+   - one trim per split on the extended Voice item, with the video left where it is;
+   - after the first trim it re-reads both Voice items and both A-roll neighbours. If a video edge moved, it stops and builds everything the older way on a fresh copy;
+   - it sets fades on the moved ends and adds Ambience items, if any (only adding).
+
+   On older Resolve it relays only the changed Voice items:
    - it records each item's volume, fades, voice isolation, color, linked video and any audio crossfade at its ends;
    - it deletes all changed audio items in one call. That is a permission prompt (the `guard.py` hook); Claude says which audio items go and that they come back at once with the new ranges. Nothing is appended until every changed item is gone, because an L reaches into the space the next item still occupies;
    - it re-checks that A-roll is unchanged. If video went with the audio, it stops and reports;
@@ -152,7 +157,7 @@ All under `<work_dir>/<project>/`:
 
 ## What it never does
 
-- Change or delete the original timeline, or relay a video item.
+- Change or delete the original timeline, or relay or trim a video item.
 - Build a split that failed a hard check, even when a marker asks for it.
 - Split a join inside one clip.
 - Leave the copy with unlinked or out-of-sync A-roll / Voice pairs.
@@ -202,5 +207,6 @@ The strong prompt names the timeline, says where your own instruction is, and as
 - Listen to the first J and the first L on headphones: does the sound lead or trail naturally, with no clipped word and no cut word coming back?
 - Step through the Cream `J` / `L` markers on the copy; all Cream markers can be removed at once.
 - A-roll and Voice are still linked and in sync on the copy.
-- Fades on the moved ends survived (whether they survive relinking is unverified).
+- Fades on the moved ends survived (on older Resolve: whether they survive relinking is unverified).
+- A 2-frame crossfade from `text-based-cut` at a moved join: how it behaves under a trim is unverified, so listen to it.
 - Camera ↔ screen splits the report lists as not built: re-run `dual-video-sync-pip` on a copy, or move them by hand.

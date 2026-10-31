@@ -78,7 +78,7 @@ Only if you explicitly prefer RCM and don't need chart matching (with RCM the wo
 | File | Contents |
 |---|---|
 | `<templates_dir>/base-apple-log.drx`, `base-apple-log-2.drx` | base node trees, one per log version |
-| `<work_dir>/<project>/stills/<clip>-709.tif` | check stills of 2–3 representative clips |
+| `<work_dir>/<project>/stills/<clip>-709.png` | check stills of 2–3 representative clips (`.tif` on Resolve before 21.1.2) |
 
 ## Workflow and approval stops
 
@@ -88,7 +88,7 @@ Only if you explicitly prefer RCM and don't need chart matching (with RCM the wo
 4. Works on a timeline that contains the clips; if there is none, it creates one from the bin. Your edit is never rearranged.
 5. On every video item: adds and loads the remote version `claude`, applies the matching template, and verifies the version is current and the labels include `CST`. Batches of up to 50 clips. A clip that already has a remote `claude` version with a different grade → it asks before overwriting.
 6. Optional: groups clips per scene into Color Groups if you shoot several scenes; later skills grade per group.
-7. Exports stills of 2–3 representative clips and checks for clipped highlights, neon saturation or a magenta / green shift (wrong log version) and crushed blacks. If it can't view the stills, it asks you to look at the viewer.
+7. Exports stills of 2–3 representative clips (on Resolve 21.1.2+ straight from the clip, without moving your playhead) and checks for clipped highlights, neon saturation or a magenta / green shift (wrong log version) and crushed blacks. If it can't view the stills, it asks you to look at the viewer.
 8. Reports a table clip → format → template → applied ✔/✘ and anything suspicious for your eye.
 
 Any script that deletes or resets something becomes a permission prompt (the `guard.py` hook), so read what you approve.

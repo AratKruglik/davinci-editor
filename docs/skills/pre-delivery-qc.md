@@ -68,7 +68,7 @@ Severity: **error** = will be visible or audible in the render; **warn** = proba
 | `chapters` | (`youtube`) `chapters.json` fails the `chapters-markers` check against the current duration | set by Claude |
 | `loudness` | integrated loudness more than ±1 LU off `loudness_target_lufs`, or a peak over `true_peak_db` | error |
 
-Loudness: reused from `audio-finish` if it measured this timeline after the last audio change (Claude says from when). Otherwise measured exactly as `audio-finish` does it: the render format is recorded and restored, only Claude's own audio-only job is added and only that job is deleted.
+Loudness: reused from `audio-finish` if it measured this timeline after the last audio change (Claude says from when). Otherwise measured exactly as `audio-finish` does it: the render format is recorded and restored, only Claude's own audio-only job is added and only that job is deleted. On Resolve 21.1.2+ a mix that is off also gets per-clip loudness of the Voice and Music items (measured without a render) in the finding, so you see which clip to fix.
 
 **Verdict:** `PASS` (no errors), `PASS WITH WARNINGS`, or `FAIL`, with counts.
 
@@ -91,7 +91,7 @@ All under `<work_dir>/<project>/`:
 | `timeline-<timeline>.json` | dump of the checked timeline |
 | `qc-<timeline>.json` | every finding, the `verdict` and the timeline `state` (end frame, item counts) it checked; read by `deliver` |
 | `qc-<timeline>.md` | the report shown to you |
-| `qc/<n>.tif` | stills for the look check |
+| `qc/<n>.png` | stills for the look check (`.tif` on Resolve before 21.1.2) |
 | `audio/mix-check.wav` | mixdown for the loudness measurement, only when it is measured anew |
 | `subtitles/<timeline>.uk.srt`, `chapters.json` | read only, for the `youtube` checks |
 

@@ -1,6 +1,6 @@
 ---
 name: subtitles-uk
-description: Ukrainian subtitles for a cut timeline in DaVinci Resolve Studio 21+ built from the word-level transcript (Resolve's own auto-captions have no Ukrainian) - maps every word onto the cut, proofreads terms and names with the user, writes a YouTube-ready SRT (42 characters, 2 balanced lines, reading speed, no dangling prepositions) and optionally places it on a Subtitles UA track; for Shorts builds animated burned-in captions of 2-4 words with the spoken word highlighted in the brand accent color.
+description: Ukrainian subtitles for a cut timeline in DaVinci Resolve Studio 21+ built from the checked word-level transcript, not Resolve's auto-captions - maps every word onto the cut, proofreads terms and names with the user, writes a YouTube-ready SRT (42 characters, 2 balanced lines, reading speed, no dangling prepositions) and optionally places it on a Subtitles UA track; for Shorts builds animated burned-in captions of 2-4 words with the spoken word highlighted in the brand accent color.
 when_to_use: User wants subtitles, captions, an SRT for YouTube, burned-in or animated captions for Shorts/Reels, or subtitles fixed after re-editing; the subtitles step of edit-episode stage D and of shorts-cutdown. Triggers - "зроби субтитри", "субтитри українською", "SRT для ютуба", "анімовані субтитри", "підписи для шортс", "караоке-субтитри", "subtitles", "captions".
 argument-hint: "[timeline] [youtube|shorts]"
 arguments: [timeline, mode]
@@ -27,7 +27,7 @@ Follow `resolve-core` first. Timeline: `$timeline` (default current). Mode: `$mo
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/subtitles.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/subtitles.py selftest`).
 
-Why from the transcript: `tl.CreateSubtitlesFromAudio` only knows the `AUTO_CAPTION_*` languages, and Ukrainian isn't one of them; with `AUTO` it picks a neighbouring language and writes nonsense. The word timings from `uk-transcribe` are already Ukrainian and already checked, so subtitles are built from them.
+Why from the transcript: `tl.CreateSubtitlesFromAudio` recognizes the audio again and ignores the checked transcript and its fixes. The 21.1.2 API lists `AUTO_CAPTION_UKRAINIAN`, but it is not verified on a running Resolve; with `AUTO` it picks a neighbouring language and writes nonsense. The word timings from `uk-transcribe` are already Ukrainian and already checked, so subtitles are built from them.
 
 ## 1. Words on the cut
 
@@ -42,6 +42,7 @@ Why from the transcript: `tl.CreateSubtitlesFromAudio` only knows the `AUTO_CAPT
 Subtitles are read, so they must be right, but they must also match what is said.
 - Remove hard fillers (`${user_config.filler_words}`) and the `(...)` silence marks from a copy of the words file; keep soft fillers when they carry meaning.
 - List suspected recognition errors in one table: technical terms, product names, English words in Ukrainian speech, numbers ("сто дев'яносто два" → `192` when it's an address). Ask once; apply the approved fixes to the words copy, keeping each word's timing. Never paraphrase or shorten what was said.
+- Term and name fixes also help the next export, chapters and Shorts: offer to write them into the source clips' Resolve transcripts with `uk-transcribe` §6 (21.1.2 Studio, asks first). Subtitle typography (digits, «лапки») stays in the words copy only.
 - Typography: Ukrainian apostrophe `ʼ` (or `'` if the user prefers), «лапки», numbers as digits for addresses, versions and prices.
 
 ## 3. YouTube SRT (`youtube`)

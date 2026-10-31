@@ -29,7 +29,7 @@ Explicit call:
 - Optional: Cyan and Blue markers on the timeline or its items (below).
 - Optional: words on the cut (`<work>/words-<timeline>.json`); with them the skill can suggest graphics from the transcript.
 - For a MotionVFX title: the template catalog. If there is none yet, the skill runs `motionvfx-catalog` first.
-- The length of every inserted graphic is your *Standard generator duration* preference (Preferences → User → Editing); the API can't trim items. Set it at least as long as your longest title hold.
+- The length of every inserted graphic is your *Standard generator duration* preference (Preferences → User → Editing); Fusion graphics have no media handles, so the API can't trim them. Set it at least as long as your longest title hold.
 
 ## Markers it reads
 
@@ -116,7 +116,7 @@ Under `<work_dir>/<project>/`:
 | File | Contents |
 |---|---|
 | `words-<timeline>.json` | words on the cut, the source of transcript suggestions |
-| `stills/title-<n>.tif` | stills for placement and verification |
+| `stills/title-<n>.png` | stills for placement and verification (`.tif` on Resolve before 21.1.2) |
 | `graphics/<n>.json` | the build spec of each graphic (timing, positions, keyframes) |
 
 The MotionVFX catalog is machine-wide: `<work_dir>/motionvfx-catalog.json`.
@@ -125,9 +125,9 @@ The MotionVFX catalog is machine-wide: `<work_dir>/motionvfx-catalog.json`.
 
 1. Collects the graphics: Cyan markers, Blue markers (asks once whether you want chapter cards), your request, and transcript suggestions listed separately.
 2. **Approval: the plan.** A table `# | TC | kind | text | duration | route (Fusion / MotionVFX name) | track`. Nothing is built before your yes.
-3. MotionVFX route: finds the exact template name in the catalog, inserts the title and fills its text fields.
+3. MotionVFX route: finds the exact template name in the catalog, backs up the timeline, inserts the title with every other video track locked (Resolve inserts a title by pushing later clips along on the lowest unlocked track), checks that none of your clips moved, and fills its text fields.
 4. Fusion route: backs up the timeline and locks `A-roll`, `B-roll` and `Voice` for the stage.
-5. Exports a still at each marker and places the lower third or callout away from the face and from the UI the viewer must see; a callout's point is read off this still.
+5. Exports a still at each marker (on Resolve 21.1.2+ straight from the timeline, without moving the playhead; the still shows the grade, every track and the titles) and places the lower third or callout away from the face and from the UI the viewer must see; a callout's point is read off this still.
 6. Computes the spec with `motion.py build` (timing, easing, safe-area placement).
 7. Inserts each graphic on `Titles`: every other video track is locked for the moment of the insert, then each one is set back to exactly the lock state it had. Checks the item landed on `Titles` at the marker frame.
 8. If a hold needs more than the item length, tells you to raise *Standard generator duration* or trim by hand. It never shortens the hold to fit.

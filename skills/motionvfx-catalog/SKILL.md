@@ -43,7 +43,12 @@ No catalog yet → run `scan` first. Reply with the best 5–10 matches: exact `
 ## Facts for the skills that use the catalog
 
 - Name passed to Resolve = the `.setting` file name without extension, exactly as in the catalog (spaces, brackets and all).
-- Titles: `tl.InsertFusionTitleIntoTimeline(name)`; text goes into the macro's `StyledText` inputs (`text_inputs` says how many). Which track the title lands on is unverified (see `resolve-core/reference.md`): check after the first insert.
+- Titles: `tl.InsertFusionTitleIntoTimeline(name)`; text goes into the macro's `StyledText` inputs (`text_inputs` says how many). It *inserts with ripple* on the lowest video track at the playhead (`resolve-core` §10): lock every other video track first and check afterwards that nothing moved; moving the title later doesn't undo the ripple.
 - Transitions: `item.AddTransition({"type": name, "category": "fusion", "position": "end", "alignment": "center", "duration": frames})`.
-- Effects (placeholders, corner screens, frames) can't be attached to a clip through the API. Skills list the clips and ask the user to drag the effect on, or use the built-in transform route.
+- Effects (placeholders, corner screens, frames, camera moves), Resolve 21.1.2+ (version gate in `resolve-core` §10): the calling skill attaches them to a **media** item with its own backup and guard; this helper only reads files. Recipe (`resolve-core/reference.md#resolve-2112-editing-calls`):
+  - id: look the catalog `name` up in `resolve.GetEffectsList("video")` (`category` `fusion`); several hits → pick the one whose `id` contains the catalog `pack`. Never build the id by hand.
+  - `fx = item.AddEffect("fusion", id)`: only media items take effects (`None` on a generator).
+  - `macro = fx.GetFusionComp().FindTool(<catalog "macro">)` (fallback `GetToolList(False)`); input ids from `macro.GetInputList()` (the catalog's `inputs` are display names, not ids), `SetInput(id, v)`, re-read with `GetInput(id)`.
+  - Undo: `item.DeleteEffects([fx])` (guarded).
+  - Older Resolve: list the clips and ask the user to drag the effect on, or use the built-in transform route.
 - MotionVFX packs are licensed per user: never copy `.drfx` files into the project or the work folder.

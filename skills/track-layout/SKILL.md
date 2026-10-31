@@ -37,7 +37,7 @@ Why this order: Backgrounds under everything (PiP plates), A-roll is the base, B
 | Name a track | `tl.SetTrackName(type, i, name)` | — |
 | Color the track header | no API | `.drt` template (below); clip colors via `item.SetClipColor(color)` are kept in sync instead |
 | Insert a track at a position | no: `AddTrack(type, subTrackType)` appends on top | plan all tracks before placing clips; for a middle track ask the user to add it (right-click track header → Add Track → position), then name it |
-| Move a clip between tracks | no | never delete-and-re-add a clip to move it: that loses effects, grades and keyframes |
+| Move a clip between tracks | 21.1.2+: `item.SetPosition({"trackIndex": t, "startFrame": f}, False)`, a group with `tl.MoveItems(items, {...}, False)` (`resolve-core` §10); older: no | never delete-and-re-add a clip to move it: that loses effects, grades and keyframes |
 | Lock / enable | `SetTrackLock`, `SetTrackEnable` | — |
 
 Audio `subTrackType`: `"mono"`, `"stereo"`, `"5.1"`… — Voice is `mono` when it's a single mic, otherwise match the source.

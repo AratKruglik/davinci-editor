@@ -1,4 +1,5 @@
 {
+ "resolve_version": "21.1.2.10",
  "project": "Router Setup 2026-11",
  "timeline": "Router - rough cut 2026-11-02",
  "timeline_start": "01:00:00:00",
@@ -8,7 +9,7 @@
   "end_inclusive": false,
   "source_offset": 0
  },
- "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones.",
+ "note": "Files that Resolve-side scripts (run_script, run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones.",
  "tracks": {
   "video": [
    "V1 Backgrounds",

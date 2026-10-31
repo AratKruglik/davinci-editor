@@ -58,8 +58,9 @@ The proposals come as one table: `# | source TC range | seconds | hook (first wo
 - Tracks laid out by `track-layout`: A-roll, Voice, Titles; Music only if you want music in Shorts.
 - Built from the **original media**, not by nesting the episode: every range is mapped back to source clip ranges with 3 frames of air before and 8 after. Screen recordings are included only if you approved a screen moment on purpose.
 - Grade: the remote `claude` version is loaded where needed.
-- **Smart Reframe** on each A-roll item, then a still of each item to check the face is inside the frame and not cut at the chin or forehead. A bad reframe gets its `Pan` set by hand toward the face, and Claude tells you.
+- **Smart Reframe** on each A-roll item, then a still of each item to check the face is inside the frame and not cut at the chin or forehead (on Resolve 21.1.2+ exported from the timeline without moving the playhead). A bad reframe gets its `Pan` set by hand toward the face, and Claude tells you.
 - Sound: clip gain and Dialogue Leveler of the source items don't come along, so `audio-finish` runs on the Short (YouTube plays Shorts at the same -14 LUFS).
+- A changed end after the build is trimmed in place on Resolve 21.1.2+; a changed start or inner join means that Short is rebuilt.
 - Captions: `subtitles-uk shorts` for animated captions. Optionally a 2–3 word title at the top for the first 2 s (`fusion-motion-graphics` `kinetic`) if the hook needs it; Claude asks.
 
 ## Settings

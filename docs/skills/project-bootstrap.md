@@ -87,7 +87,7 @@ The skill writes no working files. Media is referenced where it lies: never copi
 1. Saves the open project if it has unsaved changes.
 2. Lists the footage folder and sorts every file into a bin; reads the camera clips' frame rate where possible and asks which rate wins if it differs from `timeline_fps`.
 3. **Approval: the plan.** Project name, timeline settings, a file → bin table and counts. Nothing is created before your yes.
-4. Creates the project (a taken name → asks for another name or whether to open the existing project) and sets resolution, frame rate, color science and transcription language. Every key is read back; one that didn't stick is reported with the value Resolve kept.
+4. Creates the project (a taken name → asks for another name or whether to open the existing project) and sets resolution, frame rate, color science and transcription language (for Ukrainian on Resolve 21.1.2+ it first switches on the extended transcription model: Ukrainian exists only there). Every key is read back; one that didn't stick is reported with the value Resolve kept.
 5. Builds the bins (reusing existing ones) and imports per bin, then checks the item count per bin against the plan. A file Resolve can't read (for example a variable-frame-rate screen recording) is listed with a suggestion to convert it to constant frame rate; a transcoded copy is imported only if you ask.
 6. Proxies: there is no API to generate them. For 4K iPhone HEVC on a laptop it tells you: Media Pool → select `A-Roll` and `Screen` → right-click → **Generate Proxy Media**; Playback → **Use Proxy Media if Available**. Renders always use the originals.
 7. Creates the selects timeline in `Edit`, checks its settings match the project, and saves.

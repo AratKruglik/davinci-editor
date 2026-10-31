@@ -4,7 +4,7 @@
 
 ## What it does
 
-Transcribes clips with DaVinci Resolve 21+ built-in AI transcription, in Ukrainian or the configured language, optionally with speaker detection. It waits for the background job and verifies the language Resolve actually used. Then it exports word-level timecodes to JSON, SRT and plain text. These files are the input for text-based editing, subtitles and chapters.
+Transcribes clips with DaVinci Resolve 21+ built-in AI transcription, in Ukrainian or the configured language, optionally with speaker detection. It waits for the background job and verifies the language Resolve actually used. Then it exports word-level timecodes to JSON, SRT and plain text. These files are the input for text-based editing, subtitles and chapters. On Resolve 21.1.2 Studio it can also write the term and name fixes you approve back into Resolve's own transcript.
 
 Principle: verify, don't trust. Without the extended language models Resolve silently falls back to a built-in model, so every clip's detected language is checked.
 
@@ -25,13 +25,13 @@ Explicit call:
 
 ## Before you start
 
-- For Ukrainian, Resolve may need the **extended** language models: Resolve menu → Extras Download Manager. Without them a clip comes back in another language, and the skill stops and tells you what to download.
+- Ukrainian exists only in Resolve's **extended** language models: Resolve menu → Extras Download Manager. Without them the extended model can't be switched on or a clip comes back in another language, and the skill stops and tells you what to download.
 - Clips that already have a transcript in this language are skipped. Re-transcribing destroys manual corrections made in Resolve, so Claude asks before clearing one. To redo a clip, say so.
 
 ## Language check
 
-1. Claude sets the project's transcription language to `transcription_language` and reads it back.
-2. If the value didn't stick, it asks you to pick the language once in Resolve (Project Settings → General Options → transcription language, or the transcription dialog). It reads the accepted code back and tells you to put that code in the plugin config.
+1. Ukrainian on Resolve 21.1.2+: Claude first switches on the extended language model (`transcriptionExtendedLanguageSupport` = `1`), then sets the language to `uk`, and reads both back. The order matters: switching the extended model resets the language to `auto`, and `auto` misdetects short Ukrainian clips (2 s came back as Spanish). If the extended model doesn't switch on, it stops and points you to the Extras Download Manager.
+2. Other languages or older Resolve: Claude sets the project's transcription language to `transcription_language` and reads it back. If the value didn't stick, it asks you to pick the language once in Resolve (Project Settings → General Options → transcription language, or the transcription dialog). It reads the accepted code back and tells you to put that code in the plugin config.
 3. After the job, the `language` field of every clip must match the configured language. A mismatch means the extended models are missing: Claude names the clip, tells you what to download, and stops.
 4. Claude reads 2–3 paragraphs of the `.txt` and flags systematic errors: technical terms, names, English words in Ukrainian speech. If key terms are often wrong, it tells you. The fallback is Whisper, but nothing is installed without asking.
 
@@ -56,6 +56,7 @@ All under `<work_dir>/<project>/transcripts/`, one set per clip:
 | `<clip>.json` | the full Resolve transcription with word timecodes, plus clip name and id, file path, fps, Start TC, drop frame. This is the format `text-based-cut` and later skills read |
 | `<clip>.srt` | segment-level subtitles, at most `subtitle_max_chars` characters per line (42), 2 lines; a longer segment is split into several cues |
 | `<clip>.txt` | timecoded paragraphs, with speakers if detected |
+| `<clip>.before-fix.json` | only after a write-back: Resolve's transcript before the fixes, to undo them |
 
 ## Workflow and approval stops
 
@@ -64,13 +65,14 @@ All under `<work_dir>/<project>/transcripts/`, one set per clip:
 3. Starts the transcription for the whole bin or for each selected clip. It runs as a background job, and Claude polls it with short separate calls and tells you the progress. Expect roughly real time / 5–10 on Apple Silicon. `Cancelled` or `Error` is reported and the skill stops.
 4. Exports each clip's transcription to JSON, then builds the `.srt` and `.txt` next to it (`transcript_export.py`). The script prints the detected language per clip.
 5. Checks quality: language per clip, then a read of the text for systematic recognition errors.
-6. Reports the clips transcribed, detected language, total duration, speakers found, output folder and notable recognition problems. Next step: `text-based-cut`.
+6. **Optional write-back (21.1.2 Studio), after you approve it:** the fixes you approved for names and terms are written into Resolve's own transcript (`SetTranscription`), so Resolve's text-based editing and every later export carry them. The transcript as it was is saved first as `<clip>.before-fix.json`, then the clip is exported again.
+7. Reports the clips transcribed, detected language, total duration, speakers found, output folder, notable recognition problems and fixes written back. Next step: `text-based-cut`.
 
 Any script that deletes or resets something, such as clearing a transcript, becomes a permission prompt (the `guard.py` hook), so read what you approve.
 
 ## What it never does
 
-- Re-transcribe or clear a clip's existing transcript without asking: that destroys manual corrections made in Resolve.
+- Re-transcribe, clear or overwrite a clip's existing transcript without asking: that destroys manual corrections made in Resolve.
 - Continue with a clip whose detected language doesn't match the configured one.
 - Install Whisper or anything else without asking.
 - Write into the media folders: outputs go only to `<work_dir>/<project>/transcripts/`.

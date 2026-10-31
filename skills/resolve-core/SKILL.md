@@ -20,13 +20,13 @@ Every davinci-editor skill follows these rules. They exist because a wrong edit 
 ## 1. Connect
 
 1. `get_resolve_status`. If Resolve is not running, ask the user before calling `launch_resolve` (it opens the app and may load the last project).
-2. Read the version once: `resolve.GetVersionString()`. These skills target 21.0+. On older versions, warn that some calls (voice isolation, speaker detection, version API) may be missing.
+2. Read the version once: `resolve.GetVersionString()`. These skills target 21.0+. On older versions, warn that some calls (voice isolation, speaker detection, version API) may be missing. Editing calls added in 21.1.2 (trims, effects, frame export…) follow the version gate in §10.
 3. Read the project and timeline you will touch and say their names back to the user before any change. Never assume "current project" is the right one.
 4. Unknown function or key? Use `search_scripting_api` (e.g. pattern `Transcri`) before guessing. Resolve adds API often; `get_whats_new` with the last version you know lists additions.
 
 ## 2. Running scripts safely
 
-- `run_script` is sandboxed (no `os`, files or network). Use it by default. `run_script_unsafe` only when the step must read or write files (exporting stills, dumping a transcript to JSON, reading a DRX folder).
+- `run_script` is sandboxed (no `os`, files or network). Use it by default. `run_script_unsafe` only when the script's own Python must read or write files (dumping a transcript to JSON, reading a DRX folder). Resolve calls that write files themselves (`ExportFrame`, `ExportStills`, `Export`) work from `run_script`.
 - One step per call, short scripts, default timeout. Long loops over hundreds of clips: batch them (e.g. 50 items per call) and return progress.
 - Always set `result` to structured data (dict/list), never only `print`.
 - After every `Set*`/`Apply*`/`Add*` call, read the state back with the matching `Get*` and report the re-read value, not the boolean. Many setters return `True` and change nothing when a value string is spelled differently than this build expects.
@@ -98,10 +98,21 @@ Write transcripts, cut lists, stills and reports under `${user_config.work_dir}/
 
 - If `${CLAUDE_SKILL_DIR}` reaches you unsubstituted, locate the skill's folder once (e.g. `find / -path '*/skills/<skill>/SKILL.md' 2>/dev/null`) and use that path for its `scripts/`.
 - If a `${user_config.…}` placeholder reaches you unsubstituted (some surfaces, e.g. Cowork, may not fill plugin settings), use the default from the plugin's `.claude-plugin/plugin.json`, and say which defaults you used.
-- In Cowork the shell runs in a sandbox that sees the selected folder under a different path than Resolve on the Mac does. Resolve-side scripts (`run_script_unsafe`, `ExportCurrentFrameAsStill`) need the Mac absolute path; Bash/Python scripts need the sandbox path. Resolve the mapping once (write a small file from Resolve, find it from the shell) and keep `work_dir` inside the selected folder.
+- In Cowork the shell runs in a sandbox that sees the selected folder under a different path than Resolve on the Mac does. Resolve-side scripts and the files Resolve writes (`run_script_unsafe`, `ExportFrame`, `ExportCurrentFrameAsStill`) need the Mac absolute path; Bash/Python scripts need the sandbox path. Resolve the mapping once (write a small file from Resolve, find it from the shell) and keep `work_dir` inside the selected folder.
 
 ## 9. Language
 
 Talk to the user in the language they use. Keep Resolve names (pages, menus, setting values) in English exactly as Resolve shows them so the user can find them.
+
+## 10. Resolve 21.1.2 editing calls
+
+21.1.2 added calls that replace several manual steps. **Version gate:** use them only when `resolve.GetVersion()[:3] >= [21, 1, 2]` (or `hasattr` on the object); otherwise keep the skill's manual route and say why. Verified behaviour, details in [reference.md](reference.md#resolve-2112-editing-calls):
+
+- **Stills:** `tl.ExportFrame(offset, {"outputType": "file", "filePath": p})` / `item.ExportFrame(...)` render the finished frame (grade, all tracks, Fusion titles) at an offset from the timeline / item start, from `run_script`, without moving the playhead. `.tif` is 16-bit full resolution. Use this instead of playhead + `ExportCurrentFrameAsStill`.
+- **Trims:** `item.SetLeftOffset(n, False, False)` / `SetRightOffset(n, False, False)` set the media handle left beyond that edge, in place, no ripple. Always pass `updateLinkedItems=False` and trim each linked item yourself: with `True` the linked item gets the same *value*, not the same delta. Extending into a neighbour on the same track overwrites the neighbour's edge. Generators, titles and Fusion compositions have no handles and can't be trimmed (`False`).
+- **Placement:** `item.SetPosition({"trackIndex", "startFrame"}, False)` moves one item (also across tracks), `tl.MoveItems(items, {...}, False)` a group keeping their spacing. `tl.InsertFusionTitleIntoTimeline` *inserts with ripple* on the lowest video track at the playhead, and moving the title afterwards does not undo the shift: work on a backup, lock the other tracks first (whether a lock stops this ripple is unverified), and compare later items' starts before and after.
+- **Effects:** `resolve.GetEffectsList("video"|"audio")` gives installed effects with `id`s; `item.AddEffect(category, id)`, `GetEffects`, `DeleteEffects`; `Effect.Get/SetIsEnabled`, `Get/SetIndex`. Only media items accept effects. Fusion effects (MotionVFX included) expose their parameters through `effect.GetFusionComp()`; OFX and audio effects have **no parameter API**.
+- **Audio:** `item.AnalyzeAudioLevels(mode)` → `{"Integrated", "TruePeak"}` per item, no render. `item.RippleDeleteSilence({...})` cuts *every unlocked track*: lock what must stay, work on a duplicate. It is guarded like a delete.
+- **Transcripts:** `mp_item.SetTranscription(t)` writes a corrected transcript back (words with a leading space, as Resolve's own). Ukrainian needs `transcriptionExtendedLanguageSupport` `"1"` *before* `transcriptionLanguage` `"uk"`.
 
 Detailed API notes, verified signatures and the calibration script: [reference.md](reference.md).

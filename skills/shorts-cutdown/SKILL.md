@@ -62,10 +62,12 @@ It maps every range back to source clip ranges (with 3 frames of air before and 
 2. `track-layout setup` on it (A-roll, Voice, Titles; Music only if the user wants music in Shorts).
 3. Append calibration (`resolve-core`), then append the plan entries: video to A-roll, audio to Voice (`mediaType` 1 / 2, `recordFrame` = `tl.GetStartFrame() + record`), batches ≤ 50; relink pairs with `SetClipsLinked`. Verify count and total length against the plan.
 4. Grades: check `GetCurrentVersion()` on the items and load the remote `claude` version where needed (`resolve-core` §7).
-5. **Smart Reframe:** `item.SmartReframe()` on each A-roll item, poll `project.GetSmartReframeStatus()` in separate calls. Then a still from each item, Read it: face inside the frame and not cut at the chin or forehead. A bad result → set that item's `Pan` by hand toward the face and say so; never leave the speaker half out of frame.
+5. **Smart Reframe:** `item.SmartReframe()` on each A-roll item, poll `project.GetSmartReframeStatus()` in separate calls. Then a still from each item, Read it: face inside the frame and not cut at the chin or forehead. 21.1.2+: `tl.ExportFrame(frame - tl.GetStartFrame(), {"outputType": "file", "filePath": "<work>/shorts/<id>-<n>.jpg", "maxDimension": 1280})` at a frame inside the item (`resolve-core` §10): the timeline composite shows the reframe, no playhead move. Not `item.ExportFrame`: whether it shows the reframe is unverified. A bad result → set that item's `Pan` by hand toward the face and say so; never leave the speaker half out of frame.
 6. Sound: the source items' clip gain and Dialogue Leveler don't come along. Run `audio-finish` on the Short (YouTube plays Shorts at the same -14 LUFS).
 7. `subtitles-uk shorts` for the animated captions. Optional: a 2–3 word title at the top in the first 2 s (`fusion-motion-graphics` `kinetic`) if the hook needs it; ask.
 8. Save the project.
+
+The user changes the **end** of a built Short: on 21.1.2+ trim the last A-roll and Voice items, each with its own `SetRightOffset(ro + k, False, False)` (`ro - k` to extend) (`resolve-core/reference.md#resolve-2112-editing-calls`), before captions and titles. A changed start or inner join leaves gaps: re-plan and rebuild that Short.
 
 ## 5. Report
 

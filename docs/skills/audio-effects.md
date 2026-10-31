@@ -8,13 +8,13 @@ Five sound design treatments on timeline clips:
 
 | Effect | Result | Claude does | You do |
 |---|---|---|---|
-| `live` | a song sounds like it plays inside the scene (bar, party, concert) | pastes EQ + Reverb from your `LIVE` reference clip | — |
-| `room` | downloaded SFX stop sounding studio-clean and blend into the place | pastes a light Reverb from your `ROOM` reference clip | — |
+| `live` | a song sounds like it plays inside the scene (bar, party, concert) | pastes EQ + Reverb from your `LIVE` reference clip (no reference, Resolve 21.1.2: adds Reverb + Fairlight EQ with default settings) | — (with default settings: the plugin values) |
+| `room` | downloaded SFX stop sounding studio-clean and blend into the place | pastes a light Reverb from your `ROOM` reference clip (no reference, 21.1.2: adds Reverb with default settings) | — (with default settings: the plugin values) |
 | `pan` | sound moves left → right with a subject crossing the frame | sets the start pan | two pan keyframes (exact steps given) |
 | `no-vocals` | the song's vocals (and drums) stop fighting the speaker | checks whether this Resolve build exposes Music Remixer to scripts | Music Remixer in the Inspector (exact steps given) |
 | `expander` | background noise between phrases goes down | sends you to `voice-isolation` first | Expander on the track's Dynamics (exact steps given) |
 
-Resolve's scripting API has no setters for EQ, audio effects, Music Remixer or Dynamics, and no pan keyframes. So EQ and effects are copied from reference clips you build once (Edit page **Paste Attributes**, done by script), and the rest ends with step-by-step instructions. Claude always says which part it did and which part is yours.
+Since Resolve 21.1.2 a script can add and remove audio plugins (Reverb, Fairlight EQ, De-Esser…), but only with their default settings: there is still no way to set plugin values, the clip EQ, Music Remixer or Dynamics, and no pan keyframes. So EQ and effects are copied from reference clips you build once (Edit page **Paste Attributes**, done by script); without a reference, on 21.1.2, Claude adds the plugins with defaults and you set the values on the first clip. The rest ends with step-by-step instructions. Claude always says which part it did and which part is yours.
 
 ## When it triggers
 
@@ -40,7 +40,7 @@ Make a timeline named **`Audio FX Templates`** with any short audio clip on each
 | `LIVE` | Equalizer on: Band 4 on, Band 3 off, shape a band-pass that cuts the lows and the top; Effects → Fairlight FX → Reverb: Room Size max, Distance max, Reverb Time min |
 | `ROOM` | Effects → Fairlight FX → Reverb, preset `Vocal Wide`, then less: Distance down, mix toward dry |
 
-Without them `live` and `room` stop and show you this table; `pan`, `no-vocals` and `expander` don't need them.
+Without them `live` and `room` show you this table and offer a choice: build the reference first, or (Resolve 21.1.2) add the plugins with default settings now and set the values by hand on the first clip. Before 21.1.2 they stop. `pan`, `no-vocals` and `expander` don't need them.
 
 ## Settings
 
@@ -54,8 +54,8 @@ It writes no files.
 
 1. Reads the target clips and their tracks: `live` goes on Music, `room` on SFX / Ambience, `expander` on the dialogue track. Anything else is asked about.
 2. **Plan approval:** one table of clip → effect → what the script sets → what you set by hand.
-3. Saves the project. Before pasting effects (no API can remove them) it duplicates the timeline as a backup; for pan it records the previous value.
-4. `live` / `room`: pastes onto **one** clip, asks you to check its Inspector and listen, lets you tweak that clip, then pastes it onto the rest.
+3. Saves the project. Before pasting effects it duplicates the timeline as a backup: plugins can be removed by script on 21.1.2, but a pasted clip EQ can't. When it adds plugins with default settings, it records what was there and removes only what it added if you want it undone (a permission prompt). For pan it records the previous value.
+4. `live` / `room`: pastes onto (or, with defaults, adds the plugins to) **one** clip, asks you to check its Inspector and listen, lets you tweak that clip, then pastes it onto the rest.
 5. `pan`: sets the start side, asks where you hear it (the sign of left is checked on the first clip), then gives the keyframe steps.
 6. **Listening check** on every changed clip; report of what was set (read back from Resolve) and what's left for you.
 
@@ -65,6 +65,7 @@ It writes no files.
 - Paste onto all clips before you confirmed the first one, or paste twice onto the same clip.
 - Fake a pan sweep by cutting the clip into steps.
 - Put reverb or EQ on the dialogue.
+- Remove plugins you added yourself: only the ones it added.
 
 Any script that deletes or resets something becomes a permission prompt (the `guard.py` hook), so read what you approve.
 
