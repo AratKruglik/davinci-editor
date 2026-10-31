@@ -12,7 +12,7 @@ import sys
 import unicodedata
 
 # Any reference counts, not only a call: `f = mp.DeleteTimelines; f(x)` must still prompt.
-DESTRUCTIVE = re.compile(r"\b(Delete\w*|Clear\w*|Reset\w*|ReplaceClip|UnlinkProxyMedia)\b")
+DESTRUCTIVE = re.compile(r"\b(Delete\w*|Clear\w*|Reset\w*|RippleDeleteSilence|ReplaceClip|UnlinkProxyMedia)\b")
 # Names built at run time can't be checked statically, so they always prompt.
 DYNAMIC = re.compile(r"\b(getattr\w*|setattr|delattr|eval|exec|compile|__getattribute__|__dict__|__import__|__builtins__"
                      r"|builtins|importlib|inspect|operator|attrgetter|methodcaller|vars|globals|locals)\b")
@@ -58,6 +58,7 @@ def selftest():
     assert decide({"tool_input": {"script": "g.ResetAllGrades ()"}})
     for bypass in ['tl.DeleteMarkersByColor("Cream" if False else "Red")', 'getattr(mp, "Delete" + "Timelines")([tl])',
                    "f = mp.DeleteTimelines; f([tl])", "project.DeleteAllRenderJobs()", "gal.DeleteGalleryStillAlbum(a)",
+                   "item.RippleDeleteSilence({})", "tl.DeleteGaps()", "item.DeleteEffects(fx)",
                    "item.DeleteVersionByName('claude-measure', 1)", "mp.\uff24eleteTimelines([tl])",
                    'import operator; operator.methodcaller("Del" + "eteTimelines", [tl])(mp)',
                    'vars(type(mp))["Del" + "eteTimelines"](mp, [tl])', '__import__("op" + "erator")',
