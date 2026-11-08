@@ -39,12 +39,14 @@ The judge can't run Resolve scripts, so whoever calls it prepares the inputs:
 - The judged timeline is made **current** in Resolve: frames render only from the current timeline. Your own timeline is switched back afterwards.
 - A fresh timeline dump and the transcript mapped onto the timeline (`words-<timeline>.json`).
 - Your approved edit-memory rules for that format.
-- `frame-critic` and `pre-delivery-qc` results are used when they exist. A missing one is reported as "not run"; one from before the last edit is "outdated" and becomes a must-fix "re-run …".
+- `frame-critic` and `pre-delivery-qc` results are used when they exist. A missing one is reported as "not run". One from before the last edit still counts with its open errors, and the report adds "re-run …" as information; that alone doesn't make it `REWORK`.
 - For `pick`: a candidates file whose stills have neutral names, so nothing hints at a favorite.
 
 ## Isolation
 
-The judge runs in its own agent (`agents/edit-judge.md`) with only frame viewing (`get_image`, `get_thumbnails`), file reading and a shell; Resolve scripts and file edits are switched off for the skill as well. The shell is limited by the skill's instructions, not by a hard rule: it runs the judge's scripts and writes only its own result files.
+The judge runs in its own agent (`agents/edit-judge.md`) with only frame viewing (`get_image`, `get_thumbnails`), file reading and a shell; Resolve scripts and file edits are switched off for the skill as well. The shell is limited by the skill's instructions, not by a hard rule: it runs the judge's scripts, and only those scripts write its result files. The judge runs in the foreground: Claude waits for it, so the timeline it looks at can't change under it.
+
+Without Resolve frames (Resolve not reachable, or the tools missing) the judge gives no verdict: it says which ranges it needed to see.
 
 Whether a skill can use a plugin agent this way is not verified yet. On the first run Claude checks that the judge has no Resolve scripting or file editing; if the plugin agent isn't picked up, the skill falls back to a general agent with the same tools switched off.
 
@@ -76,8 +78,8 @@ All under `<work_dir>/<project>/`:
 |---|---|
 | `judge/rules-<timeline>.json` | the approved rules the caller passed |
 | `judge/metrics-<timeline>.json` | the numbers |
-| `judge-<timeline>.json` | verdict, must-fix list, the six scores with evidence, the critic and QC status |
-| `judge-<timeline>.md` | the report shown to you |
+| `judge-<timeline>.json` | verdict, must-fix list, re-run info, the six scores with evidence, the critic and QC status |
+| `judge-<timeline>.md` | the report shown to you, written by `judge.py` from the same result |
 | `judge/blind-<kind>.json`, `judge/key-<kind>.json` | `pick`: the shuffled candidates and the key the judge never reads |
 
 ## Workflow
@@ -127,4 +129,4 @@ The judge doesn't see your remark anyway; asking for the list gets you the evide
 
 - Jump to each must-fix timecode and look at it in context.
 - A low pace score names the stretch: decide whether to cut it, add a zoom, or keep it.
-- After fixes, run `pre-delivery-qc` again before the judge: an outdated QC is a must-fix by itself.
+- After fixes, run `pre-delivery-qc` again before the judge: an outdated QC still counts, and its errors may already be fixed.

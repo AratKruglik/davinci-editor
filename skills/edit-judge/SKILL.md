@@ -6,6 +6,7 @@ argument-hint: "gate <work>/timeline-<timeline>.json [youtube|shorts] | pick <wo
 arguments: [mode, input, format]
 context: fork
 agent: edit-judge
+background: false
 disallowed-tools:
   - "mcp__DaVinci_Resolve__run_script"
   - "mcp__DaVinci_Resolve__run_script_unsafe"
@@ -39,7 +40,9 @@ If a `${user_config.…}` placeholder reached you unsubstituted, use 700 for `pa
 
 ## Isolation
 
-The agent `edit-judge` (`agents/edit-judge.md`) has only `get_image`, `get_thumbnails`, `Read` and `Bash`; `disallowed-tools` above removes `run_script`, `run_script_unsafe`, `Edit`, `Write` and `NotebookEdit` as well. Whether a skill's `agent:` resolves a plugin agent is unverified: confirm on the first run that this fork has no `run_script` and no `Edit` / `Write`. If it doesn't resolve, set `agent: general-purpose` and keep the same `disallowed-tools`. In both cases Bash could still do anything, so the limit on it is this text: Bash runs only the commands below and writes only the judge's own files (`<work>/judge/`, `<work>/judge-<timeline>.md`).
+The agent `edit-judge` (`agents/edit-judge.md`) has only `get_image`, `get_thumbnails`, `Read` and `Bash`; `disallowed-tools` above removes `run_script`, `run_script_unsafe`, `Edit`, `Write` and `NotebookEdit` as well. Whether a skill's `agent:` resolves a plugin agent is unverified: confirm on the first run that this fork has no `run_script` and no `Edit` / `Write`. If it doesn't resolve, set `agent: general-purpose` and keep the same `disallowed-tools`. In both cases Bash could still do anything, so the limit on it is this text: Bash runs only the commands below, and only `judge.py` writes files (`<work>/judge/`, `<work>/judge-<timeline>.json` and `.md`).
+
+`background: false`: the caller waits for the judge. A judge running in the background could look at frames after the caller switched the current timeline or edited it.
 
 The judge reads edit-memory rules but never writes to a timeline, so it runs neither the start step nor a snapshot of `resolve-core` §11.
 
@@ -53,14 +56,14 @@ The skill that calls the judge (`edit-episode`, `shorts-cutdown`, `thumbnail-fra
 3. The transcript on the timeline (`timeline_map.py words`, `resolve-core` §4) → `<work>/words-<timeline>.json`.
 4. `memory.py rules --format youtube|shorts --memory "<M>"` (`resolve-core` §11) → `<work>/judge/rules-<timeline>.json`.
 5. Leave `placed-<timeline>.json`, `critic-<timeline>.json` and `qc-<timeline>.json` where their skills wrote them; nothing needs to be run for them.
-6. Call `edit-judge gate "<work>/timeline-<timeline>.json" [youtube|shorts]`, nothing else: no summary of the edit, no opinion.
+6. Call `edit-judge gate "<work>/timeline-<timeline>.json" [youtube|shorts]`, nothing else: no summary of the edit, no opinion. Don't switch timelines or edit until the judge replies.
 
 **pick**
 1. Make the timeline the ranges belong to current.
 2. Write `<work>/candidates-<kind>.json`: `[{"id", "label", "range" | "still" | "text"}]`, `range` = `[start TC, end TC]` on that timeline, `still` = image path relative to `<work>`. Name stills neutrally (`cand-01.png`, not `best-7.png`): `blind` hides `id` and `label`, not a revealing file name or text.
 3. Call `edit-judge pick "<work>/candidates-<kind>.json"`. `<kind>` is `shorts` or `thumbnails`, or name the criteria in the call for another kind.
 
-Afterwards the caller restores the user's timeline and shows the result.
+Afterwards the caller restores the user's timeline and shows the result. A reply without a verdict (inputs missing, frames not seen) is shown as that: the caller never scores or decides in the judge's place.
 
 ## 2. gate
 
@@ -70,7 +73,7 @@ Afterwards the caller restores the user's timeline and shows the result.
    python3 ${CLAUDE_SKILL_DIR}/../frame-critic/scripts/critic.py stale "<work>/critic-<timeline>.json" "$input"
    python3 ${CLAUDE_SKILL_DIR}/../pre-delivery-qc/scripts/qc.py stale "<work>/qc-<timeline>.json" "$input"
    ```
-   Exit 0: current, pass it to `verdict`. Exit 1: the timeline changed since that check; it counts as not run, and `verdict` gets `--stale critic` / `--stale qc` instead of the file, which adds the must-fix "re-run frame-critic" / "re-run pre-delivery-qc". Any other exit: stop and reply with the error.
+   Pass every existing file to `verdict`: its open `error` findings count either way. Exit 1 (the timeline changed since that check) adds `--stale critic` / `--stale qc`, an info row "re-run frame-critic" / "re-run pre-delivery-qc" that doesn't force `REWORK` by itself. Any other exit: stop and reply with the error.
 3. **Numbers.**
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/scripts/judge.py metrics "$input" "<work>/words-<timeline>.json" [--ledger "<work>/placed-<timeline>.json"] \
@@ -82,24 +85,15 @@ Afterwards the caller restores the user's timeline and shows the result.
    - Each `static` range: `get_thumbnails` over it, about one per 2 s (`count` up to 48). Same picture throughout → confirmed static. Scrolling, typing, new output, a slide build or a moving cursor → the picture changes, so the span is not static; say so in the pace note.
    - Graphics and consistency: `get_image` at each ledger element's `full` frame, and `get_thumbnails` across the elements of one `kind`.
    - Ending: `get_thumbnails` over the last 20 s (last 5 s for `shorts`).
-5. **Score** the six criteria by [reference.md](reference.md): `hook`, `pace`, `graphics`, `consistency`, `rules` (every approved rule by id and text in the note), `ending`. Each: `score` 1..5, `evidence` at least one TC or TC range, `note` one or two sentences in the user's language naming what is seen there and, for a score of 2 or lower, the skill that owns the fix: `text-based-cut` for hook, pace and ending (a zoom from `tutorial-zooms` can also break a static span); the ledger `owner` of the elements for graphics and consistency; the rule's `scope.skill` for rules.
-6. **Verdict**, scores passed on stdin so no file needs a hand write:
+5. **Score** the six criteria by [reference.md](reference.md): `hook`, `pace`, `graphics`, `consistency`, `rules` (every approved rule by id and text in the note), `ending`. Each: `score` 1..5, `evidence` at least one TC or TC range, `note` one or two sentences in the user's language (Resolve names in English, `resolve-core` §9) naming what is seen there and, for a score of 2 or lower, `owner`, the skill that owns the fix: `text-based-cut` for hook, pace and ending (a zoom from `tutorial-zooms` can also break a static span); the ledger `owner` of the elements for graphics and consistency; the rule's `scope.skill` for rules.
+6. **Verdict and report**, scores passed on stdin so no file needs a hand write:
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/scripts/judge.py verdict /dev/stdin [--critic "<work>/critic-<timeline>.json"] [--qc "<work>/qc-<timeline>.json"] \
-     [--stale critic] [--stale qc] --out "<work>/judge-<timeline>.json" <<'JSON'
-   {"hook": {"score": 2, "evidence": ["01:00:00:00-01:00:30:00"], "note": "…"}, "pace": {…}, "graphics": {…}, "consistency": {…}, "rules": {…}, "ending": {…}}
+     [--stale critic] [--stale qc] --metrics "<work>/judge/metrics-<timeline>.json" --out "<work>/judge-<timeline>.json" <<'JSON'
+   {"hook": {"score": 2, "evidence": ["01:00:00:00-01:00:30:00"], "note": "…", "owner": "text-based-cut"}, "pace": {…}, "graphics": {…}, "consistency": {…}, "rules": {…}, "ending": {…}}
    JSON
    ```
-   `SHIP` only if no score is 2 or lower and neither the critic nor QC has an open `error`; otherwise `REWORK` with `must_fix`. The result keeps the scores, `critic` / `qc` as their verdict, `missing` or `stale`. Never edit it.
-7. **Report** `<work>/judge-<timeline>.md` in the user's language (Resolve names in English, `resolve-core` §9), written with one quoted heredoc (`cat > "<work>/judge-<timeline>.md" <<'MD'`), the only file written without a script:
-
-   **Verdict:** `SHIP` / `REWORK`; frame-critic and QC: their verdict, "not run" or "outdated, re-run".
-
-   | criterion | score | evidence (TC) | note |
-
-   **Must fix:** | TC | problem | owner skill |
-
-   The numbers from `metrics` in one short block. The ranking or verdict is advice: the judge doesn't block `deliver` (QC is the hard gate), and the user decides whether to fix or ship.
+   `SHIP` only if no score is 2 or lower and neither the critic nor QC has an open `error`; otherwise `REWORK` with `must_fix`. `judge-<timeline>.json` keeps the scores, `info` and `critic` / `qc` as their verdict or `missing`; the same call writes the report `judge-<timeline>.md` (verdict, scores with evidence, must fix as TC | problem | owner skill, re-run info, the numbers). Never edit either file. The verdict is advice: the judge doesn't block `deliver` (QC is the hard gate), and the user decides whether to fix or ship.
 
 ## 3. pick
 
@@ -125,7 +119,7 @@ Afterwards the caller restores the user's timeline and shows the result.
 
 ## Never
 
-- Change the project, markers, timelines or the files of other skills; run Bash for anything but the commands above and the report heredoc.
+- Change the project, markers, timelines or the files of other skills; run Bash for anything but the commands above.
 - See which candidate the skill favored before deciding: no Read of `candidates-<kind>.json` or the key file before `rank`.
 - Score from what the conversation or the caller said about the edit, or without a timecode as evidence.
 - Replace the user's decision: the verdict and the ranking are advice.

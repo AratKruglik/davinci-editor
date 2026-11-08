@@ -1,17 +1,19 @@
 """Numbers, verdict and blind ranking for edit-judge.
 
 python3 judge.py metrics <dump.json> <words.json> [--ledger placed.json] --format youtube|shorts [--pause-ms 700] --out metrics.json
-python3 judge.py verdict <scores.json> [--critic critic.json] [--qc qc.json] [--stale critic|qc ...] --out judge.json
+python3 judge.py verdict <scores.json> [--critic critic.json] [--qc qc.json] [--stale critic|qc ...] [--metrics metrics.json] --out judge.json
+      (also writes the report judge.md next to judge.json)
 python3 judge.py blind <candidates.json> --out blind.json --key key.json [--seed N]
 python3 judge.py pairs <blind.json>                                  (comparisons to run: every pair, both orders)
 python3 judge.py rank <results.json> --key key.json
 python3 judge.py selftest
 
-scores.json: {criterion: {"score": 1..5, "evidence": [tc, ...], "note": str}} for hook, pace, graphics, consistency, rules, ending.
+scores.json: {criterion: {"score": 1..5, "evidence": [tc, ...], "note": str, "owner": skill (optional)}} for hook, pace, graphics, consistency, rules, ending.
 results.json: [{"pair": [x, y], "order": "xy"|"yx", "winner": x|y}], labels as in blind.json.
 --critic/--qc given but unreadable: exit 2, no verdict written; omitted: recorded as "missing" and counted as no findings.
---stale critic|qc: that check is outdated (critic.py / qc.py stale), recorded as "stale" with a must-fix "re-run <skill>".
-judge.json: verdict, must_fix, critic, qc (verdict | "missing" | "stale") and the scores as given.
+--stale critic|qc: that file is outdated (critic.py / qc.py stale); its open errors still count, and an info row "re-run <skill>"
+  is added that doesn't force REWORK by itself. Needs the file passed too.
+judge.json: verdict, must_fix, info, critic, qc (verdict | "missing") and the scores as given.
 blind keeps only range, still, text of a candidate.
 A pair judged in both orders with different winners is a tie: half a win for each.
 """
@@ -88,16 +90,51 @@ def check_scores(scores):
 
 def verdict(scores, critic, qc, stale=()):
     check_scores(scores)
-    must_fix = [{"criterion": c, "evidence": scores[c].get("evidence", []), "note": scores[c].get("note", "")}
+    must_fix = [{"criterion": c, "evidence": scores[c].get("evidence", []), "note": scores[c].get("note", ""), "owner": scores[c].get("owner")}
                 for c in CRITERIA if scores[c]["score"] <= 2]
     for source, result in (("critic", critic), ("qc", qc)):
         for f in (result or {}).get("findings", []):
             if f["severity"] == "error":
                 owner = ((f.get("fix") or {}).get("skill") or f.get("owner")) if source == "critic" else None
                 must_fix.append({"tc": f.get("tc"), "kind": f["kind"], "message": f["message"], "owner": owner, "source": source})
-    for source in stale:
-        must_fix.append({"tc": None, "kind": "stale", "message": f"re-run {CHECK_SKILL[source]}", "owner": CHECK_SKILL[source], "source": source})
-    return {"verdict": "REWORK" if must_fix else "SHIP", "must_fix": must_fix}
+    info = [{"kind": "stale", "message": f"re-run {CHECK_SKILL[source]}", "owner": CHECK_SKILL[source], "source": source}
+            for source in sorted(set(stale))]
+    return {"verdict": "REWORK" if must_fix else "SHIP", "must_fix": must_fix, "info": info}
+
+
+def cell(value):
+    return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+def report(title, result, metrics=None):
+    lines = [f"# {title}", "",
+             f"**Verdict:** {result['verdict']} · frame-critic: {result['critic']} · pre-delivery-qc: {result['qc']}", "",
+             "| criterion | score | evidence | note |", "|---|---|---|---|"]
+    for c in CRITERIA:
+        s = result["scores"][c]
+        lines.append(f"| {c} | {s['score']} | {cell(', '.join(s.get('evidence', [])))} | {cell(s.get('note', ''))} |")
+    lines += ["", "## Must fix", ""]
+    if result["must_fix"]:
+        lines += ["| TC | problem | owner skill |", "|---|---|---|"]
+        for f in result["must_fix"]:
+            if "criterion" in f:
+                lines.append(f"| {cell(', '.join(f['evidence']))} | {f['criterion']}: {cell(f['note'])} | {f['owner'] or '-'} |")
+            else:
+                lines.append(f"| {cell(f['tc'] or '')} | {f['kind']}: {cell(f['message'])} ({f['source']}) | {f['owner'] or '-'} |")
+    else:
+        lines.append("Nothing.")
+    for f in result["info"]:
+        lines += ["", f"Info: {f['message']} ({f['source']} result is older than the timeline; its errors above still count)."]
+    if metrics:
+        hook = metrics["hook_words"]
+        lines += ["", "## Numbers", "",
+                  f"- words in the first {hook['window_s']} s: {hook['count']}",
+                  f"- pauses over the threshold: {len(metrics['pauses'])}",
+                  f"- static spans: {', '.join('-'.join(r) for r in metrics['static']) or 'none'}",
+                  f"- graphics per minute: {metrics['graphics_per_min']} {json.dumps(metrics['per_kind'], ensure_ascii=False)}",
+                  f"- after the last word: {metrics['tail_s']} s"]
+    lines += ["", "Advice only: the user decides whether to fix or ship; pre-delivery-qc is the hard gate."]
+    return "\n".join(lines) + "\n"
 
 
 def blind(candidates, seed):
@@ -160,25 +197,36 @@ def cli_missing_inputs_selftest():
             finally:
                 sys.argv = old
             assert not os.path.exists(out), "no verdict may be written"
-        out = path("v.json")
-        sys.argv, old = ["judge.py", "verdict", path("scores.json"), "--critic", path("ok.json"), "--out", out], sys.argv
-        try:
-            with contextlib.redirect_stdout(io.StringIO()):
-                main()
-        finally:
-            sys.argv = old
-        saved = read(out)
-        assert saved["verdict"] == "SHIP" and saved["critic"] == "PASS" and saved["qc"] == "missing", saved
-        assert saved["scores"]["hook"]["score"] == 4, saved
-        sys.argv, old = ["judge.py", "verdict", path("scores.json"), "--critic", path("ok.json"), "--stale", "qc", "--out", out], sys.argv
-        try:
-            with contextlib.redirect_stdout(io.StringIO()):
-                main()
-        finally:
-            sys.argv = old
-        saved = read(out)
-        assert saved["verdict"] == "REWORK" and saved["qc"] == "stale" and saved["must_fix"][0]["owner"] == "pre-delivery-qc", saved
+        out = path("judge-T.json")
 
+        def run(*args):
+            argv = ["judge.py", "verdict", path("scores.json"), *args, "--out", out]
+            old, sys.argv = sys.argv, argv
+            try:
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    main()
+            finally:
+                sys.argv = old
+            return read(out)
+        saved = run("--critic", path("ok.json"))
+        assert saved["verdict"] == "SHIP" and saved["critic"] == "PASS" and saved["qc"] == "missing", saved
+        assert saved["scores"]["hook"]["score"] == 4 and saved["info"] == [], saved
+        md = open(path("judge-T.md"), encoding="utf-8").read()
+        assert md.startswith("# judge-T\n") and "**Verdict:** SHIP" in md and "| hook | 4 |" in md and "## Numbers" not in md, md
+        write(path("qc.json"), {"verdict": "FAIL", "findings": [{"severity": "error", "kind": "black", "tc": "01:00:09:00", "message": "a | b"}]})
+        write(path("m.json"), {"hook_words": {"window_s": 30, "count": 5, "text": ""}, "pauses": [], "static": [["01:00:28:00", "01:01:08:00"]],
+                               "graphics_per_min": 0.5, "per_kind": {}, "tail_s": 1.5})
+        saved = run("--qc", path("qc.json"), "--stale", "qc", "--stale", "qc", "--metrics", path("m.json"))
+        assert saved["verdict"] == "REWORK" and saved["qc"] == "FAIL" and len(saved["must_fix"]) == 1, saved
+        assert saved["info"] == [{"kind": "stale", "message": "re-run pre-delivery-qc", "owner": "pre-delivery-qc", "source": "qc"}], saved
+        md = open(path("judge-T.md"), encoding="utf-8").read()
+        assert "| black: a \\| b (qc) | - |" in md and "Info: re-run pre-delivery-qc" in md and "01:00:28:00-01:01:08:00" in md, md
+        try:
+            run("--stale", "critic")
+        except SystemExit as e:
+            assert e.code == 2, e.code
+        else:
+            raise AssertionError("--stale without its file must be refused")
 
 def selftest():
     fps = 25
@@ -226,10 +274,10 @@ def selftest():
 
     scores = {c: {"score": 4, "evidence": ["01:00:01:00"], "note": "ok"} for c in CRITERIA}
     clean = {"findings": [], "verdict": "PASS"}
-    assert verdict(scores, clean, clean) == {"verdict": "SHIP", "must_fix": []}
+    assert verdict(scores, clean, clean) == {"verdict": "SHIP", "must_fix": [], "info": []}
     low = {**scores, "pace": {"score": 2, "evidence": ["01:00:10:00"], "note": "drags"}}
     v = verdict(low, clean, clean)
-    assert v["verdict"] == "REWORK" and v["must_fix"] == [{"criterion": "pace", "evidence": ["01:00:10:00"], "note": "drags"}], v
+    assert v["verdict"] == "REWORK" and v["must_fix"] == [{"criterion": "pace", "evidence": ["01:00:10:00"], "note": "drags", "owner": None}], v
     err = {"findings": [{"severity": "error", "kind": "overlap", "tc": "01:00:05:00", "message": "two titles", "fix": {"skill": "fusion-motion-graphics"}},
                         {"severity": "warn", "kind": "near-cut", "tc": "01:00:06:00", "message": "close", "fix": {"skill": None}}]}
     v = verdict(scores, err, clean)
@@ -239,9 +287,11 @@ def selftest():
     v = verdict(scores, None, qc_err)
     assert v["verdict"] == "REWORK" and v["must_fix"][0]["source"] == "qc" and v["must_fix"][0]["owner"] is None, v
     assert verdict(scores, None, None)["verdict"] == "SHIP"
-    v = verdict(scores, None, clean, stale=["critic"])
-    assert v["verdict"] == "REWORK" and v["must_fix"] == [
-        {"tc": None, "kind": "stale", "message": "re-run frame-critic", "owner": "frame-critic", "source": "critic"}], v
+    v = verdict(scores, clean, clean, stale=["critic", "critic"])
+    assert v["verdict"] == "SHIP" and v["must_fix"] == [] and v["info"] == [
+        {"kind": "stale", "message": "re-run frame-critic", "owner": "frame-critic", "source": "critic"}], v
+    v = verdict(scores, err, clean, stale=["critic"])
+    assert v["verdict"] == "REWORK" and len(v["must_fix"]) == 1 and len(v["info"]) == 1, v
     for bad in ({**scores, "pace": {"score": 6, "evidence": [], "note": ""}}, {k: v for k, v in scores.items() if k != "hook"}):
         try:
             verdict(bad, clean, clean)
@@ -317,6 +367,7 @@ def main():
     v.add_argument("--critic")
     v.add_argument("--qc")
     v.add_argument("--stale", action="append", choices=list(CHECK_SKILL), default=[])
+    v.add_argument("--metrics")
     v.add_argument("--out", required=True)
     b = sub.add_parser("blind")
     b.add_argument("candidates")
@@ -335,16 +386,18 @@ def main():
         write(a.out, result)
         return print(json.dumps({"out": a.out, "static": len(result["static"]), "pauses": len(result["pauses"])}))
     if a.cmd == "verdict":
-        if a.critic and "critic" in a.stale or a.qc and "qc" in a.stale:
-            p.error("a stale check is not passed as a file")
-        scores, critic, qc = read(a.scores), read(a.critic), read(a.qc)
-
-        def state(name, data):
-            return "stale" if name in a.stale else "missing" if data is None else data.get("verdict")
-        result = {**verdict(scores, critic, qc, a.stale), "critic": state("critic", critic), "qc": state("qc", qc), "scores": scores}
+        for name in a.stale:
+            if not getattr(a, name):
+                p.error(f"--stale {name} needs --{name}: the outdated file still counts")
+        scores, critic, qc, numbers = read(a.scores), read(a.critic), read(a.qc), read(a.metrics)
+        result = {**verdict(scores, critic, qc, a.stale), "critic": "missing" if critic is None else critic.get("verdict"),
+                  "qc": "missing" if qc is None else qc.get("verdict"), "scores": scores}
         write(a.out, result)
-        return print(json.dumps({"out": a.out, "verdict": result["verdict"], "must_fix": len(result["must_fix"]),
-                                 "critic": result["critic"], "qc": result["qc"]}, ensure_ascii=False))
+        md = os.path.splitext(a.out)[0] + ".md"
+        with open(md, "w", encoding="utf-8") as f:
+            f.write(report(os.path.splitext(os.path.basename(a.out))[0], result, numbers))
+        return print(json.dumps({"out": a.out, "report": md, "verdict": result["verdict"], "must_fix": len(result["must_fix"]),
+                                 "info": len(result["info"]), "critic": result["critic"], "qc": result["qc"]}, ensure_ascii=False))
     if a.cmd == "blind":
         hidden, key = blind(read(a.candidates), a.seed)
         write(a.out, hidden)

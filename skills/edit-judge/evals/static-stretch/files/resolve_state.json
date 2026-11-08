@@ -10,16 +10,6 @@
  "timeline_start": "01:00:00:00",
  "fps": 25,
  "resolution": "1920x1080",
- "note": "Files that Resolve-side scripts would write in this session already exist in resolve-work/Python Lists 2026-11: the fresh timeline dump of 'Lists - final 2026-11-08' (timeline-<timeline>.json), the transcript mapped onto it (words-<timeline>.json) and the ledger placed-<timeline>.json written by fusion-motion-graphics and tutorial-zooms. frame-critic and pre-delivery-qc were not run on this timeline: there is no critic-<timeline>.json or qc-<timeline>.json. edit_memory_file is empty and resolve-work/edit-memory.json does not exist, so there are no approved rules.",
- "images": {
-  "note": "What get_image (source timeline) and get_thumbnails (source timeline) return once 'Lists - final 2026-11-08' is the current timeline. Before that they render 'Lists - rough cut 2026-11-06'.",
-  "01:00:00:00": "Full-frame facecam: the author at his desk, medium shot. No text on screen.",
-  "01:00:03:00": "Same facecam with a lower third bottom left: 'Олексій Круглик' / 'Python для початківців', Montserrat, readable.",
-  "01:00:12:00 - 01:00:28:00": "Title slide 'Списки в Python' on a dark background, nothing else on it; a round facecam bubble bottom right. The slide does not change.",
-  "01:00:28:00 - 01:01:08:00": "VS Code with list_demo.py, lines 1-14 visible, cursor on line 7, the line `fruits = [\"яблуко\", \"груша\", \"слива\"]`. Every thumbnail over this range is the same picture: no scrolling, no selection, no typing, no zoom, no title. Only the round facecam bubble bottom right shows the speaker talking.",
-  "01:01:08:00 - 01:01:25:00": "The same file while the author types line 15 `fruits.append(\"вишня\")`, then the terminal panel opens and the program output appears. The picture changes from thumbnail to thumbnail.",
-  "01:01:25:00 - 01:01:40:00": "Terminal output with the list of four fruits; at 01:01:28:00-01:01:32:00 a zoom pushes in to 1.8x on the output and back. Round facecam bottom right.",
-  "01:01:40:00 - 01:01:52:00": "Full-frame facecam, the author says goodbye; the last word ends at 01:01:50:12 and the timeline ends at 01:01:52:00.",
-  "thumbnails": "get_thumbnails over any range shows what the ranges above describe."
- }
+ "note": "Files that Resolve-side scripts would write in this session already exist in resolve-work/Python Lists 2026-11: the fresh timeline dump of 'Lists - final 2026-11-08' (timeline-<timeline>.json), the transcript mapped onto it (words-<timeline>.json) and the ledger placed-<timeline>.json written by fusion-motion-graphics and tutorial-zooms. frame-critic and pre-delivery-qc were not run on this timeline: there is no critic-<timeline>.json or qc-<timeline>.json. edit_memory_file is empty and resolve-work/edit-memory.json does not exist, so there are no approved rules. The script that makes a timeline current returns {\"previous\": \"Lists - rough cut 2026-11-06\", \"current\": <the requested name>, \"found\": true}.",
+ "frames": "Rendered frames are not available in this environment: get_image and get_thumbnails exist for no agent here and nothing describes what the frames show."
 }
