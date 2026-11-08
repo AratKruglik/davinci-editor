@@ -149,6 +149,7 @@ python3 skills/chapters-markers/scripts/chapters.py selftest
 python3 skills/thumbnail-frames/scripts/thumbs.py selftest
 python3 skills/pre-delivery-qc/scripts/qc.py selftest
 python3 skills/frame-critic/scripts/critic.py selftest
+python3 skills/edit-memory/scripts/memory.py selftest
 python3 skills/deliver/scripts/mp4_info.py selftest
 python3 skills/uk-transcribe/scripts/transcript_export.py selftest
 claude plugin validate .

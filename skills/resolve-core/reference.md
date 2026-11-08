@@ -195,6 +195,46 @@ python3 <plugin>/skills/resolve-core/scripts/timeline_map.py words "<work>/timel
 
 Items with a speed change or disabled are skipped with a warning; report those warnings, don't drop them silently.
 
+## Handoff snapshot
+
+The last step of every Claude write to the timeline (end of a skill, each critic fix round, critic and QC Cream markers, an `edit-episode` stop) is a snapshot: the timeline dump above plus what `edit-memory` compares. Run the dump code, then this in the same `run_script_unsafe` call:
+
+```python
+import datetime
+PROPS = ("ZoomX", "ZoomY", "Pan", "Tilt", "Opacity", "AudioVolume")
+
+def fusion_of(it):
+    comp = it.GetFusionCompByIndex(1) if it.GetFusionCompCount() else None
+    tools = comp.GetToolList(False, "TextPlus") if comp else {}
+    if not tools:
+        return None
+    text = sorted(tools.values(), key=lambda t: t.Name)[0]
+    center = text.GetInput("Center") or {}
+    return {"text": text.GetInput("StyledText"), "center": [center.get(1), center.get(2)], "size": text.GetInput("Size")}
+
+for kind, tracks in dump["tracks"].items():
+    for t in tracks:
+        for row, it in zip(t["items"], tl.GetItemListInTrack(kind, t["index"]) or []):
+            row["props"] = {k: it.GetProperty(k) for k in PROPS}
+            row["fades"] = it.GetFades() if kind != "subtitle" else None
+            row["fusion"] = fusion_of(it) if kind == "video" else None
+stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+path = os.path.join(WORK, "handoff", f"{dump['timeline_id']}-{stamp}.json")
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(dump, f, ensure_ascii=False, indent=1)
+result = {"path": path}
+```
+
+The time stamp lives only in the file name: `memory.py changed` compares the JSON, so a field with the time would make every snapshot differ. The fresh state passed to `changed` and `diff` is made with the same script (written to a scratch path, not to `handoff/`); a plain dump lacks `props` / `fades` / `fusion`, and `changed` then compares only the fields both files carry. `owner` and `kind` come from the `placed` ledger, not from the snapshot. The first Text+ by tool name stands for a comp's text; other text tools, keyframes inside Fusion beyond these inputs, volume keyframes (no API) and grades are not compared. Markers whose `customData` starts with `claude:` are ignored by both `changed` and `diff`.
+
+```bash
+python3 <plugin>/skills/edit-memory/scripts/memory.py changed "<last handoff>.json" "<fresh>.json"    # exit 1 = changed
+python3 <plugin>/skills/edit-memory/scripts/memory.py diff "<last handoff>.json" "<fresh>.json" --ledger "<work>/placed-<timeline>.json" --out "<work>/handoff/events.json"
+```
+
+Events: `moved` (start off by more than 1 frame after ripple compensation from A-roll / Screen length changes), `retimed` (length change on other tracks, in frames), `cut_changed` (length change or removal of an A-roll / Screen item), `deleted`, `added_by_user`, `text_changed`, `property_changed` (one event per property, with `property` and a numeric delta: `ZoomX`, `Pan`, `Opacity`, `FadeIn`, `Center.x`, `Size`, ...), `volume_changed` (`AudioVolume` delta), `track_changed`. Items match by `item_id`, then media by track role + `clip_id` + overlapping source range, then Fusion items by role + text + nearest start after the shift.
+
 ## Fusion builds from a spec
 
 `fusion-motion-graphics` and `tutorial-zooms` don't type Fusion node code by hand each time: their scripts write a spec JSON (`{"tools": [{"name", "id", "inputs": {id: value}, "keys": {id: {frame: value}}, "connect": {input: "Tool.Output"}}]}`), and one builder applies it in a Fusion comp:
