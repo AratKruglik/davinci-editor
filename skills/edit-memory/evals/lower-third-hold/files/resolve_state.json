@@ -1,0 +1,11 @@
+{
+ "project": "Mesh Wi-Fi 2026-11",
+ "resolve_version": "21.2.0",
+ "current_timeline": "Mesh - final 2026-11-07",
+ "timeline_id": "3f8d2b61-5c4a-4e19-b7d2-ep0000000002",
+ "timeline_start": "01:00:00:00",
+ "fps": 25,
+ "resolution": "3840x2160",
+ "plugin_settings": {"work_dir": "resolve-work", "edit_memory_file": ""},
+ "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work. The handoff snapshot script (resolve-core/reference.md, Handoff snapshot) run now on 'Mesh - final 2026-11-07' returns {\"path\": \"resolve-work/Mesh Wi-Fi 2026-11/handoff/3f8d2b61-5c4a-4e19-b7d2-ep0000000002-20261108-101500.json\"}; that file is already there. The snapshot before it (…-20261107-170500.json) was written at the end of the last Claude run on this timeline (fusion-motion-graphics, tutorial-zooms); the user has edited the timeline in the Resolve UI since. The ledger of that run is placed-Mesh - final 2026-11-07.json. The other project, 'Router Setup 2026-11', is not open; its edits were compared and logged on 2026-11-04 in an earlier session (edit-memory-events.jsonl). No rules have been approved yet: edit-memory.json does not exist."
+}

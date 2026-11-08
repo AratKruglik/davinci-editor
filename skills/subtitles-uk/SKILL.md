@@ -13,6 +13,7 @@ allowed-tools:
   - "Bash(python3 *timeline_map.py *)"
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *placed.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -25,6 +26,8 @@ hooks:
 # Ukrainian subtitles
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Mode: `$mode` (default `youtube`; `shorts` on a vertical timeline).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/subtitles.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/subtitles.py selftest`).
 

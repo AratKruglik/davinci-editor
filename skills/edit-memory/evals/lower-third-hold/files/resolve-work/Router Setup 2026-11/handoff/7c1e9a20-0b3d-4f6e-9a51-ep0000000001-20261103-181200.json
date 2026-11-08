@@ -1,0 +1,282 @@
+{
+ "name": "Router - final 2026-11-03",
+ "timeline_id": "7c1e9a20-0b3d-4f6e-9a51-ep0000000001",
+ "fps": 25.0,
+ "drop_frame": false,
+ "width": 3840,
+ "height": 2160,
+ "start_frame": 90000,
+ "end_frame": 93000,
+ "start_tc": "01:00:00:00",
+ "markers": {
+  "300": {
+   "color": "Cyan",
+   "duration": 1,
+   "name": "LT",
+   "note": "",
+   "customData": "claude:done:fusion-motion-graphics:2026-11-03"
+  }
+ },
+ "tracks": {
+  "video": [
+   {
+    "index": 1,
+    "name": "Backgrounds",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 2,
+    "name": "A-roll",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "C0101.mov",
+      "item_id": "r-a1",
+      "clip_id": "r-cam1",
+      "start": 90000,
+      "end": 91500,
+      "source_start": 0,
+      "source_end": 1499,
+      "left_offset": 0,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     },
+     {
+      "name": "C0102.mov",
+      "item_id": "r-a2",
+      "clip_id": "r-cam2",
+      "start": 91500,
+      "end": 93000,
+      "source_start": 200,
+      "source_end": 1699,
+      "left_offset": 200,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     }
+    ]
+   },
+   {
+    "index": 3,
+    "name": "Titles",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "Fusion Composition",
+      "item_id": "r-lt1",
+      "clip_id": null,
+      "start": 90100,
+      "end": 90225,
+      "source_start": 0,
+      "source_end": 124,
+      "left_offset": null,
+      "right_offset": null,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "color": "",
+      "fusion_comps": 1,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": {
+       "text": "Олексій Круглик засновник студії",
+       "center": [
+        0.24,
+        0.16
+       ],
+       "size": 0.06
+      }
+     },
+     {
+      "name": "Fusion Composition",
+      "item_id": "r-lt2",
+      "clip_id": null,
+      "start": 90900,
+      "end": 91025,
+      "source_start": 0,
+      "source_end": 124,
+      "left_offset": null,
+      "right_offset": null,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "color": "",
+      "fusion_comps": 1,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": {
+       "text": "Wi-Fi 6 роутер Archer AX55",
+       "center": [
+        0.24,
+        0.16
+       ],
+       "size": 0.06
+      }
+     },
+     {
+      "name": "Fusion Composition",
+      "item_id": "r-lt3",
+      "clip_id": null,
+      "start": 92000,
+      "end": 92125,
+      "source_start": 0,
+      "source_end": 124,
+      "left_offset": null,
+      "right_offset": null,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "color": "",
+      "fusion_comps": 1,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": {
+       "text": "Порт WAN синій",
+       "center": [
+        0.24,
+        0.16
+       ],
+       "size": 0.06
+      }
+     }
+    ]
+   }
+  ],
+  "audio": [
+   {
+    "index": 1,
+    "name": "Voice",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "C0101.mov",
+      "item_id": "r-v1",
+      "clip_id": "r-cam1",
+      "start": 90000,
+      "end": 91500,
+      "source_start": 0,
+      "source_end": 1499,
+      "left_offset": 0,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     },
+     {
+      "name": "C0102.mov",
+      "item_id": "r-v2",
+      "clip_id": "r-cam2",
+      "start": 91500,
+      "end": 93000,
+      "source_start": 200,
+      "source_end": 1699,
+      "left_offset": 200,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     }
+    ]
+   }
+  ],
+  "subtitle": []
+ }
+}

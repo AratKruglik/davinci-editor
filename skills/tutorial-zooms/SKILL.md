@@ -13,6 +13,7 @@ allowed-tools:
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *timeline_map.py *)"
   - "Bash(python3 *placed.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -25,6 +26,8 @@ hooks:
 # Tutorial zooms
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Mode: `$mode` (default `screen`; `punch-in` for jump cuts).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan (`max_scale` caps every zoom below `zoom_max_scale`), and take a snapshot as the last step of every write.
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/zooms.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/zooms.py selftest`). Settings: default scale `${user_config.zoom_default_scale}`, max `${user_config.zoom_max_scale}`, ease `${user_config.zoom_ease_s}` s, punch-in `${user_config.punch_in_scale}`.
 

@@ -13,6 +13,7 @@ allowed-tools:
   - "Bash(python3 *chapters.py *)"
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *critic.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -25,6 +26,8 @@ hooks:
 # Pre-delivery QC
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Target: `$target` (default `youtube`; `shorts` for a vertical timeline).
+
+Edit memory (`resolve-core` §11): before the first Cream marker, the start step (learn); after the markers, a snapshot.
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/qc.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/qc.py selftest`).
 

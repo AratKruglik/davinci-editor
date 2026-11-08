@@ -17,6 +17,7 @@ The defaults suit Ukrainian-language YouTube tutorials; change only what differs
 | `footage_bin` | `01_Footage/A-Roll` | Media Pool bin with the main footage |
 | `templates_dir` | — | folder with DRX grade templates (the base node tree); if empty, Claude asks on the first color skill |
 | `work_dir` | `resolve-work` | where transcripts, cut lists, stills and reports go (relative to the working folder) |
+| `edit_memory_file` | — | rules learned from your manual edits, shared by all projects (empty = `<work_dir>/edit-memory.json`; the event log sits next to it) |
 | `output_gamma` | `Gamma 2.4` | Rec.709 output gamma (`Gamma 2.2` only if you grade for computer screens) |
 | `transcription_language` | `uk` | Resolve transcription language |
 | `speaker_detection` | `false` | detect speakers (interviews, podcasts) |

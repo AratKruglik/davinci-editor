@@ -1,0 +1,12 @@
+---
+tags: [skill-creator]
+max_turns: 40
+timeout_seconds: 900
+allowed_tools: [Read, Glob, Grep, Skill, Write, Edit, Bash]
+---
+
+[Тестове середовище] DaVinci Resolve і MCP-інструменти DaVinci_Resolve тут недоступні. Стан Resolve, який знадобиться, лежить у вхідних файлах. Кожну дію в Resolve (run_script, run_script_unsafe, get_image, get_thumbnails, launch_resolve) не виконуй, а запиши у файл resolve_actions.md по порядку: інструмент, повний скрипт або параметри, очікуваний результат; далі вважай, що вона повернула очікуване (див. resolve_state.json). Питання, які поставив би мені, запиши в questions.md разом з рекомендованим рішенням і продовжуй з ним. Локальні команди (python3 тощо) записуй у local_actions.md: команда і короткий результат. Робоча папка (work_dir) — ./resolve-work, edit_memory_file порожній. Наприкінці запиши свою фінальну відповідь мені у final_response.md.
+
+Я після тебе руками дещо поправив у «Mesh - final 2026-11-07», а раніше так само в Router. Подивись, чого ти можеш навчитися з моїх правок. Поки тільки покажи, що пропонуєш, затверджувати будемо потім.
+
+Input files: resolve-work, resolve_state.json

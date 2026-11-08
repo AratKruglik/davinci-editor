@@ -12,6 +12,7 @@ allowed-tools:
   - "Bash(python3 *split_edits.py *)"
   - "Bash(python3 *timeline_map.py *)"
   - "Bash(python3 *tc.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -24,6 +25,8 @@ hooks:
 # Split edits (J and L)
 
 Follow `resolve-core` first. Timeline: `$timeline` (default: the current one). Scope: `$scope` — `auto` (default: candidates + the user's markers) or `markers` (only the user's Cocoa J/L/split markers).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 A **J-cut**: the next shot's sound starts before its picture, so the change feels expected. An **L-cut**: the picture has changed, the previous sound runs on under it, so a thought ends without being chopped. Same mechanics, opposite direction — one skill.
 

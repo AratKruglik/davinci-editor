@@ -12,6 +12,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_thumbnails"
   - "Bash(python3 *critic.py *)"
   - "Bash(python3 *placed.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -24,6 +25,8 @@ hooks:
 # Frame critic
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Scope: `$scope` (default `all`; or one owner skill, e.g. `fusion-motion-graphics`).
+
+Edit memory (`resolve-core` §11): the start step (learn) on `$timeline` once it is current (§1 step 1), before any write; each owner's fix round ends with its snapshot (§4), and a snapshot follows the Cream markers (§5).
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/critic.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py selftest`). Resolve scripts: [reference.md](reference.md).
 
@@ -43,7 +46,7 @@ The critic looks at what the skills placed and says what is wrong, with numbers 
      --zoom-max ${user_config.zoom_max_scale} --cps-max ${user_config.subtitle_max_cps} --chars-max ${user_config.subtitle_max_chars} \
      [--rules <numeric rules file>] [--changed <element id> ... | --scope $scope] --out "<work>/critic-<timeline>.json"
    ```
-   It writes the timeline `state`, the findings and the `verdict`. A new critic run calls `check` without `--changed`: it starts at round 1 and, for `all`, drops every earlier finding. With a `$scope` other than `all` it also passes `--scope $scope`: the measured and seen findings (§2–§3) of the other owners' elements stay, since this run doesn't look at them again; their round doesn't carry over. Only the re-check after an owner fix (§4) passes `--changed`. Kinds: `short-hold` (fully visible less than 0.5 s + characters / 14, at least 3 s for a lower third), `overlap` (two text elements on screen at once; a callout may sit over another title), `near-cut` (an edge closer than 6 frames to an A-roll / Screen cut; not for zooms and PiP, whose edges are those cuts), `zoom-scale`, `cps`, `chars`. Pass `--rules` only when `edit-memory` has numeric rules (`hold_extra_s`, `max_scale`) for these owners.
+   It writes the timeline `state`, the findings and the `verdict`. A new critic run calls `check` without `--changed`: it starts at round 1 and, for `all`, drops every earlier finding. With a `$scope` other than `all` it also passes `--scope $scope`: the measured and seen findings (§2–§3) of the other owners' elements stay, since this run doesn't look at them again; their round doesn't carry over. Only the re-check after an owner fix (§4) passes `--changed`. Kinds: `short-hold` (fully visible less than 0.5 s + characters / 14, at least 3 s for a lower third), `overlap` (two text elements on screen at once; a callout may sit over another title), `near-cut` (an edge closer than 6 frames to an A-roll / Screen cut; not for zooms and PiP, whose edges are those cuts), `zoom-scale`, `cps`, `chars`. Rules of every owner: `python3 ${CLAUDE_SKILL_DIR}/../edit-memory/scripts/memory.py rules --format youtube|shorts --memory "<M>" > "<work>/critic/rules.json"` (`M` and the format as in `resolve-core` §11); `check` uses only the numeric ones (`hold_extra_s`, `max_scale`). Pass `--rules` when that list isn't empty.
 
 The numbers always run on every element, because an overlap needs all of them. `$scope` limits §2 and §3 to that owner's elements.
 
@@ -106,7 +109,7 @@ Timing fixes on edges (`near-cut`) name the frames to move the element by.
 
    | # | TC | element | problem | changed / left | still |
 
-3. Make the user's timeline current again and re-read it.
+3. Snapshot (`resolve-core` §11) while `$timeline` is still current, then make the user's timeline current again and re-read it.
 4. Show the report. `critic-<timeline>.json` (`verdict`, `state`) is what `pre-delivery-qc` reads; after any later edit `critic.py stale` reports it as outdated and the check runs again.
 
 ## Never

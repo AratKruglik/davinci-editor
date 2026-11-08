@@ -1,6 +1,6 @@
 ---
 name: resolve-core
-description: Shared rules for every davinci-editor skill that drives DaVinci Resolve Studio 21+ through the DaVinci Resolve MCP server - connection check, safe script execution, timeline backup before edits, timecode/frame math, finding tracks by role, marker etiquette, node-label conventions and verified API gotchas. Load before any run_script call against Resolve.
+description: Shared rules for every davinci-editor skill that drives DaVinci Resolve Studio 21+ through the DaVinci Resolve MCP server - connection check, safe script execution, timeline backup before edits, timecode/frame math, finding tracks by role, marker etiquette, node-label conventions, edit memory (learn, rules, handoff snapshots) and verified API gotchas. Load before any run_script call against Resolve.
 when_to_use: Any task that reads or changes a DaVinci Resolve project, timeline, media pool, grade or Fairlight setting; also when another davinci-editor skill says "follow resolve-core".
 user-invocable: false
 allowed-tools:
@@ -11,6 +11,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_whats_new"
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *timeline_map.py *)"
+  - "Bash(python3 *memory.py *)"
 ---
 
 # Resolve core conventions
@@ -116,3 +117,15 @@ Talk to the user in the language they use. Keep Resolve names (pages, menus, set
 - **Transcripts:** `mp_item.SetTranscription(t)` writes a corrected transcript back (words with a leading space, as Resolve's own). Ukrainian needs `transcriptionExtendedLanguageSupport` `"1"` *before* `transcriptionLanguage` `"uk"`.
 
 Detailed API notes, verified signatures and the calibration script: [reference.md](reference.md).
+
+## 11. Edit memory
+
+`edit-memory` learns from the user's hand edits between Claude's runs. Memory file `M` = `${user_config.edit_memory_file}`, empty → `${user_config.work_dir}/edit-memory.json` (one file for all projects; the event log `edit-memory-events.jsonl` sits next to it). Script `${CLAUDE_SKILL_DIR}/../edit-memory/scripts/memory.py`, always with `--memory "<M>"` where it takes one. Snapshots are `<work>/handoff/<timeline_id>-<YYYYMMDD-HHMMSS>.json` ([reference.md](reference.md#handoff-snapshot)); the newest by name is the last one.
+
+Every skill that writes to a timeline (items, properties, Fusion comps, Cream markers) does three things on the timeline it writes to:
+
+1. **Learn at the start**, before its first write and without questions: take a snapshot (the fresh state), then `memory.py changed "<previous snapshot>" "<fresh>"`. Exit 1 → `memory.py diff "<previous>" "<fresh>" --ledger "<work>/placed-<timeline>.json" --out "<work>/handoff/events.json"`, then `memory.py log "<work>/handoff/events.json" --project "<project>" --timeline "<timeline>" --memory "<M>"`, and say the count in one line. No earlier snapshot of this `timeline_id` (a new timeline) → nothing to learn. The fresh state stays as the newest snapshot, so the same edits are never logged twice; a snapshot taken without this step first would hide the user's edits since the previous one.
+2. **Rules before the plan:** `memory.py rules --skill <this skill> --format youtube|shorts --memory "<M>"` (`shorts` on a vertical timeline). A numeric `param` overrides the plugin default it names (`hold_extra_s` adds seconds to the computed hold, `max_scale` caps the zoom below `zoom_max_scale`); a text rule guides the choices. A direct request of the user or a marker note beats a rule. The plan table lists the rules applied (id and text).
+3. **Snapshot as the last step** of every write: the end of the skill, each critic fix round, critic and QC Cream markers, every `edit-episode` stop. Otherwise Claude's own changes look like the user's next time.
+
+Candidates are never shown at a skill's start. At its end (in `edit-episode`: at the stop), when step 1 logged events and `memory.py lessons --memory "<M>"` has a candidate that is not `one_off` and holds one of them, run the approval of `edit-memory learn` (its §2–§3). Only `memory.py` writes the memory files, never a hand edit.

@@ -12,6 +12,7 @@ allowed-tools:
   - "Bash(python3 *sound_library.py *)"
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *show.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -24,6 +25,8 @@ hooks:
 # Sound design
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Density: `$density` (default `normal`).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 Music sources already cleared or refused: !`python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/show.py '${user_config.work_dir}/sound-licenses.json' 60 'none yet (no sound-licenses.json)'`
 

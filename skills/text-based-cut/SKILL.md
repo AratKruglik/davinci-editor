@@ -13,6 +13,7 @@ allowed-tools:
   - "Bash(python3 *cut_candidates.py *)"
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *split_edits.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -25,6 +26,8 @@ hooks:
 # Text-based rough cut
 
 Follow `resolve-core` first. Scope: `$scope` (default `${user_config.footage_bin}`). Pace: `$pace` (default `normal`).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 Principle: the script proposes, the editor decides. Nothing is cut without the user's approval, and the result is a new timeline next to the untouched source.
 

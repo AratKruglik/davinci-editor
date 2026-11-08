@@ -33,6 +33,12 @@
       "description": "Folder for transcripts, cut lists, exported stills and reports. Relative paths resolve against the Claude Code working directory.",
       "default": "resolve-work"
     },
+    "edit_memory_file": {
+      "type": "string",
+      "title": "Edit memory file",
+      "description": "Shared rules learned from your manual edits (all projects). Empty = <work_dir>/edit-memory.json.",
+      "default": ""
+    },
     "output_gamma": {
       "type": "string",
       "title": "Rec.709 output gamma",

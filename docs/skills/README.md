@@ -21,6 +21,7 @@ The order follows [`edit-episode`](edit-episode.md), which runs the whole workfl
 | [`resolve-core`](resolve-core.md) | hidden shared rules: connection check, backups, delete guard, timecodes, tracks by role, marker etiquette, node labels |
 | [`edit-episode`](edit-episode.md) | the whole workflow, stages A–D, resumable from `episode.md`; slash command only |
 | [`marker-edit`](marker-edit.md) | reads your colored markers, plans, and dispatches each color to its skill |
+| [`edit-memory`](edit-memory.md) | learns from your manual edits between Claude's runs; repeated edits become rules you approve one by one |
 
 ### Stage A: project and color before the cut
 

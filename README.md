@@ -111,6 +111,7 @@ Click a name for its guide and example prompts.
 | [`frame-critic`](docs/skills/frame-critic.md) | checks placed titles, zooms and captions: cut off, unreadable, too short |
 | [`pre-delivery-qc`](docs/skills/pre-delivery-qc.md) | checks before render |
 | [`deliver`](docs/skills/deliver.md) | H.265 renders for YouTube and Shorts |
+| [`edit-memory`](docs/skills/edit-memory.md) | learns from your manual edits; rules only after your yes |
 | [`resolve-core`](docs/skills/resolve-core.md) | hidden shared rules |
 
 ## Troubleshooting

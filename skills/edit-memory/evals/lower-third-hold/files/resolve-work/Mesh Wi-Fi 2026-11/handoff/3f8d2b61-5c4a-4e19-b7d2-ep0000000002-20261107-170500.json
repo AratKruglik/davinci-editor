@@ -1,0 +1,377 @@
+{
+ "name": "Mesh - final 2026-11-07",
+ "timeline_id": "3f8d2b61-5c4a-4e19-b7d2-ep0000000002",
+ "fps": 25.0,
+ "drop_frame": false,
+ "width": 3840,
+ "height": 2160,
+ "start_frame": 90000,
+ "end_frame": 93000,
+ "start_tc": "01:00:00:00",
+ "markers": {
+  "300": {
+   "color": "Cyan",
+   "duration": 1,
+   "name": "LT",
+   "note": "",
+   "customData": "claude:done:fusion-motion-graphics:2026-11-03"
+  }
+ },
+ "tracks": {
+  "video": [
+   {
+    "index": 1,
+    "name": "Backgrounds",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 2,
+    "name": "A-roll",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "A001.mov",
+      "item_id": "m-a1",
+      "clip_id": "m-cam1",
+      "start": 90000,
+      "end": 91000,
+      "source_start": 0,
+      "source_end": 999,
+      "left_offset": 0,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     },
+     {
+      "name": "A001.mov",
+      "item_id": "m-a2",
+      "clip_id": "m-cam1",
+      "start": 91000,
+      "end": 92000,
+      "source_start": 1000,
+      "source_end": 1999,
+      "left_offset": 1000,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     },
+     {
+      "name": "A002.mov",
+      "item_id": "m-a3",
+      "clip_id": "m-cam2",
+      "start": 92000,
+      "end": 93000,
+      "source_start": 0,
+      "source_end": 999,
+      "left_offset": 0,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     }
+    ]
+   },
+   {
+    "index": 3,
+    "name": "Screen",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "screen-setup.mov",
+      "item_id": "m-s1",
+      "clip_id": "m-scr1",
+      "start": 92000,
+      "end": 92600,
+      "source_start": 300,
+      "source_end": 899,
+      "left_offset": 300,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     }
+    ]
+   },
+   {
+    "index": 4,
+    "name": "Titles",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "Fusion Composition",
+      "item_id": "m-lt1",
+      "clip_id": null,
+      "start": 90200,
+      "end": 90325,
+      "source_start": 0,
+      "source_end": 124,
+      "left_offset": null,
+      "right_offset": null,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "color": "",
+      "fusion_comps": 1,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": {
+       "text": "Марина Коваль мережева інженерка",
+       "center": [
+        0.24,
+        0.16
+       ],
+       "size": 0.06
+      }
+     },
+     {
+      "name": "Fusion Composition",
+      "item_id": "m-lt2",
+      "clip_id": null,
+      "start": 91100,
+      "end": 91225,
+      "source_start": 0,
+      "source_end": 124,
+      "left_offset": null,
+      "right_offset": null,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "color": "",
+      "fusion_comps": 1,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": {
+       "text": "Mesh-система Deco X50",
+       "center": [
+        0.24,
+        0.16
+       ],
+       "size": 0.06
+      }
+     },
+     {
+      "name": "Fusion Composition",
+      "item_id": "m-lt3",
+      "clip_id": null,
+      "start": 92700,
+      "end": 92825,
+      "source_start": 0,
+      "source_end": 124,
+      "left_offset": null,
+      "right_offset": null,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "color": "",
+      "fusion_comps": 1,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": {
+       "text": "Вузол у коридорі",
+       "center": [
+        0.24,
+        0.16
+       ],
+       "size": 0.06
+      }
+     }
+    ]
+   }
+  ],
+  "audio": [
+   {
+    "index": 1,
+    "name": "Voice",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "A001.mov",
+      "item_id": "m-v1",
+      "clip_id": "m-cam1",
+      "start": 90000,
+      "end": 91000,
+      "source_start": 0,
+      "source_end": 999,
+      "left_offset": 0,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     },
+     {
+      "name": "A001.mov",
+      "item_id": "m-v2",
+      "clip_id": "m-cam1",
+      "start": 91000,
+      "end": 92000,
+      "source_start": 1000,
+      "source_end": 1999,
+      "left_offset": 1000,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     },
+     {
+      "name": "A002.mov",
+      "item_id": "m-v3",
+      "clip_id": "m-cam2",
+      "start": 92000,
+      "end": 93000,
+      "source_start": 0,
+      "source_end": 999,
+      "left_offset": 0,
+      "right_offset": 4000,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "color": "",
+      "fusion_comps": 0,
+      "props": {
+       "ZoomX": 1.0,
+       "ZoomY": 1.0,
+       "Pan": 0.0,
+       "Tilt": 0.0,
+       "Opacity": 100.0,
+       "AudioVolume": 0.0
+      },
+      "fades": {
+       "FadeIn": 0,
+       "FadeOut": 0
+      },
+      "fusion": null
+     }
+    ]
+   }
+  ],
+  "subtitle": []
+ }
+}

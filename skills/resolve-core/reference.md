@@ -226,12 +226,14 @@ with open(path, "w", encoding="utf-8") as f:
 result = {"path": path}
 ```
 
-The time stamp lives only in the file name: `memory.py changed` compares the JSON, so a field with the time would make every snapshot differ. The fresh state passed to `changed` and `diff` is made with the same script (written to a scratch path, not to `handoff/`); a plain dump lacks `props` / `fades` / `fusion`, and `changed` then compares only the fields both files carry. `owner` and `kind` come from the `placed` ledger, not from the snapshot. The first Text+ by tool name stands for a comp's text; other text tools, keyframes inside Fusion beyond these inputs, volume keyframes (no API) and grades are not compared. Markers whose `customData` starts with `claude:` are ignored by both `changed` and `diff`.
+The time stamp lives only in the file name: `memory.py changed` compares the JSON, so a field with the time would make every snapshot differ. The fresh state passed to `changed` and `diff` at a skill's start is a snapshot like any other, made with the same script into `handoff/` (`SKILL.md` §11), so it is the next run's starting point; a plain dump lacks `props` / `fades` / `fusion`, and `changed` then compares only the fields both files carry. `owner` and `kind` come from the `placed` ledger, not from the snapshot. The first Text+ by tool name stands for a comp's text; other text tools, keyframes inside Fusion beyond these inputs, volume keyframes (no API) and grades are not compared. Markers whose `customData` starts with `claude:` are ignored by both `changed` and `diff`.
 
 ```bash
 python3 <plugin>/skills/edit-memory/scripts/memory.py changed "<last handoff>.json" "<fresh>.json"    # exit 1 = changed
 python3 <plugin>/skills/edit-memory/scripts/memory.py diff "<last handoff>.json" "<fresh>.json" --ledger "<work>/placed-<timeline>.json" --out "<work>/handoff/events.json"
 ```
+
+**Unverified:** `item.GetUniqueId()` survives `SetPosition` (verified on 21.2). Whether it survives a Resolve restart, or a blade or trim in the UI, is not verified; matching by content (above) is the fallback when ids differ.
 
 Events: `moved` (start off by more than 1 frame after ripple compensation: each old frame takes the observed start change of the A-roll / Screen piece over it, or of the next piece after a gap, so cuts, inserts and lifts on those tracks are not moves), `retimed` (length change on other tracks, in frames), `cut_changed` (length change or removal of an A-roll / Screen item), `deleted`, `added_by_user`, `text_changed`, `property_changed` (one event per property, with `property` and a numeric delta: `ZoomX`, `Pan`, `Opacity`, `FadeIn`, `Center.x`, `Size`, ...), `volume_changed` (`AudioVolume` delta), `track_changed` (by track name, so an inserted track is not a change). Items match by `item_id`, then media by track role + `clip_id` + overlapping source range, then Fusion items by role + text + nearest start after the shift.
 

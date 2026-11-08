@@ -1,0 +1,35 @@
+{
+ "timeline_id": "7c1e9a20-0b3d-4f6e-9a51-ep0000000001",
+ "items": [
+  {
+   "item_id": "r-lt1",
+   "owner": "fusion-motion-graphics",
+   "kind": "lower-third",
+   "part": null,
+   "spec": "resolve-work/Router Setup 2026-11/graphics/1.json",
+   "track": "Titles",
+   "start": 90100,
+   "end": 90225
+  },
+  {
+   "item_id": "r-lt2",
+   "owner": "fusion-motion-graphics",
+   "kind": "lower-third",
+   "part": null,
+   "spec": "resolve-work/Router Setup 2026-11/graphics/2.json",
+   "track": "Titles",
+   "start": 90900,
+   "end": 91025
+  },
+  {
+   "item_id": "r-lt3",
+   "owner": "fusion-motion-graphics",
+   "kind": "lower-third",
+   "part": null,
+   "spec": "resolve-work/Router Setup 2026-11/graphics/3.json",
+   "track": "Titles",
+   "start": 92000,
+   "end": 92125
+  }
+ ]
+}

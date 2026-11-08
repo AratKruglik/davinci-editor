@@ -1,0 +1,22 @@
+[
+ {
+  "type": "retimed",
+  "owner": "fusion-motion-graphics",
+  "kind": "lower-third",
+  "item_id": "r-lt1",
+  "track": "Titles",
+  "tc": "01:00:04:00",
+  "frame": 90100,
+  "value": 25
+ },
+ {
+  "type": "retimed",
+  "owner": "fusion-motion-graphics",
+  "kind": "lower-third",
+  "item_id": "r-lt3",
+  "track": "Titles",
+  "tc": "01:01:20:00",
+  "frame": 92000,
+  "value": 28
+ }
+]

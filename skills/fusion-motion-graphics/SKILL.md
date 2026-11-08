@@ -13,6 +13,7 @@ allowed-tools:
   - "Bash(python3 *catalog.py *)"
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *placed.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -25,6 +26,8 @@ hooks:
 # Fusion motion graphics
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Request: `$request` (default: the Cyan and Blue markers).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan (`hold_extra_s` adds its seconds to every computed hold of that rule's kind), and take a snapshot as the last step of every write.
 
 Brand (plugin config): font `${user_config.brand_font}` `${user_config.brand_font_style}`, text `${user_config.brand_text_color}`, accent `${user_config.brand_accent_color}`, plate `${user_config.brand_plate_color}` at `${user_config.brand_plate_opacity}`, animation `${user_config.brand_text_anim}`.
 

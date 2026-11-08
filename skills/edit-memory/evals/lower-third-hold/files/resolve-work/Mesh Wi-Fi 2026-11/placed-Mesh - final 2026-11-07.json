@@ -1,0 +1,46 @@
+{
+ "timeline_id": "3f8d2b61-5c4a-4e19-b7d2-ep0000000002",
+ "items": [
+  {
+   "item_id": "m-lt1",
+   "owner": "fusion-motion-graphics",
+   "kind": "lower-third",
+   "part": null,
+   "spec": "resolve-work/Mesh Wi-Fi 2026-11/graphics/1.json",
+   "track": "Titles",
+   "start": 90200,
+   "end": 90325
+  },
+  {
+   "item_id": "m-lt2",
+   "owner": "fusion-motion-graphics",
+   "kind": "lower-third",
+   "part": null,
+   "spec": "resolve-work/Mesh Wi-Fi 2026-11/graphics/2.json",
+   "track": "Titles",
+   "start": 91100,
+   "end": 91225
+  },
+  {
+   "item_id": "m-lt3",
+   "owner": "fusion-motion-graphics",
+   "kind": "lower-third",
+   "part": null,
+   "spec": "resolve-work/Mesh Wi-Fi 2026-11/graphics/3.json",
+   "track": "Titles",
+   "start": 92700,
+   "end": 92825
+  },
+  {
+   "item_id": "m-s1",
+   "owner": "tutorial-zooms",
+   "kind": "zoom",
+   "part": "z1",
+   "spec": "resolve-work/Mesh Wi-Fi 2026-11/zooms/m-s1.json",
+   "track": "Screen",
+   "start": 92000,
+   "end": 92600,
+   "scale": 1.6
+  }
+ ]
+}

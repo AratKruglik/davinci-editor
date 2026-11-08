@@ -12,6 +12,7 @@ allowed-tools:
   - "Bash(python3 *shorts.py *)"
   - "Bash(python3 *timeline_map.py *)"
   - "Bash(python3 *tc.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -24,6 +25,8 @@ hooks:
 # Shorts cutdown
 
 Follow `resolve-core` first. Source: `$timeline` (default current; the finished cut, not the selects). Count: `$count` (default: the Mint markers, else up to 3 proposals). Length `${user_config.shorts_min_s}`–`${user_config.shorts_max_s}` s, frame `${user_config.shorts_resolution}`.
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/shorts.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/shorts.py selftest`).
 

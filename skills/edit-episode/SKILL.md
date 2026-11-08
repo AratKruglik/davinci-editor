@@ -12,6 +12,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_scripting_api"
   - "Bash(python3 *show.py *)"
   - "Bash(python3 *critic.py *)"
+  - "Bash(python3 *memory.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -28,6 +29,8 @@ Progress saved so far: !`python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/sho
 `$episode` alone and a single letter A–D (`/edit-episode C`) means the stage, not the episode name. Run the steps in order, starting from `$from_stage` (default: the first unfinished step in `episode.md`, else A). Each step is a separate skill: invoke it, let it finish with its own verification, then **stop and ask the user to approve** before the next. Never chain two steps without an explicit "далі"/"go". The user may skip any step ("без chart-match"); record the skip and why.
 
 Start: follow `resolve-core` §1–3 (connect, confirm project, save). Keep a running checklist in `${user_config.work_dir}/<project>/episode.md` (step, status `done|skipped|failed`, date, timeline names, notes) and update it after every step, so a later session resumes from it.
+
+Edit memory (`resolve-core` §11): every approval stop ends with a snapshot of each timeline the step wrote to (the step's own last snapshot counts), and new candidates from `memory.py lessons` (not `one_off`) are shown at that stop with `edit-memory learn` §2–§3, not inside the step. Resuming from `episode.md` in a new session: run `edit-memory learn` before the next step, so the user's edits since the last stop are learned before anything overwrites them.
 
 Every stage starts with `marker-edit` limited to that stage's colors (A: Sand; B: Red, Green, Yellow, Purple, Fuchsia, Cocoa; C: Lavender, Sky, Rose; D: Cyan, Pink, Blue, Mint, Lemon): the user's markers are the brief for the stage.
 
