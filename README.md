@@ -139,6 +139,7 @@ python3 skills/split-edits/scripts/split_edits.py selftest
 python3 skills/sound-design/scripts/test_sound_library.py
 python3 skills/audio-finish/scripts/loudness.py selftest
 python3 skills/resolve-core/scripts/timeline_map.py selftest
+python3 skills/resolve-core/scripts/placed.py selftest
 python3 skills/fusion-motion-graphics/scripts/motion.py selftest
 python3 skills/tutorial-zooms/scripts/zooms.py selftest
 python3 skills/subtitles-uk/scripts/subtitles.py selftest
