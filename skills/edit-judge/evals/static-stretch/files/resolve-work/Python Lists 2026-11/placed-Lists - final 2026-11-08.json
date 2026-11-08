@@ -1,0 +1,35 @@
+{
+ "timeline_id": "5d2c8e14-7a3b-4f90-b6e1-lists0001108",
+ "items": [
+  {
+   "item_id": "8f1a2c3d-0b4e-4a5f-9c6d-lt0000000001",
+   "owner": "fusion-motion-graphics",
+   "kind": "lower-third",
+   "spec": "resolve-work/Python Lists 2026-11/graphics/1.json",
+   "track": "Titles",
+   "start": 90050,
+   "end": 90150,
+   "full": 90060,
+   "hold_end": 90142,
+   "gone": 90150,
+   "text": "Олексій Круглик\nPython для початківців",
+   "scale": null,
+   "part": null
+  },
+  {
+   "item_id": "s-0004",
+   "owner": "tutorial-zooms",
+   "kind": "zoom",
+   "spec": "resolve-work/Python Lists 2026-11/zooms.json",
+   "track": "Screen",
+   "start": 92200,
+   "end": 92300,
+   "full": 92212,
+   "hold_end": 92288,
+   "gone": 92300,
+   "text": null,
+   "scale": 1.8,
+   "part": "1"
+  }
+ ]
+}

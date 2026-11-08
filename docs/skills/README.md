@@ -65,6 +65,7 @@ The order follows [`edit-episode`](edit-episode.md), which runs the whole workfl
 | [`thumbnail-frames`](thumbnail-frames.md) | ranked thumbnail candidate stills from Lemon markers |
 | [`frame-critic`](frame-critic.md) | measured and visual check of placed graphics, zooms and captions; fixes go back to the owning skill |
 | [`pre-delivery-qc`](pre-delivery-qc.md) | read-only check before render |
+| [`edit-judge`](edit-judge.md) | independent verdict after QC (SHIP / REWORK with timecoded must-fix rows) and blind ranking of Shorts and thumbnail candidates |
 | [`deliver`](deliver.md) | H.265 renders after QC, verified on disk, upload package |
 
 ## Writing prompts that get professional results

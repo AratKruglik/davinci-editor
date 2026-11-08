@@ -1,7 +1,7 @@
 """Numbers, verdict and blind ranking for edit-judge.
 
 python3 judge.py metrics <dump.json> <words.json> [--ledger placed.json] --format youtube|shorts [--pause-ms 700] --out metrics.json
-python3 judge.py verdict <scores.json> [--critic critic.json] [--qc qc.json] --out judge.json
+python3 judge.py verdict <scores.json> [--critic critic.json] [--qc qc.json] [--stale critic|qc ...] --out judge.json
 python3 judge.py blind <candidates.json> --out blind.json --key key.json [--seed N]
 python3 judge.py pairs <blind.json>                                  (comparisons to run: every pair, both orders)
 python3 judge.py rank <results.json> --key key.json
@@ -10,6 +10,7 @@ python3 judge.py selftest
 scores.json: {criterion: {"score": 1..5, "evidence": [tc, ...], "note": str}} for hook, pace, graphics, consistency, rules, ending.
 results.json: [{"pair": [x, y], "order": "xy"|"yx", "winner": x|y}], labels as in blind.json.
 --critic/--qc given but unreadable: exit 2, no verdict written; omitted: recorded as "missing" and counted as no findings.
+--stale critic|qc: that check is outdated (critic.py / qc.py stale), recorded as "stale" with a must-fix "re-run <skill>".
 blind keeps only range, still, text of a candidate.
 A pair judged in both orders with different winners is a tie: half a win for each.
 """
@@ -28,6 +29,7 @@ STATIC_S = {"youtube": 20, "shorts": 4}
 STATIC_ROLES = ("a-roll", "screen", "b-roll")
 NOT_GRAPHICS = ("zoom", "caption")
 BLIND_FIELDS = ("range", "still", "text")
+CHECK_SKILL = {"critic": "frame-critic", "qc": "pre-delivery-qc"}
 
 
 def role(name):
@@ -83,7 +85,7 @@ def check_scores(scores):
             raise SystemExit(f"{c}: score must be an integer 1..5, got {scores[c].get('score')!r}")
 
 
-def verdict(scores, critic, qc):
+def verdict(scores, critic, qc, stale=()):
     check_scores(scores)
     must_fix = [{"criterion": c, "evidence": scores[c].get("evidence", []), "note": scores[c].get("note", "")}
                 for c in CRITERIA if scores[c]["score"] <= 2]
@@ -92,6 +94,8 @@ def verdict(scores, critic, qc):
             if f["severity"] == "error":
                 owner = ((f.get("fix") or {}).get("skill") or f.get("owner")) if source == "critic" else None
                 must_fix.append({"tc": f.get("tc"), "kind": f["kind"], "message": f["message"], "owner": owner, "source": source})
+    for source in stale:
+        must_fix.append({"tc": None, "kind": "stale", "message": f"re-run {CHECK_SKILL[source]}", "owner": CHECK_SKILL[source], "source": source})
     return {"verdict": "REWORK" if must_fix else "SHIP", "must_fix": must_fix}
 
 
@@ -164,6 +168,15 @@ def cli_missing_inputs_selftest():
             sys.argv = old
         saved = read(out)
         assert saved["verdict"] == "SHIP" and saved["critic"] == "PASS" and saved["qc"] == "missing", saved
+        assert saved["scores"]["hook"]["score"] == 4, saved
+        sys.argv, old = ["judge.py", "verdict", path("scores.json"), "--critic", path("ok.json"), "--stale", "qc", "--out", out], sys.argv
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                main()
+        finally:
+            sys.argv = old
+        saved = read(out)
+        assert saved["verdict"] == "REWORK" and saved["qc"] == "stale" and saved["must_fix"][0]["owner"] == "pre-delivery-qc", saved
 
 
 def selftest():
@@ -225,6 +238,9 @@ def selftest():
     v = verdict(scores, None, qc_err)
     assert v["verdict"] == "REWORK" and v["must_fix"][0]["source"] == "qc" and v["must_fix"][0]["owner"] is None, v
     assert verdict(scores, None, None)["verdict"] == "SHIP"
+    v = verdict(scores, None, clean, stale=["critic"])
+    assert v["verdict"] == "REWORK" and v["must_fix"] == [
+        {"tc": None, "kind": "stale", "message": "re-run frame-critic", "owner": "frame-critic", "source": "critic"}], v
     for bad in ({**scores, "pace": {"score": 6, "evidence": [], "note": ""}}, {k: v for k, v in scores.items() if k != "hook"}):
         try:
             verdict(bad, clean, clean)
@@ -299,6 +315,7 @@ def main():
     v.add_argument("scores")
     v.add_argument("--critic")
     v.add_argument("--qc")
+    v.add_argument("--stale", action="append", choices=list(CHECK_SKILL), default=[])
     v.add_argument("--out", required=True)
     b = sub.add_parser("blind")
     b.add_argument("candidates")
@@ -317,9 +334,13 @@ def main():
         write(a.out, result)
         return print(json.dumps({"out": a.out, "static": len(result["static"]), "pauses": len(result["pauses"])}))
     if a.cmd == "verdict":
-        critic, qc = read(a.critic), read(a.qc)
-        result = {**verdict(read(a.scores), critic, qc), "critic": "missing" if critic is None else critic.get("verdict"),
-                  "qc": "missing" if qc is None else qc.get("verdict")}
+        if a.critic and "critic" in a.stale or a.qc and "qc" in a.stale:
+            p.error("a stale check is not passed as a file")
+        scores, critic, qc = read(a.scores), read(a.critic), read(a.qc)
+
+        def state(name, data):
+            return "stale" if name in a.stale else "missing" if data is None else data.get("verdict")
+        result = {**verdict(scores, critic, qc, a.stale), "critic": state("critic", critic), "qc": state("qc", qc), "scores": scores}
         write(a.out, result)
         return print(json.dumps({"out": a.out, "verdict": result["verdict"], "must_fix": len(result["must_fix"]),
                                  "critic": result["critic"], "qc": result["qc"]}, ensure_ascii=False))

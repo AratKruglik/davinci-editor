@@ -1,0 +1,248 @@
+{
+ "name": "Lists - final 2026-11-08",
+ "timeline_id": "5d2c8e14-7a3b-4f90-b6e1-lists0001108",
+ "fps": 25.0,
+ "drop_frame": false,
+ "width": 1920,
+ "height": 1080,
+ "start_frame": 90000,
+ "end_frame": 92800,
+ "start_tc": "01:00:00:00",
+ "markers": {},
+ "tracks": {
+  "video": [
+   {
+    "index": 1,
+    "name": "A-roll",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "A001_cam.mov",
+      "item_id": "a-0001",
+      "clip_id": "mp-cam",
+      "start": 90000,
+      "end": 90300,
+      "source_start": 250,
+      "source_end": 550,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/A001_cam.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "A001_cam.mov",
+      "item_id": "a-0002",
+      "clip_id": "mp-cam",
+      "start": 92500,
+      "end": 92800,
+      "source_start": 3900,
+      "source_end": 4200,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/A001_cam.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 2,
+    "name": "Screen",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "slides_lists.png",
+      "item_id": "s-0001",
+      "clip_id": "mp-slide",
+      "start": 90300,
+      "end": 90700,
+      "source_start": 0,
+      "source_end": 400,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/slides_lists.png",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Purple",
+      "fusion_comps": 0
+     },
+     {
+      "name": "screen_2026-11-06.mov",
+      "item_id": "s-0002",
+      "clip_id": "mp-scr",
+      "start": 90700,
+      "end": 91700,
+      "source_start": 1200,
+      "source_end": 2200,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/screen_2026-11-06.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Purple",
+      "fusion_comps": 0
+     },
+     {
+      "name": "screen_2026-11-06.mov",
+      "item_id": "s-0003",
+      "clip_id": "mp-scr",
+      "start": 91700,
+      "end": 92125,
+      "source_start": 2900,
+      "source_end": 3325,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/screen_2026-11-06.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Purple",
+      "fusion_comps": 0
+     },
+     {
+      "name": "screen_2026-11-06.mov",
+      "item_id": "s-0004",
+      "clip_id": "mp-scr",
+      "start": 92125,
+      "end": 92500,
+      "source_start": 3600,
+      "source_end": 3975,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/screen_2026-11-06.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Purple",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 3,
+    "name": "PiP",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "A001_cam.mov",
+      "item_id": "p-0001",
+      "clip_id": "mp-cam",
+      "start": 90300,
+      "end": 92500,
+      "source_start": 550,
+      "source_end": 2750,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/A001_cam.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Teal",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 4,
+    "name": "Titles",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "Fusion Composition",
+      "item_id": "8f1a2c3d-0b4e-4a5f-9c6d-lt0000000001",
+      "clip_id": null,
+      "start": 90050,
+      "end": 90150,
+      "source_start": 0,
+      "source_end": 100,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "file": null,
+      "fps": null,
+      "resolution": null,
+      "color": "Orange",
+      "fusion_comps": 1
+     }
+    ]
+   }
+  ],
+  "audio": [
+   {
+    "index": 1,
+    "name": "Voice",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "A001_cam.mov",
+      "item_id": "v-0001",
+      "clip_id": "mp-cam",
+      "start": 90000,
+      "end": 92500,
+      "source_start": 250,
+      "source_end": 2750,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/A001_cam.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "A001_cam.mov",
+      "item_id": "v-0002",
+      "clip_id": "mp-cam",
+      "start": 92500,
+      "end": 92800,
+      "source_start": 3900,
+      "source_end": 4200,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Lists/A001_cam.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     }
+    ]
+   }
+  ]
+ }
+}

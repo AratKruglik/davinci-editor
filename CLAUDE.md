@@ -28,7 +28,7 @@ The full self-test list lives in two places that must stay in sync: README "Deve
 - **Skill frontmatter** carries `allowed-tools` (pre-approved MCP tools and `Bash(python3 *<script>.py *)` patterns), `arguments`, and settings via `${user_config.<key>}`; scripts are referenced as `${CLAUDE_SKILL_DIR}/scripts/...`. A new setting goes into `userConfig` in `plugin.json` and the table in `docs/settings.md`.
 - **Orchestration**: `edit-episode` runs the whole workflow in stages with approval stops, keeping progress in `episode.md`; `marker-edit` maps marker colors to tasks and dispatches to the matching skills. Marker colors and track roles are design contracts documented in `docs/marker-color-system.md` and `docs/track-layout.md`.
 - **Color pipeline**: the API cannot create nodes, so color skills work on a user-captured DRX template with labeled serial nodes `CHART → CST → PRIMARY → SKIN → DEPTH → LOOK`, found by label, edited only with per-node calls, stored in a remote grade version named `claude`.
-- **Cowork build**: `scripts/build_cowork.py` copies `skills/` without `evals/`, renames the plugin to `davinci-editor-cowork`, bundles `.mcp.json`, and rewrites the literal prefix `mcp__DaVinci_Resolve__` in every `.md` to the plugin-scoped name. Always spell tool names with that exact prefix in skills.
+- **Cowork build**: `scripts/build_cowork.py` copies `skills/` (without `evals/`) and `agents/`, renames the plugin to `davinci-editor-cowork`, bundles `.mcp.json`, and rewrites the literal prefix `mcp__DaVinci_Resolve__` in every `.md` to the plugin-scoped name. Always spell tool names with that exact prefix in skills and agents.
 
 ## Evals
 
