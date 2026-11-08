@@ -30,7 +30,7 @@ Edit memory (`resolve-core` §11): the start step (learn) on `$timeline` once it
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/critic.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py selftest`). Resolve scripts: [reference.md](reference.md).
 
-The critic looks at what the skills placed and says what is wrong, with numbers and a concrete fix. It never moves, trims, deletes or restyles an element and never edits a spec: the skill that placed the element owns it and re-applies it from its own spec, so the next run reproduces the fix. It doesn't judge taste, pacing or whether a graphic belongs at all; that is the judge's job. The only things it writes are its result files, two renders per text element, and Cream markers.
+The critic looks at what the skills placed and says what is wrong, with numbers and a concrete fix. It never moves, trims, deletes or restyles an element and never edits a spec: the skill that placed the element owns it and re-applies it from its own spec, so the next run reproduces the fix. It doesn't judge taste, pacing or whether a graphic belongs at all; that is the judge's job. The only things it writes are its result files, two renders per text element, Cream markers, and the edit-memory snapshots and event log (files, not the timeline).
 
 ## 1. Inventory and numbers
 

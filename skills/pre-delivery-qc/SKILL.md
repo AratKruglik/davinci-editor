@@ -31,7 +31,7 @@ Edit memory (`resolve-core` §11): before the first Cream marker, the start step
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/qc.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/qc.py selftest`).
 
-This skill only looks. It doesn't trim, delete, relink or move anything: every fix is an editorial decision or needs the user's eyes, and a QC that "fixes" silently can't be trusted. The only things it writes are reports, Cream markers and (for loudness) a temporary render job it removes again.
+This skill only looks. It doesn't trim, delete, relink or move anything: every fix is an editorial decision or needs the user's eyes, and a QC that "fixes" silently can't be trusted. The only things it writes are reports, Cream markers, (for loudness) a temporary render job it removes again, and the edit-memory snapshot and event log (files, not the timeline).
 
 ## 1. Timeline checks
 
