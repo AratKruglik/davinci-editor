@@ -4,6 +4,7 @@ python3 critic.py inventory <placed ledger.json> <dump.json> --out elements.json
 python3 critic.py check <elements.json> <dump.json> --zoom-max Z --cps-max C --chars-max N [--rules rules.json] --out critic.json
 python3 critic.py add <critic.json> --severity error|warn --kind K --element ID --tc TC --message M
                       [--frame F] [--still PATH] [--bbox x0 y0 x1 y1] [--fix-skill S --fix-change C]
+python3 critic.py bbox <track on.tif> <track off.tif>      (bounds of what changed between the two renders)
 python3 critic.py stale <critic.json> <fresh dump.json>      (exit 1 = the timeline changed since the check)
 python3 critic.py selftest
 
@@ -13,12 +14,15 @@ import argparse
 import json
 import os
 import sys
+import tempfile
 from datetime import datetime
 from itertools import combinations
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "resolve-core", "scripts"))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "pre-delivery-qc", "scripts"))
+sys.path.insert(0, os.path.join(HERE, "..", "..", "chart-match", "scripts"))
+from chart_match import read_tiff
 from placed import load
 from qc import ORDER, stale, state_of, summarize
 from tc import frames_to_tc
@@ -128,6 +132,29 @@ def apply_rules(cfg, rules):
     return cfg
 
 
+def bbox_diff(on_path, off_path, threshold=0.04, step=2):
+    w, h, on = read_tiff(on_path)
+    w2, h2, off = read_tiff(off_path)
+    if (w, h) != (w2, h2):
+        raise SystemExit(f"render size differs: {w}x{h} vs {w2}x{h2}")
+    xs = sorted({*range(0, w, step), w - 1})    # the last column and row are always sampled so edge contact is never missed
+    ys = sorted({*range(0, h, step), h - 1})
+    hit = [(x, y) for y in ys for x in xs if max(abs(a - b) for a, b in zip(on(x, y), off(x, y))) > threshold]
+    if not hit:
+        return None
+    return [min(x for x, _ in hit), min(y for _, y in hit), max(x for x, _ in hit), max(y for _, y in hit)]
+
+
+def safe_kinds(bbox, w, h):
+    x0, y0, x1, y1 = bbox
+    if x0 <= 0 or y0 <= 0 or x1 >= w - 1 or y1 >= h - 1:
+        return [("offscreen", "error")]
+    for margin, kind, severity in ((0.05, "unsafe", "error"), (0.10, "unsafe-title", "warn")):
+        if x0 < w * margin or x1 > w * (1 - margin) or y0 < h * margin or y1 > h * (1 - margin):
+            return [(kind, severity)]
+    return []
+
+
 def selftest():
     fps, t0 = 24, 86400
 
@@ -224,6 +251,39 @@ def selftest():
     cfg = apply_rules(base, rules)
     assert cfg["hold_extra_s"] == {"lower-third": 1.0} and cfg["zoom_max"] == 2.0 and base.get("hold_extra_s") is None
     assert apply_rules(base, [])["zoom_max"] == 2.5
+
+    sys.path.insert(0, os.path.join(HERE, "..", "..", "thumbnail-frames", "scripts"))
+    from thumbs import write_tiff
+    w, h = 192, 108
+    background = lambda x, y: (100 + x // 3, 120, 140 - y // 4)
+
+    def render(path, rect=None, size=(w, h)):
+        def px(x, y):
+            if rect and rect[0] <= x <= rect[2] and rect[1] <= y <= rect[3]:
+                return (13, 13, 13)
+            return background(x, y)
+        write_tiff(path, size[0], size[1], px)
+
+    with tempfile.TemporaryDirectory() as d:
+        off, on, small = (os.path.join(d, n) for n in ("off.tif", "on.tif", "small.tif"))
+        render(off)
+        render(on, (150, 20, 191, 40))
+        box = bbox_diff(on, off)
+        assert box == [150, 20, 191, 40] and "offscreen" in [k for k, _ in safe_kinds(box, w, h)], box
+        render(on, (20, 20, 60, 40))
+        assert bbox_diff(on, off) == [20, 20, 60, 40] and safe_kinds(bbox_diff(on, off), w, h) == []
+        render(on, (5, 20, 60, 40))
+        assert safe_kinds(bbox_diff(on, off), w, h) == [("unsafe", "error")]
+        render(on, (12, 20, 60, 40))
+        assert safe_kinds(bbox_diff(on, off), w, h) == [("unsafe-title", "warn")]
+        assert bbox_diff(off, off) is None
+        render(small, size=(96, 54))
+        try:
+            bbox_diff(on, small)
+        except SystemExit as e:
+            assert "size" in str(e)
+        else:
+            raise AssertionError("expected SystemExit: size")
     print("critic selftest ok")
 
 
@@ -244,6 +304,9 @@ def main():
     ck.add_argument("--chars-max", type=int, required=True)
     ck.add_argument("--rules")
     ck.add_argument("--out", required=True)
+    bb = sub.add_parser("bbox")
+    bb.add_argument("on")
+    bb.add_argument("off")
     ad = sub.add_parser("add")
     ad.add_argument("critic")
     ad.add_argument("--severity", required=True)
@@ -281,6 +344,10 @@ def main():
         result = check(read(a.elements), read(a.dump), cfg)
         write(a.out, result)
         return print(json.dumps({"out": a.out, "verdict": result["verdict"], "counts": result["counts"]}))
+    if a.cmd == "bbox":
+        box = bbox_diff(a.on, a.off)
+        w, h, _ = read_tiff(a.on)
+        return print(json.dumps({"bbox": box, "width": w, "height": h, "kinds": safe_kinds(box, w, h) if box else []}))
     result = read(a.critic)
     if a.cmd == "stale":
         is_stale = stale(result, read(a.dump))
