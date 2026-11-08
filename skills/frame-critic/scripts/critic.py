@@ -6,6 +6,7 @@ python3 critic.py add <critic.json> --severity error|warn --kind K --element ID 
                       [--frame F] [--still PATH] [--bbox x0 y0 x1 y1] [--fix-skill S --fix-change C]
 python3 critic.py bbox <track on.tif> <track off.tif>      (bounds of what changed between the two renders)
 python3 critic.py stale <critic.json> <fresh dump.json>      (exit 1 = the timeline changed since the check)
+python3 critic.py next-round <critic.json>                   (round + 1; exit 1 once two fix rounds are used up)
 python3 critic.py selftest
 
 Frames are absolute timeline frames (dump start_frame included). Kinds: see placed.py.
@@ -13,6 +14,7 @@ Frames are absolute timeline frames (dump start_frame included). Kinds: see plac
 import argparse
 import json
 import os
+import subprocess
 import sys
 import tempfile
 from datetime import datetime
@@ -243,6 +245,15 @@ def selftest():
         assert "max 2 rounds" in str(e)
     else:
         raise AssertionError("expected SystemExit: max 2 rounds")
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "critic.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({**r, "round": 1}, f)
+        cli = [sys.executable, os.path.abspath(__file__), "next-round", path]
+        assert [subprocess.run(cli, capture_output=True).returncode for _ in range(2)] == [0, 0]
+        refused = subprocess.run(cli, capture_output=True, text=True)
+        with open(path, encoding="utf-8") as f:
+            assert refused.returncode != 0 and "max 2 rounds" in refused.stderr and json.load(f)["round"] == 3, refused
 
     rules = [{"scope": {"kind": "lower-third"}, "param": {"name": "hold_extra_s", "value": 1.0}},
              {"scope": {"kind": "lower-third"}, "param": {"name": "hold_extra_s", "value": 0.5}},
@@ -322,6 +333,8 @@ def main():
     st = sub.add_parser("stale")
     st.add_argument("critic")
     st.add_argument("dump")
+    nr = sub.add_parser("next-round")
+    nr.add_argument("critic")
     a = ap.parse_args()
 
     def read(path):
@@ -353,6 +366,10 @@ def main():
         is_stale = stale(result, read(a.dump))
         print(json.dumps({"stale": is_stale, "verdict": result.get("verdict")}))
         sys.exit(1 if is_stale else 0)
+    if a.cmd == "next-round":
+        result = next_round(result)
+        write(a.critic, result)
+        return print(json.dumps({"round": result["round"]}))
     fix = {"skill": a.fix_skill, "change": a.fix_change} if a.fix_skill else None
     result = add_finding(result, a.severity, a.kind, a.element, a.tc, a.message, frame=a.frame,
                          evidence={"still": a.still, "bbox": a.bbox}, fix=fix)

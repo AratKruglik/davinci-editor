@@ -62,6 +62,7 @@ The order follows [`edit-episode`](edit-episode.md), which runs the whole workfl
 | [`chapters-markers`](chapters-markers.md) | YouTube chapters from Blue markers, checked against YouTube's rules |
 | [`shorts-cutdown`](shorts-cutdown.md) | 30–60 s vertical Shorts from Mint markers or the transcript |
 | [`thumbnail-frames`](thumbnail-frames.md) | ranked thumbnail candidate stills from Lemon markers |
+| [`frame-critic`](frame-critic.md) | measured and visual check of placed graphics, zooms and captions; fixes go back to the owning skill |
 | [`pre-delivery-qc`](pre-delivery-qc.md) | read-only check before render |
 | [`deliver`](deliver.md) | H.265 renders after QC, verified on disk, upload package |
 

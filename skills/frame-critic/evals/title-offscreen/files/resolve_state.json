@@ -1,0 +1,22 @@
+{
+ "project": "Router Setup 2026-11",
+ "resolve_version": "21.2.0",
+ "current_timeline": "Router - rough cut 2026-11-02",
+ "timelines": [
+  "Router - rough cut 2026-11-02",
+  "Router - final 2026-11-08"
+ ],
+ "timeline": "Router - final 2026-11-08",
+ "timeline_start": "01:00:00:00",
+ "fps": 25,
+ "resolution": "1920x1080",
+ "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work: the timeline dump of 'Router - final 2026-11-08' and the ledger placed-<timeline>.json written by fusion-motion-graphics. The on/off TIF renders from ExportFrame are not shipped; what `critic.py bbox <id>-on.tif <id>-off.tif` prints for each text element is already in resolve-work/Router Setup 2026-11/critic/<item_id>-bbox.json (bounds at the element's `full` frame). Read those instead of running bbox. There is no words-<timeline>.json transcript for this timeline.",
+ "images": {
+  "note": "What get_image (source timeline, max_dimension 1600) and get_thumbnails return once 'Router - final 2026-11-08' is the current timeline.",
+  "01:00:04:10": "A-roll medium shot, the author's face in the upper middle (about x 0.38-0.62, y 0.12-0.60 of the frame). Lower third bottom left: dark plate with white Montserrat Bold 'Олексій Круглик' and below it 'засновник студії «Кадр за кадром»'; the second line and the plate run into the right edge of the frame, the closing '»' and part of 'кадром' are cut off. Cyrillic renders correctly, contrast is good, nothing covers the face.",
+  "01:00:23:19": "Screen recording of the router web UI. Kinetic phrase 'Швидкість 940 Мбіт/с' centered in the frame, large white text, readable, brand font, no boxes. No face in the frame.",
+  "01:00:24:10": "Screen recording of the router web UI. The kinetic phrase is still centered; the callout 'Порт WAN' with its dot sits on the WAN port on the left of the router diagram, label above the dot, readable against the light UI thanks to its plate. The two do not touch.",
+  "01:00:52:00": "A-roll with the user's own 'Підписуйтесь' Text+ near the bottom edge (not placed by any skill).",
+  "thumbnails": "get_thumbnails over any range shows the same layout as the frames above."
+ }
+}

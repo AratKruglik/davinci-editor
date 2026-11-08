@@ -1,0 +1,266 @@
+{
+ "name": "Router - final 2026-11-08",
+ "timeline_id": "e4a7c1d2-8f3b-4d6e-9a10-final0001108",
+ "fps": 25.0,
+ "drop_frame": false,
+ "width": 1920,
+ "height": 1080,
+ "start_frame": 90000,
+ "end_frame": 91500,
+ "start_tc": "01:00:00:00",
+ "markers": {
+  "100": {
+   "color": "Cyan",
+   "name": "Олексій Круглик",
+   "note": "засновник студії «Кадр за кадром»",
+   "duration": 113,
+   "customData": "claude:done:fusion-motion-graphics:2026-11-08"
+  },
+  "590": {
+   "color": "Cyan",
+   "name": "Швидкість 940 Мбіт/с",
+   "note": "kinetic",
+   "duration": 38,
+   "customData": "claude:done:fusion-motion-graphics:2026-11-08"
+  },
+  "594": {
+   "color": "Yellow",
+   "name": "",
+   "note": "перевірити цифру швидкості",
+   "duration": 1,
+   "customData": ""
+  },
+  "600": {
+   "color": "Cyan",
+   "name": "Порт WAN",
+   "note": "callout 0.24 0.42",
+   "duration": 75,
+   "customData": "claude:done:fusion-motion-graphics:2026-11-08"
+  }
+ },
+ "tracks": {
+  "video": [
+   {
+    "index": 1,
+    "name": "Backgrounds",
+    "enabled": true,
+    "locked": false,
+    "items": []
+   },
+   {
+    "index": 2,
+    "name": "A-roll",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "IMG_4140.MOV",
+      "item_id": "a-0001",
+      "clip_id": "mp-4140",
+      "start": 90000,
+      "end": 90800,
+      "source_start": 0,
+      "source_end": 800,
+      "left_offset": 40,
+      "right_offset": 300,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4140.MOV",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4140.MOV",
+      "item_id": "a-0002",
+      "clip_id": "mp-4140",
+      "start": 90800,
+      "end": 91500,
+      "source_start": 0,
+      "source_end": 700,
+      "left_offset": 40,
+      "right_offset": 300,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4140.MOV",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 3,
+    "name": "Screen",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "screen-2026-11-02.mov",
+      "item_id": "s-0001",
+      "clip_id": "mp-scr1",
+      "start": 90500,
+      "end": 91000,
+      "source_start": 0,
+      "source_end": 500,
+      "left_offset": 40,
+      "right_offset": 300,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/screen-2026-11-02.mov",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     }
+    ]
+   },
+   {
+    "index": 4,
+    "name": "Titles",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "Fusion Composition",
+      "item_id": "9b2e41f0-1a7c-4e55-b0d1-lt0000000001",
+      "clip_id": null,
+      "start": 90100,
+      "end": 90225,
+      "source_start": 0,
+      "source_end": 125,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "file": null,
+      "fps": null,
+      "resolution": null,
+      "color": "Orange",
+      "fusion_comps": 1
+     },
+     {
+      "name": "Fusion Composition",
+      "item_id": "9b2e41f0-1a7c-4e55-b0d1-kn0000000002",
+      "clip_id": null,
+      "start": 90590,
+      "end": 90715,
+      "source_start": 0,
+      "source_end": 125,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "file": null,
+      "fps": null,
+      "resolution": null,
+      "color": "Orange",
+      "fusion_comps": 1
+     }
+    ]
+   },
+   {
+    "index": 5,
+    "name": "Titles 2",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "Fusion Composition",
+      "item_id": "9b2e41f0-1a7c-4e55-b0d1-co0000000003",
+      "clip_id": null,
+      "start": 90600,
+      "end": 90725,
+      "source_start": 0,
+      "source_end": 125,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "file": null,
+      "fps": null,
+      "resolution": null,
+      "color": "Orange",
+      "fusion_comps": 1
+     },
+     {
+      "name": "Text+",
+      "item_id": "3c8d0a77-55e2-4f19-9a6b-user00000001",
+      "clip_id": null,
+      "start": 91300,
+      "end": 91425,
+      "source_start": 0,
+      "source_end": 125,
+      "left_offset": 0,
+      "right_offset": 0,
+      "enabled": true,
+      "speed": 100.0,
+      "online": null,
+      "file": null,
+      "fps": null,
+      "resolution": null,
+      "color": "Orange",
+      "fusion_comps": 1
+     }
+    ]
+   }
+  ],
+  "audio": [
+   {
+    "index": 1,
+    "name": "Voice",
+    "enabled": true,
+    "locked": false,
+    "items": [
+     {
+      "name": "IMG_4140.MOV",
+      "item_id": "v-0001",
+      "clip_id": "mp-4140",
+      "start": 90000,
+      "end": 90800,
+      "source_start": 0,
+      "source_end": 800,
+      "left_offset": 40,
+      "right_offset": 300,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4140.MOV",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     },
+     {
+      "name": "IMG_4140.MOV",
+      "item_id": "v-0002",
+      "clip_id": "mp-4140",
+      "start": 90800,
+      "end": 91500,
+      "source_start": 0,
+      "source_end": 700,
+      "left_offset": 40,
+      "right_offset": 300,
+      "enabled": true,
+      "speed": 100.0,
+      "online": "Online",
+      "file": "/Volumes/Shoot/Router/IMG_4140.MOV",
+      "fps": 25.0,
+      "resolution": "1920x1080",
+      "color": "Blue",
+      "fusion_comps": 0
+     }
+    ]
+   }
+  ],
+  "subtitle": []
+ }
+}

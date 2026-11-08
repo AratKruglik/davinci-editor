@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: title-offscreen
+expected_outcome: |
+  frame-critic makes "Router - final 2026-11-08" current (and restores "Router - rough cut 2026-11-02" at the end), builds the inventory from placed-<timeline>.json with critic.py inventory and runs critic.py check, which finds short-hold on the kinetic phrase (fully visible 1.5 s, needs 1.9 s). The measuring run_script records the enabled state of every video track, exports the on/off frames, disables only the element's track, and restores and re-reads the state in a finally block of that same script. The bounds come from the precomputed bbox outputs, so the lower third is recorded with critic.py add as offscreen (error) at 01:00:04:10 with bbox [115, 838, 1919, 990]. The callout overlapping the kinetic phrase over the screen recording is not an overlap finding, and the user's own 'Підписуйтесь' title is not judged. Every finding names fix.skill fusion-motion-graphics and a concrete spec change. The user asked for a report only, so the findings stay open as Cream claude:critic:<kind> markers (the kinetic one a frame after the user's Yellow marker) and in critic-<timeline>.json / .md with verdict FAIL; nothing on the timeline is moved, trimmed, deleted or re-inserted.
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,47 @@
+{
+ "timeline_id": "e4a7c1d2-8f3b-4d6e-9a10-final0001108",
+ "items": [
+  {
+   "item_id": "9b2e41f0-1a7c-4e55-b0d1-lt0000000001",
+   "owner": "fusion-motion-graphics",
+   "kind": "lower-third",
+   "spec": "resolve-work/Router Setup 2026-11/graphics/1.json",
+   "track": "Titles",
+   "start": 90100,
+   "end": 90225,
+   "full": 90110,
+   "hold_end": 90222,
+   "gone": 90230,
+   "text": "Олексій Круглик\nзасновник студії «Кадр за кадром»",
+   "scale": null
+  },
+  {
+   "item_id": "9b2e41f0-1a7c-4e55-b0d1-kn0000000002",
+   "owner": "fusion-motion-graphics",
+   "kind": "kinetic",
+   "spec": "resolve-work/Router Setup 2026-11/graphics/2.json",
+   "track": "Titles",
+   "start": 90590,
+   "end": 90715,
+   "full": 90594,
+   "hold_end": 90632,
+   "gone": 90640,
+   "text": "Швидкість 940 Мбіт/с",
+   "scale": null
+  },
+  {
+   "item_id": "9b2e41f0-1a7c-4e55-b0d1-co0000000003",
+   "owner": "fusion-motion-graphics",
+   "kind": "callout",
+   "spec": "resolve-work/Router Setup 2026-11/graphics/3.json",
+   "track": "Titles 2",
+   "start": 90600,
+   "end": 90725,
+   "full": 90610,
+   "hold_end": 90685,
+   "gone": 90693,
+   "text": "Порт WAN",
+   "scale": null
+  }
+ ]
+}

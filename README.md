@@ -108,6 +108,7 @@ Click a name for its guide and example prompts.
 | [`chapters-markers`](docs/skills/chapters-markers.md) | YouTube chapters |
 | [`shorts-cutdown`](docs/skills/shorts-cutdown.md) | vertical Shorts |
 | [`thumbnail-frames`](docs/skills/thumbnail-frames.md) | best frames for a thumbnail |
+| [`frame-critic`](docs/skills/frame-critic.md) | checks placed titles, zooms and captions: cut off, unreadable, too short |
 | [`pre-delivery-qc`](docs/skills/pre-delivery-qc.md) | checks before render |
 | [`deliver`](docs/skills/deliver.md) | H.265 renders for YouTube and Shorts |
 | [`resolve-core`](docs/skills/resolve-core.md) | hidden shared rules |
