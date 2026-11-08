@@ -11,6 +11,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__search_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_api"
   - "Bash(python3 *show.py *)"
+  - "Bash(python3 *critic.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -70,7 +71,7 @@ Picture and sound of the episode are locked now: lock A-roll, B-roll and Voice (
 4. `chapters-markers` — Blue markers → `chapters.txt`.
 5. `shorts-cutdown` — Mint markers / proposals → vertical timelines; each Short gets `audio-finish` and `subtitles-uk shorts`.
 6. `thumbnail-frames` — Lemon markers → `thumbnail-brief.md`.
-7. `track-layout cleanup` (empty tracks, after confirmation), then `pre-delivery-qc` on the episode and on every Short. Errors go back to the step that owns them.
+7. `track-layout cleanup` (empty tracks, after confirmation), then `pre-delivery-qc` on the episode and on every Short. Before QC, for each of those timelines that has a ledger `<work>/placed-<timeline>.json`: fresh dump, then `python3 ${CLAUDE_SKILL_DIR}/../frame-critic/scripts/critic.py stale "<work>/critic-<timeline>.json" "<dump>"`; exit 1 (later edits, e.g. subtitles or the cleanup) or no critic file → `frame-critic <timeline> all` first, with its fix stop. Errors go back to the step that owns them.
 8. `deliver all`.
 
 `frame-critic` checks what steps 1 (graphics), 2 (screen zooms) and 5 (each Short) placed: the owner skill runs it once at its end, so don't run it again. Its findings and fixes are part of that step's approval stop: the fix rounds go back to the owner only after the user's yes, before the next step. Record the critic verdict and what stayed open in `episode.md`.

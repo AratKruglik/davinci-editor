@@ -74,7 +74,7 @@ Show the plan before building: `# | TC | kind | anim | text | duration | route (
      --owner fusion-motion-graphics --kind <spec kind> --track "<track name>" --start <start> --end <item.GetEnd()> \
      --full <full> --hold-end <hold_end> --gone <gone> --spec "<work>/graphics/<n>.json" --text="<text> <sub>"
    ```
-   `--text=` carries both lines joined by a space (reading time counts them); for a counter, the final number. A MotionVFX title (§2) has no spec: record it without `--spec`, with `--full` = start and `--hold-end` = `--gone` = `item.GetEnd()`, since its timing is the template's own.
+   `--text=` carries both lines joined by a space (reading time counts them); for a counter, the final number. A MotionVFX title (§2) is not recorded: it has no spec and its timing is the template's own, so the critic's frames would be wrong; `pre-delivery-qc` looks at it as a title outside the ledger.
 
 Counter: the number is driven by a Fusion expression on `StyledText`; read `GetInput("StyledText", t)` at the start and end of the count to confirm it runs.
 

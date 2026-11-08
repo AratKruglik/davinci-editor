@@ -94,7 +94,7 @@
 
 ### 4.6 Межа з `pre-delivery-qc`
 
-QC лишається технічною перевіркою. Його розділ «Looks» замінюється: QC читає `critic-<timeline>.json`; немає файлу або `critic.py stale` → finding `critic-stale` (warn) з порадою запустити `frame-critic`; відкриті `error` критика → finding `look` (error).
+QC лишається технічною перевіркою. Його розділ «Looks» звужується: стоп-кадри на 0/25/50/75 % і останній секунді лишаються для кольору (log-flat, колір явно не той), а шрифт, safe area і PiP поверх титру QC перевіряє лише на Fusion-титрах, яких немає в журналі `placed` (поставив користувач, шаблон MotionVFX). Текст елементів із журналу перевіряє критик: QC читає `critic-<timeline>.json`; немає файлу (а журнал є) → finding `critic-stale` (warn) з порадою запустити `frame-critic`; кожна `error` критика → finding `look` (error); якщо `critic.py stale` (таймлайн змінився після перевірки) → ще й `critic-stale` (warn), а `look` з файлу лишаються error з приміткою, що перевірка давніша за останню правку. `edit-episode` перед QC запускає `critic.py stale` і при застарілому вердикті — `frame-critic <timeline> all`. QC лишається read-only.
 
 ### 4.7 Ніколи
 
