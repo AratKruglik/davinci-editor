@@ -45,8 +45,9 @@ def changed(old, new):
 
 
 def same_source(a, b):
+    """Resolve's source_end is exclusive for partial items but not for whole clips, so ranges come from lengths."""
     return a.get("clip_id") is not None and a.get("clip_id") == b.get("clip_id") and \
-        a["source_start"] <= b["source_end"] and b["source_start"] <= a["source_end"]
+        a["source_start"] < b["source_start"] + length(b) and b["source_start"] < a["source_start"] + length(a)
 
 
 def shift_at(shifts, frame):
@@ -85,24 +86,22 @@ def match(old, new):
         if owner is not None:
             take(owner, j)
 
-    # shortcut: source frames are read as timeline frames (100% speed); speed-changed cut items shift wrongly
-    steps = set()
+    # shortcut: offsets of blade pieces inside a speed-changed item are read as timeline frames
+    spans = []
     for i, o in enumerate(olds):
-        if o["_role"] not in CUT_ROLES:
-            continue
-        pos, rest = o["source_start"], sum(length(news[j]) for j in pairs.get(i, [])) - length(o)
-        for p in sorted((news[j] for j in pairs.get(i, [])), key=lambda p: p["source_start"]):
-            if gap := p["source_start"] - pos:
-                steps.add((max(o["start"], o["start"] + p["source_start"] - o["source_start"]), -gap))
-                rest += gap
-            pos = p["source_start"] + length(p)
-        if rest:
-            steps.add((o["end"], rest))
-    # shortcut: a clip inserted on A-roll/Screen with no old counterpart adds no step; later items then read as moved
-    shifts, total = [], 0
-    for f, d in sorted(steps):
-        total += d
-        shifts.append((f, total))
+        if o["_role"] in CUT_ROLES:
+            for p in (news[j] for j in pairs.get(i, [])):
+                lo = o["start"] + p["source_start"] - o["source_start"]
+                spans.append((lo, lo + length(p), p["start"] - lo))
+    # an old frame takes the observed shift of the cut-track piece over it, or of the next piece after a gap;
+    # where A-roll and Screen overlap, the first one wins so a synced cut counts once
+    shifts, covered = [], None
+    for lo, hi, shift in sorted(spans):
+        if covered is None or hi > covered:
+            frame = min([lo] + [r["start"] for r in olds]) if covered is None else covered
+            if shift != (shifts[-1][1] if shifts else 0):
+                shifts.append((frame, shift))
+            covered = hi if covered is None else max(covered, hi)
 
     def same_text(o, n):
         return o.get("fusion") is not None and n.get("fusion") is not None and o["fusion"].get("text") == n["fusion"].get("text")
@@ -152,13 +151,15 @@ def diff(old, new, ledger):
             if delta:
                 emit("cut_changed", n, item_id, delta)
         else:
-            off = n["start"] - (o["start"] + shift_at(shifts, o["start"]))
+            # a head trim moves the start but not the content: measure where the new first frame sat in the old timeline
+            was = o["start"] + (n["source_start"] - o["source_start"] if o.get("clip_id") is not None else 0)
+            off = n["start"] - (was + shift_at(shifts, was))
             if abs(off) > 1:
                 emit("moved", n, item_id, off)
             # audio linked to a cut clip gets trimmed with it; that is the cut, not a retime
             if delta and (o["_kind"] != "audio" or o.get("clip_id") not in cut_clips):
                 emit("retimed", n, item_id, delta)
-        if (o["_kind"], o["_index"]) != (n["_kind"], n["_index"]):
+        if o["_track"] != n["_track"]:
             emit("track_changed", n, item_id, n["_track"])
         if o.get("fusion") and n.get("fusion") and o["fusion"].get("text") != n["fusion"].get("text"):
             emit("text_changed", n, item_id, n["fusion"].get("text"))
@@ -227,7 +228,7 @@ def selftest():
         return sorted((e["type"], e["item_id"]) for e in events)
 
     new = cut48()
-    assert ripple_shift(base, new) == [(90128, -48)]
+    assert ripple_shift(base, new) == [(90080, -48)]
     events = diff(base, new, ledger)
     assert kinds(events) == [("cut_changed", "a1")], events
     over_a1, over_cut = deepcopy(base), deepcopy(new)
@@ -235,8 +236,57 @@ def selftest():
     tracks(over_cut)["Titles"].append(title("t0", 90092, "Нуль"))
     assert kinds(diff(over_a1, over_cut, ledger)) == [("cut_changed", "a1")]
     head = deepcopy(base)
-    tracks(head)["A-roll"][0].update(start=90000, end=90152, source_start=48)
-    assert ripple_shift(base, head) == [(90048, -48)]
+    tracks(head)["B-roll"].clear()
+    for first in (tracks(head)["A-roll"], tracks(head, "audio")["Voice"]):
+        first[0].update(end=90152, source_start=48)
+        for it in first[1:]:
+            it.update(start=it["start"] - 48, end=it["end"] - 48)
+    for it in tracks(head)["Titles"]:
+        it.update(start=it["start"] - 48, end=it["end"] - 48)
+    assert ripple_shift(base, head) == [(90000, -48)]
+    assert kinds(diff(base, head, ledger)) == [("cut_changed", "a1"), ("deleted", "b1")]
+    gap = deepcopy(base)
+    tracks(gap)["A-roll"][1].update(start=90248, source_start=548)
+    assert ripple_shift(base, gap) == [] and kinds(diff(base, gap, ledger)) == [("cut_changed", "a2")]
+    inserted = deepcopy(base)
+    for it in tracks(inserted)["A-roll"][1:] + tracks(inserted, "audio")["Voice"][1:] + tracks(inserted)["Titles"]:
+        it.update(start=it["start"] + 100, end=it["end"] + 100)
+    tracks(inserted)["A-roll"].insert(1, item("new", "c9", 90200, 90300))
+    assert ripple_shift(base, inserted) == [(90200, 100)]
+    assert kinds(diff(base, inserted, ledger)) == [("added_by_user", "new")]
+    bladed = deepcopy(base)
+    for it in (it for t in bladed["tracks"].values() for tr in t for it in tr["items"]):
+        it["source_end"] += 1
+    whole = deepcopy(bladed)
+    a1 = tracks(bladed)["A-roll"][0]
+    tracks(bladed)["A-roll"].insert(1, {**deepcopy(a1), "item_id": "a1b", "start": 90100, "source_start": 100})
+    a1.update(end=90100, source_end=100)
+    assert ripple_shift(whole, bladed) == [] and diff(whole, bladed, ledger) == []
+    screen = deepcopy(base)
+    screen["tracks"]["video"].insert(1, {"index": 2, "name": "Screen", "items": [item("s1", "c5", 90000, 90600)]})
+    for i, t in enumerate(screen["tracks"]["video"]):
+        t["index"] = i + 1
+    synced = deepcopy(screen)
+    for first in (tracks(synced)["A-roll"], tracks(synced, "audio")["Voice"]):
+        first[0].update(end=90180, source_end=179)
+        first[1].update(start=90180, end=90360, source_start=520)
+        first[2].update(start=90360, end=90560)
+    s1 = tracks(synced)["Screen"][0]
+    tracks(synced)["Screen"].append({**deepcopy(s1), "item_id": "s1b", "start": 90180, "end": 90560, "source_start": 220})
+    s1.update(end=90180, source_end=179)
+    for it in tracks(synced)["Titles"]:
+        it.update(start=it["start"] - 40, end=it["end"] - 40)
+    assert ripple_shift(screen, synced) == [(90180, -40)]
+    assert {e["type"] for e in diff(screen, synced, ledger)} == {"cut_changed"}
+    assert kinds(diff(base, screen, ledger)) == [("added_by_user", "s1")]
+    shifted = deepcopy(base)
+    shifted["tracks"]["video"].insert(0, {"index": 1, "name": "Backgrounds", "items": []})
+    for i, t in enumerate(shifted["tracks"]["video"]):
+        t["index"] = i + 1
+    assert diff(base, shifted, ledger) == []
+    trimmed = deepcopy(base)
+    tracks(trimmed)["B-roll"][0].update(start=90030, source_start=10)
+    assert kinds(diff(base, trimmed, ledger)) == [("retimed", "b1")]
     pip = deepcopy(base)
     pip["tracks"]["video"].append({"index": 5, "name": "PiP", "items": [item("p1", "c1", 90000, 90100)]})
     pip_cut = deepcopy(pip)
@@ -255,8 +305,9 @@ def selftest():
         items = tracks(new, kind)[first]
         del items[1]
         items[1].update(start=90200, end=90400)
-    tracks(new)["Titles"][2].update(start=90250, end=90300)
-    assert ripple_shift(base, new) == [(90400, -200)]
+    for t in tracks(new)["Titles"]:
+        t.update(start=t["start"] - 200, end=t["end"] - 200)
+    assert ripple_shift(base, new) == [(90200, -200)]
     events = diff(base, new, ledger)
     assert kinds(events) == [("cut_changed", "a2")] and events[0]["value"] == -200, events
 
