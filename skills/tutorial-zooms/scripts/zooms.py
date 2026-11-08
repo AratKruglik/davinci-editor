@@ -77,12 +77,14 @@ def plan(data):
         chained = prev_end is not None and z["start"] - prev_end <= gap_f
         move(z["start"], z["start"] + e, state, target)
         nxt = zooms[i + 1] if i + 1 < len(zooms) else None
+        hold_end = z["end"]
         if nxt and nxt["start"] - z["end"] <= gap_f:
             state, prev_end = target, z["end"]
         else:
             move(z["end"] - e, z["end"], target, rest)
-            state, prev_end = rest, z["end"]
+            state, prev_end, hold_end = rest, z["end"], z["end"] - e
         rows.append({"id": z.get("id", i), "start": z["start"], "end": z["end"], "scale": s,
+                     "full": z["start"] + e, "hold_end": hold_end,
                      "focus": [round(target[1], 3), round(target[2], 3)], "pan_from_previous": chained})
     tools = [{"name": "ZOOM", "id": "Transform", "connect": {"Input": "MediaIn1.Output"},
               "inputs": {"Pivot": {1: 0.5, 2: 0.5}}, "keys": {"Size": keys_size, "Center": keys_center}},
@@ -113,6 +115,7 @@ def selftest():
     assert size["50"] == 1.0 and abs(size["62"] - p["zooms"][0]["scale"]) < 1e-9, size
     assert "140" not in size, "a is chained into b: no zoom-out between them"
     assert p["zooms"][1]["pan_from_previous"] and size["260"] == 1.0 and size["160"] == p["zooms"][0]["scale"]
+    assert [(z["full"], z["hold_end"]) for z in p["zooms"][:2]] == [(1062, 1150), (1172, 1248)], p["zooms"]
     assert any("shorter than 1 s" in w for w in p["warnings"]), p["warnings"]
     assert all(v >= 1.0 for v in size.values())
     for f, c in p["tools"][0]["keys"]["Center"].items():

@@ -52,7 +52,7 @@ def inventory(ledger, dump):
     present = {i.get("item_id") for tracks in dump["tracks"].values() for t in tracks for i in t["items"]}
     elements, notes = [], []
     for entry in ledger["items"]:
-        label = f"{entry['owner']}/{entry['item_id']}"
+        label = f"{entry['owner']}/{entry['item_id']}" + (f"#{entry['part']}" if entry.get("part") is not None else "")
         if entry["item_id"] in present:
             elements.append({**entry, "id": label, "mid": (entry["full"] + entry["hold_end"]) // 2})
         else:
@@ -119,7 +119,7 @@ def check(elements, dump, cfg):
 
     cuts = cut_frames(dump)
     for e in elements:
-        if e["kind"] == "zoom":    # a zoom is the A-roll item itself, so its own boundaries are the cuts
+        if e["kind"] in ("zoom", "pip"):    # the item itself, cut with the Screen sections: its edges are the cuts
             continue
         for edge in (e["start"], e["gone"]):
             near = min(cuts, key=lambda c: abs(c - edge), default=None)
@@ -218,6 +218,7 @@ def selftest():
     r = run([entry("n", full=86700, start=86603)])[0]
     assert kinds(r) == [("near-cut", "fusion-motion-graphics/n")] and r["findings"][0]["severity"] == "warn" and r["verdict"] == "PASS WITH WARNINGS", r
     assert kinds(run([entry("n", start=86610)])[0]) == []
+    assert kinds(run([entry("p", "pip", "", start=86600)])[0]) == [], "a PiP item is cut with its Screen section"
     assert kinds(run([entry("n", start=t0 + 2)])[0]) == [], "the timeline start is not a cut"
     r = run([entry("n", start=86600)])[0]
     assert r["findings"][0]["frame"] == 86600 and r["findings"][0]["tc"] == "01:00:08:08", r["findings"][0]
@@ -237,6 +238,8 @@ def selftest():
     dump = dump_with(["a"])
     elements, notes = inventory({"timeline_id": "tl", "items": [entry("a"), entry("gone-id")]}, dump)
     assert [e["id"] for e in elements] == ["fusion-motion-graphics/a"] and len(notes) == 1 and "gone-id" in notes[0], (elements, notes)
+    elements, _ = inventory({"timeline_id": "tl", "items": [{**entry("a"), "part": "0"}, {**entry("a"), "part": "1"}]}, dump)
+    assert [e["id"] for e in elements] == ["fusion-motion-graphics/a#0", "fusion-motion-graphics/a#1"], elements
 
     r = run([entry("a", hold=2), entry("k", "kinetic", "Привіт", full=87000, hold=0.5)])[0]
     assert sorted(f["id"] for f in r["findings"]) == ["f1", "f2"] and r["state"]["items"]["video"] == 4 and r["timeline_id"] == "tl"

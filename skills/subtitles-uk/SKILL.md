@@ -12,6 +12,7 @@ allowed-tools:
   - "Bash(python3 *subtitles.py *)"
   - "Bash(python3 *timeline_map.py *)"
   - "Bash(python3 *tc.py *)"
+  - "Bash(python3 *placed.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -71,10 +72,26 @@ On a vertical timeline (from `shorts-cutdown`). Style: 2–4 words in `${user_co
    `python3 ${CLAUDE_SKILL_DIR}/scripts/subtitles.py fusion "<captions>" --item-start <item.GetStart()> --comp-start <comp start> --width <w> --height <h> --font … --style … --text … --accent … --out "<work>/shorts/<short>-captions-spec.json"`
    Apply with the Fusion builder (`resolve-core/reference.md#fusion-builds-from-a-spec`), in batches of ~40 tools per call. The highlight uses Text+ **Write On** (`Start`/`End`) on an accent copy of the phrase, so both layers share one layout. First build: check those input ids with `GetInputList()`; if Text+ has no usable Write On inputs in this build, rebuild with `--no-highlight` (phrase pop without the word highlight) and tell the user why.
 5. Verify on stills at three captions: text inside the frame, highlight on the right word, no caption over the face (move `spot` up or down if it is, and say so).
+6. Record the captions in the ledger `frame-critic` reads: `tl.GetUniqueId()` and the comp's `item.GetUniqueId()`, then every group of `<short>-captions.json` as one part (`--part` = its index from 0; its `start` / `end` are timeline frames and the caption is fully on for all of it). Drop the item first, so a rebuild with other groups leaves no old parts; one Bash call, chained with `&&`:
+   ```bash
+   python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py drop "<work>/placed-<timeline>.json" --item-id <item id> && \
+   python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py add "<work>/placed-<timeline>.json" --timeline-id <tl id> --item-id <item id> --owner subtitles-uk --kind caption --track Titles --part <n> \
+     --start <start> --end <end> --full <start> --hold-end <end> --gone <end> --spec "<work>/shorts/<short>-captions-spec.json" --text="<group text>" && …
+   ```
 
 ## 5. Finish
 
 Save. Report: cues / captions, fixes applied, fast-speech spots, file paths, what's on the timeline. Next: `deliver` (SRT as a separate file for the main video, captions burned into the Short by being on Titles).
+
+`shorts` mode: then run `frame-critic <timeline> subtitles-uk` on the Short. When `shorts-cutdown` called this skill, skip it: that skill runs the critic once for the whole Short.
+
+## 6. Fix from frame-critic (`shorts`)
+
+`frame-critic` hands over findings whose `fix.skill` is `subtitles-uk`: element id (`subtitles-uk/<item_id>#<n>`), kind, TC, message and `fix.change` (words per caption, a line break, a caption's duration).
+
+1. Change only what `fix.change` names: re-run `subtitles.py captions` with another `--max-words` / `--max-chars`, or edit those groups in `<short>-captions.json` (split a group, move a boundary to a word edge); never change the words themselves. Then `subtitles.py fusion` again.
+2. Re-apply on the same comp, never by hand in Resolve: the builder as in §4 step 4, stills (step 5), and re-record every group (step 6: drop, then every part, since the indices may shift).
+3. Return the element ids of the changed captions (after a regrouping, every caption of that Short) so the critic re-checks them with `check --changed`. A fix you can't apply stays open: say which and why.
 
 ## Never
 

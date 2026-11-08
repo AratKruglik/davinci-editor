@@ -12,6 +12,7 @@ allowed-tools:
   - "Bash(python3 *loudness.py *)"
   - "Bash(python3 *chapters.py *)"
   - "Bash(python3 *tc.py *)"
+  - "Bash(python3 *critic.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -41,7 +42,9 @@ This skill only looks. It doesn't trim, delete, relink or move anything: every f
 ## 2. Checks in Resolve
 
 - **Grades:** on every A-roll / B-roll / Screen item, `GetCurrentVersion()` is the remote `claude` version (or the user's own grade). An item on `versionName` "" with no grade → finding `ungraded`.
-- **Looks:** stills at 0 %, 25 %, 50 %, 75 %, the last second, and the middle of every Fusion title (`fusion_comps` > 0 in the dump): `tl.ExportFrame(frame - tl.GetStartFrame(), {"outputType": "file", "filePath": "<work>/qc/<n>.png", "maxDimension": 1280})` from `run_script` (21.1.2, `resolve-core` §10: the finished composite with grade, every track and titles; the user's playhead stays put), check `success`, Read them. Older Resolve: `tl.SetCurrentTimecode`, `project.ExportCurrentFrameAsStill("<work>/qc/<n>.tif")`. Look for: a missing font (boxes or a fallback face), text outside the safe area, a frame that is still log-flat or wildly off in color, a PiP covering a title.
+- **Looks** come from `frame-critic`, not from stills here: `<work>/critic-<timeline>.json`. No ledger `<work>/placed-<timeline>.json` either → no skill placed anything to judge: no finding. Ledger but no critic file → finding `critic-stale` (warn, "no frame-critic check; run `frame-critic <timeline>`"). Present →
+  `python3 ${CLAUDE_SKILL_DIR}/../frame-critic/scripts/critic.py stale "<work>/critic-<timeline>.json" "<dump>"`
+  exit 1 (the timeline changed since the check) → finding `critic-stale` (warn, with its `checked_at`), and its findings don't count. Exit 0 → each finding left in it with severity `error` becomes a finding `look` (error) with its `tc` and message plus the owner and change from its `fix`.
 - **Subtitles / chapters** (`youtube`): `<work>/subtitles/<timeline>.uk.srt` exists and is newer than the last edit (else finding `subtitles-stale`); `<work>/chapters.json` passes `python3 ${CLAUDE_SKILL_DIR}/../chapters-markers/scripts/chapters.py check …` with the current duration.
 - **Loudness:** if `audio-finish` measured this timeline after the last audio change, reuse its numbers (say from when). Otherwise run its §4 measurement exactly as written there (record and restore the render format, add only your own audio-only job, delete only that job) and
   `python3 ${CLAUDE_SKILL_DIR}/../audio-finish/scripts/loudness.py measure "<work>/audio/mix-check.wav" --target ${user_config.loudness_target_lufs} --ceiling ${user_config.true_peak_db}`.
@@ -49,7 +52,7 @@ This skill only looks. It doesn't trim, delete, relink or move anything: every f
 
 Record every finding from this section in the same file, so `deliver` gates on one verdict:
 `python3 ${CLAUDE_SKILL_DIR}/scripts/qc.py add "<work>/qc-<timeline>.json" --severity error|warn|info --kind <kind> --message "<text>" [--tc <TC>]`
-(kinds: `ungraded`, `look`, `subtitles-stale`, `chapters`, `loudness`). Never edit the JSON by hand.
+(kinds: `ungraded`, `critic-stale`, `look`, `subtitles-stale`, `chapters`, `loudness`). Never edit the JSON by hand.
 
 ## 3. Report
 
@@ -59,7 +62,7 @@ Write `<work>/qc-<timeline>.md` and show it:
 
 | # | severity | TC | track | problem | suggested fix (who) |
 
-Fix suggestions name the owner: black / flash frame / dropout → trim or extend in the edit (user, or `text-based-cut` again); offline → relink in the media pool (user); empty tracks → `track-layout cleanup`; open markers → the skill of that color (`marker-edit`); loudness → `audio-finish`; stale subtitles → `subtitles-uk`.
+Fix suggestions name the owner: black / flash frame / dropout → trim or extend in the edit (user, or `text-based-cut` again); offline → relink in the media pool (user); empty tracks → `track-layout cleanup`; open markers → the skill of that color (`marker-edit`); loudness → `audio-finish`; stale subtitles → `subtitles-uk`; `critic-stale` → `frame-critic`; `look` → the skill in the critic's `fix.skill`.
 
 Put a Cream marker on each error with a frame (`customData` `claude:qc:<kind>`, name = kind, note = the message), offset by one frame if a user marker sits there. Remove Cream `claude:qc:*` markers from a previous QC run only after the user agrees (the guard will ask; name them).
 

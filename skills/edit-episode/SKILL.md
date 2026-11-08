@@ -1,6 +1,6 @@
 ---
 name: edit-episode
-description: Orchestrates a full episode edit in DaVinci Resolve Studio 21+ in a fixed order with an approval stop after every step - A) project and color before the cut (project-bootstrap, log-to-rec709, chart-match, natural-skin-grade, depth-background-blur), B) transcript, track layout, text-based rough cut, camera + screen PiP and J/L split edits (split-edits), C) sound (voice-isolation, sound-design, audio-finish), D) graphics, zooms, subtitles, chapters, Shorts, thumbnails, QC and delivery (fusion-motion-graphics, tutorial-zooms, subtitles-uk, chapters-markers, shorts-cutdown, thumbnail-frames, pre-delivery-qc, deliver); each stage starts from the user's colored markers and the progress is kept in episode.md so a later session can resume.
+description: Orchestrates a full episode edit in DaVinci Resolve Studio 21+ in a fixed order with an approval stop after every step - A) project and color before the cut (project-bootstrap, log-to-rec709, chart-match, natural-skin-grade, depth-background-blur), B) transcript, track layout, text-based rough cut, camera + screen PiP and J/L split edits (split-edits), C) sound (voice-isolation, sound-design, audio-finish), D) graphics, zooms, subtitles, chapters, Shorts, thumbnails, QC and delivery (fusion-motion-graphics, tutorial-zooms, subtitles-uk, chapters-markers, shorts-cutdown, thumbnail-frames, frame-critic after each step that places elements, pre-delivery-qc, deliver); each stage starts from the user's colored markers and the progress is kept in episode.md so a later session can resume.
 when_to_use: User invokes /edit-episode to run the whole pipeline on a new shoot or to resume it.
 argument-hint: "[episode name] [from-stage A|B|C|D]"
 arguments: [episode, from_stage]
@@ -72,6 +72,8 @@ Picture and sound of the episode are locked now: lock A-roll, B-roll and Voice (
 6. `thumbnail-frames` — Lemon markers → `thumbnail-brief.md`.
 7. `track-layout cleanup` (empty tracks, after confirmation), then `pre-delivery-qc` on the episode and on every Short. Errors go back to the step that owns them.
 8. `deliver all`.
+
+`frame-critic` checks what steps 1 (graphics), 2 (screen zooms) and 5 (each Short) placed: the owner skill runs it once at its end, so don't run it again. Its findings and fixes are part of that step's approval stop: the fix rounds go back to the owner only after the user's yes, before the next step. Record the critic verdict and what stayed open in `episode.md`.
 
 Approval: the user watches the graphics and zooms in context, reads the chapter list, and picks the Shorts and thumbnail before rendering.
 

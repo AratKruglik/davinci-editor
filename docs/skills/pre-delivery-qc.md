@@ -63,7 +63,8 @@ Severity: **error** = will be visible or audible in the render; **warn** = proba
 | `open-marker`, `claude-marker` | see above | warn, info |
 | `settings` | timeline size or fps doesn't match the delivery format | error |
 | `ungraded` | an A-roll / B-roll / Screen item without the remote `claude` version or your own grade | set by Claude |
-| `look` | stills at 0 %, 25 %, 50 %, 75 %, the last second and the middle of every Fusion title: a missing font (boxes or a fallback face), text outside the safe area, a frame still log-flat or wildly off in color, a PiP covering a title | set by Claude |
+| `critic-stale` | graphics, zooms, captions or PiP were placed by a skill, but `frame-critic` hasn't checked them, or checked them before the last edit: run `frame-critic` | warn |
+| `look` | an `error` that `frame-critic` left open (cut-off text, a covered face, a short hold…), with the owner skill and the change it suggests | error |
 | `subtitles-stale` | (`youtube`) the SRT is missing or older than the last edit | set by Claude |
 | `chapters` | (`youtube`) `chapters.json` fails the `chapters-markers` check against the current duration | set by Claude |
 | `loudness` | integrated loudness more than ±1 LU off `loudness_target_lufs`, or a peak over `true_peak_db` | error |
@@ -91,15 +92,15 @@ All under `<work_dir>/<project>/`:
 | `timeline-<timeline>.json` | dump of the checked timeline |
 | `qc-<timeline>.json` | every finding, the `verdict` and the timeline `state` (end frame, item counts) it checked; read by `deliver` |
 | `qc-<timeline>.md` | the report shown to you |
-| `qc/<n>.png` | stills for the look check (`.tif` on Resolve before 21.1.2) |
+| `critic-<timeline>.json` | read only: the `frame-critic` verdict and its open findings |
 | `audio/mix-check.wav` | mixdown for the loudness measurement, only when it is measured anew |
 | `subtitles/<timeline>.uk.srt`, `chapters.json` | read only, for the `youtube` checks |
 
 ## Workflow and approval stops
 
 1. Dumps the timeline and runs the timeline checks against the expected format (`qc.py check`).
-2. Checks grades, exports and looks at the stills, checks subtitles and chapters (`youtube`), measures or reuses loudness. Each finding goes into the same `qc-<timeline>.json` through `qc.py add`, never by editing the JSON by hand.
-3. Writes and shows the report: verdict and counts, then `# | severity | TC | track | problem | suggested fix (who)`. Fixes name their owner: black / flash frame / dropout → trim or extend in the edit (you, or `text-based-cut` again); offline → relink in the Media Pool (you); empty tracks → `track-layout cleanup`; open markers → the skill of that color (`marker-edit`); loudness → `audio-finish`; stale subtitles → `subtitles-uk`.
+2. Checks grades, reads the `frame-critic` verdict, checks subtitles and chapters (`youtube`), measures or reuses loudness. Each finding goes into the same `qc-<timeline>.json` through `qc.py add`, never by editing the JSON by hand.
+3. Writes and shows the report: verdict and counts, then `# | severity | TC | track | problem | suggested fix (who)`. Fixes name their owner: black / flash frame / dropout → trim or extend in the edit (you, or `text-based-cut` again); offline → relink in the Media Pool (you); empty tracks → `track-layout cleanup`; open markers → the skill of that color (`marker-edit`); loudness → `audio-finish`; stale subtitles → `subtitles-uk`; `critic-stale` → `frame-critic`; `look` → the skill the critic named.
 4. Puts Cream markers on the errors.
 5. **Question: old QC markers.** Cream `claude:qc:*` markers from a previous run are removed only after you agree, named one by one.
 
@@ -109,7 +110,7 @@ All under `<work_dir>/<project>/`:
 
 It is read-only. It never trims, deletes, relinks or moves anything, and never changes items, tracks, settings or your markers. The only things it writes:
 
-- reports in the work folder (`qc-<timeline>.json`, `qc-<timeline>.md`, the look stills and, when measuring loudness, the mixdown);
+- reports in the work folder (`qc-<timeline>.json`, `qc-<timeline>.md` and, when measuring loudness, the mixdown);
 - Cream markers on the errors;
 - a temporary audio-only render job for loudness, which it deletes again, restoring the render format.
 

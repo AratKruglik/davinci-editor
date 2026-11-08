@@ -12,6 +12,7 @@ allowed-tools:
   - "Bash(python3 *zooms.py *)"
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *timeline_map.py *)"
+  - "Bash(python3 *placed.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -51,12 +52,19 @@ Build, per item (all zooms on one item go into one comp):
    It eases in and out (`inout` cubic), keeps the scaled image covering the frame (focus clamped near edges), and chains zooms closer than 1 s into a pan. Report its warnings.
 3. Apply the spec with the Fusion builder (`resolve-core/reference.md#fusion-builds-from-a-spec`): `MediaIn1 → ZOOM (Transform) → MediaOut1`. The zoom lives inside the comp, so the clip's Inspector transform (PiP layout from `dual-video-sync-pip`) stays as it is; check the PiP still sits right after the first build.
 4. Verify each zoom: stills (same `tl.ExportFrame` call) at its middle and 1 s after its end, Read them: the element is centered and readable, no black edge, back to full frame afterwards. Fusion on 4K screen recordings is heavy: offer `item.SetFusionOutputCache("Auto")` for smooth playback.
+5. Record the item's zooms in the ledger `frame-critic` reads: `tl.GetUniqueId()`, `item.GetUniqueId()` and the item's track name, then every row of the spec's `zooms` as one part (its frames are timeline frames; `full` = start + ease, `hold_end` = end − ease, or the end when it pans on to the next zoom). Drop the item first, so a rebuild with fewer zooms leaves no old parts; one Bash call, chained with `&&`:
+   ```bash
+   python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py drop "<work>/placed-<timeline>.json" --item-id <item id> && \
+   python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py add "<work>/placed-<timeline>.json" --timeline-id <tl id> --item-id <item id> --owner tutorial-zooms --kind zoom --track "<track name>" --part "<row id>" \
+     --start <row start> --end <row end> --full <row full> --hold-end <row hold_end> --gone <row end> --scale <row scale> --spec "<work>/zooms/<item>-spec.json" && …
+   ```
 
 **MotionVFX zoom (only when the user asks for it, Resolve 21.1.2+).** The `mHowTo Zoom` effect instead of the Transform route, on a media item only:
 1. Id from `resolve.GetEffectsList("video")` (name `mHowTo Zoom`); not installed → say so and use the Transform route. An item whose `GetEffects("fusion")` comps already have `FindTool("mHowTo_Zoom")` → from an earlier run: set its inputs, don't add a second one.
 2. `fx = item.AddEffect("fusion", id)`, `macro = fx.GetFusionComp().FindTool("mHowTo_Zoom")`. Inputs (verified, `resolve-core/reference.md`): `Input4` Zoom Scale, `Input3` Movement Target `{1: x, 2: y}`, `Input5`/`Input6` ease in/out. `SetInput`, re-read `GetInput`.
 3. Unverified, so probe on the first zoom: the unit of Zoom Scale (default 0.3, not the skill's scale factor, so `zoom_max_scale` can't be applied as a number), the origin of Movement Target, and the timing (the effect sits on the whole item, so the move follows the macro, not the zoom range or chaining). Export stills at the item's start, middle and end, show them, and do the rest only after the yes.
 4. Undo: `item.DeleteEffects([fx])` (guarded). Record the item's effects before the change in `zooms-before.json`.
+5. Not recorded in the ledger: the effect's scale unit and timing are unverified, so the critic would have nothing true to check.
 
 ## 2. Punch-ins (`punch-in`)
 
@@ -68,9 +76,21 @@ Hides jump cuts in a talking head: segments between the Cream `cut` markers of `
 
 Show the list of items that change before applying; apply after the yes.
 
+Punch-ins are not recorded in the ledger: they reframe the A-roll itself at the configured `${user_config.punch_in_scale}`, nothing is placed over the picture.
+
 ## 3. Finish
 
 Mark handled Pink markers `claude:done:tutorial-zooms:<date>`. Save. Report: zooms built (TC, what, scale), items skipped and why, punch-in items, stills to look at, how to undo (`zooms-before.json`; Fusion comps and MotionVFX effects named in the report). Suggest a soft whoosh on big zooms only if `sound-design` runs again (never on every zoom).
+
+Then, after screen zooms, run `frame-critic <timeline> tutorial-zooms`.
+
+## 4. Fix from frame-critic
+
+`frame-critic` hands over findings whose `fix.skill` is `tutorial-zooms`: element id (`tutorial-zooms/<item_id>#<zoom id>`), kind, TC, message and `fix.change` (a scale at most `${user_config.zoom_max_scale}`, a zoom center away from the edge).
+
+1. In `<work>/zooms/<item>.json` change only that zoom (`scale`, or `region` from the same still), re-run `zooms.py plan` and report its warnings.
+2. Re-apply on the same item, never by hand in Resolve: rebuild the `ZOOM` keys (§1 build step 3), verify (step 4), re-record the item (step 5: drop, then every row).
+3. Return the element ids of the zooms you changed so the critic re-checks them with `check --changed`. A fix you can't apply stays open: say which and why.
 
 ## Never
 

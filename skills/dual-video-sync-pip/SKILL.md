@@ -13,6 +13,7 @@ allowed-tools:
   - "Bash(python3 *catalog.py *)"
   - "Bash(python3 *tc.py *)"
   - "Bash(python3 *split_edits.py *)"
+  - "Bash(python3 *placed.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -97,6 +98,11 @@ Show the plan (sections with timecodes, mode, duration; layout) and get a yes. B
 4. Screen items keep full frame; if the recording's aspect differs (16:10 Mac screens), the timeline's scaling setting handles it — mention black bars or crop to the user.
 5. Load the remote `claude` grade on PiP items (`resolve-core` §7): they are the same camera clips.
 6. `track-layout recolor`, save the project.
+7. Record every PiP item in the ledger `frame-critic` reads, with its real place on the timeline: `tl.GetUniqueId()`, and per item `GetUniqueId()`, `GetStart()`, `GetEnd()` (return them from the step 2 append script, or read the PiP track back). A PiP is fully on screen for its whole segment. One Bash call, chained with `&&`:
+   ```bash
+   python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py add "<work>/placed-<timeline>.json" --timeline-id <tl id> --item-id <item id> --owner dual-video-sync-pip --kind pip --track "<PiP track name>" \
+     --start <GetStart> --end <GetEnd> --full <GetStart> --hold-end <GetEnd> --gone <GetEnd> --spec "<work>/pip-plan.json" && …
+   ```
 
 ## 6. Optional: MotionVFX placeholder
 
@@ -105,6 +111,16 @@ If the user wants a styled frame instead of a plain corner: `python3 ${CLAUDE_SK
 ## 7. Report
 
 Pairs and offsets, sections placed per mode (count, total duration), parts without screen recording, layout values, what to check by eye (lip sync on the screen's mouse clicks, PiP not covering important UI).
+
+Then run `frame-critic <timeline> dual-video-sync-pip`.
+
+## 8. Fix from frame-critic
+
+`frame-critic` hands over findings whose `fix.skill` is `dual-video-sync-pip`: element id (`dual-video-sync-pip/<item_id>`), kind, TC, message and `fix.change` (another corner or size).
+
+1. Change only `layout` / `pip_size` in `<work>/pip-input.json` and re-run `pip_plan.py` for the new `pip_properties`. The sections and frames stay as they are.
+2. Re-apply on the named PiP items only, never by hand in Resolve: `SetProperties` with the new values, `GetProperties()` to compare, a still of the first one (§5 step 3). A different corner for one section only: say that the layout then changes inside the video, and ask.
+3. The item ids and frames don't change, so the ledger stays right. Return the element ids so the critic re-checks them with `check --changed`. A fix you can't apply stays open: say which and why.
 
 ## Never
 

@@ -37,13 +37,13 @@ The critic looks at what the skills placed and says what is wrong, with numbers 
 4. ```bash
    python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py inventory "<work>/placed-<timeline>.json" "<work>/timeline-<timeline>.json" --out "<work>/critic/elements.json"
    ```
-   Each element has `id` (`<owner>/<item_id>`), `kind` (`lower-third`, `callout`, `kinetic`, `counter`, `zoom`, `caption`, `pip`), `owner`, `spec`, `track`, `text`, `scale` and absolute frames `start`, `full` (fully in), `mid`, `hold_end`, `gone`, `end`. Report its `notes` (ledger entries no longer on the timeline). Items that are not in the ledger belong to the user (`owner: user`): never measure, judge or report them.
+   Each element has `id` (`<owner>/<item_id>`, or `<owner>/<item_id>#<part>` for one of several elements inside one item: the captions of a Short's comp, the zooms of one clip), `kind` (`lower-third`, `callout`, `kinetic`, `counter`, `zoom`, `caption`, `pip`), `owner`, `spec`, `track`, `text`, `scale` and absolute frames `start`, `full` (fully in), `mid`, `hold_end`, `gone`, `end`. Report its `notes` (ledger entries no longer on the timeline). Items that are not in the ledger belong to the user (`owner: user`): never measure, judge or report them.
 5. ```bash
    python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py check "<work>/critic/elements.json" "<work>/timeline-<timeline>.json" \
      --zoom-max ${user_config.zoom_max_scale} --cps-max ${user_config.subtitle_max_cps} --chars-max ${user_config.subtitle_max_chars} \
      [--rules <numeric rules file>] [--changed <element id> ...] --out "<work>/critic-<timeline>.json"
    ```
-   It writes the timeline `state`, the findings and the `verdict`. A new critic run calls `check` without `--changed`: it starts at round 1 and drops every earlier finding. Only the re-check after an owner fix (§4) passes `--changed`. Kinds: `short-hold` (fully visible less than 0.5 s + characters / 14, at least 3 s for a lower third), `overlap` (two text elements on screen at once; a callout may sit over another title), `near-cut` (an edge closer than 6 frames to an A-roll / Screen cut), `zoom-scale`, `cps`, `chars`. Pass `--rules` only when `edit-memory` has numeric rules (`hold_extra_s`, `max_scale`) for these owners.
+   It writes the timeline `state`, the findings and the `verdict`. A new critic run calls `check` without `--changed`: it starts at round 1 and drops every earlier finding. Only the re-check after an owner fix (§4) passes `--changed`. Kinds: `short-hold` (fully visible less than 0.5 s + characters / 14, at least 3 s for a lower third), `overlap` (two text elements on screen at once; a callout may sit over another title), `near-cut` (an edge closer than 6 frames to an A-roll / Screen cut; not for zooms and PiP, whose edges are those cuts), `zoom-scale`, `cps`, `chars`. Pass `--rules` only when `edit-memory` has numeric rules (`hold_extra_s`, `max_scale`) for these owners.
 
 The numbers always run on every element, because an overlap needs all of them. `$scope` limits §2 and §3 to that owner's elements.
 
@@ -51,7 +51,7 @@ The numbers always run on every element, because an overlap needs all of them. `
 
 For every text element (`lower-third`, `callout`, `kinetic`, `counter`, `caption`) on a video track, at its `full` frame:
 
-1. One `run_script` per element ([reference.md](reference.md#measure-one-element)): record `GetIsTrackEnabled` of every video track, `ExportFrame` the full composite to `<work>/critic/<item_id>-on.tif`, disable only the element's track, `ExportFrame` to `<item_id>-off.tif`, restore the recorded state in `finally` and read it back. Offset = frame − `tl.GetStartFrame()`; `maxDimension` 0. Resolve writes with the Mac path, the shell reads with its own (`resolve-core` §8). Check both `success` and `restored`. `ExportFrame` needs 21.1.2 (`resolve-core` §10): on older Resolve skip this level, say so, and rely on §3.
+1. One `run_script` per element ([reference.md](reference.md#measure-one-element)): record `GetIsTrackEnabled` of every video track, `ExportFrame` the full composite to `<work>/critic/<name>-on.tif` (`<name>` = `<item_id>`, plus `-<part>` when the element has one), disable only the element's track, `ExportFrame` to `<name>-off.tif`, restore the recorded state in `finally` and read it back. Offset = frame − `tl.GetStartFrame()`; `maxDimension` 0. Resolve writes with the Mac path, the shell reads with its own (`resolve-core` §8). Check both `success` and `restored`. `ExportFrame` needs 21.1.2 (`resolve-core` §10): on older Resolve skip this level, say so, and rely on §3.
 2. `python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py bbox "<on.tif>" "<off.tif>"` → the bounds of what the element adds to the frame and their `kinds` (`offscreen` error: touches the frame edge; `unsafe` error: outside action-safe 5 %; `unsafe-title` warn: outside title-safe 10 %). `bbox` null: nothing of the element renders at that frame (covered by an upper track or entirely off frame); record it as `offscreen` and look at the frame in §3.
 3. Compare the boxes of elements visible at the same frame (a callout over another title is allowed in time, not on top of it): intersecting boxes → `overlap` (error).
 
@@ -60,7 +60,7 @@ A track holds one item per frame, so the difference is that one element. If the 
 Record each finding with the bounds as evidence and a fix for the owner (§4):
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py add "<work>/critic-<timeline>.json" --severity error|warn --kind <kind> --element "<id>" \
-  --tc <TC of the frame> --frame <frame> --message "<what is wrong, in numbers>" --still "critic/<item_id>-on.tif" --bbox x0 y0 x1 y1 \
+  --tc <TC of the frame> --frame <frame> --message "<what is wrong, in numbers>" --still "critic/<name>-on.tif" --bbox x0 y0 x1 y1 \
   --fix-skill <owner> --fix-change "<concrete spec change>"
 ```
 Never edit the JSON by hand: only `check` and `add` write findings.

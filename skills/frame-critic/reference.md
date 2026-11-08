@@ -28,8 +28,8 @@ One script per element, at the element's `full` frame (absolute). It records the
 TIMELINE_ID = "<timeline_id from the dump>"
 FRAME = 0          # element "full", absolute timeline frame
 TRACK = 0          # video track index of the element (from the dump, by its track name)
-ON = "<mac work>/critic/<item_id>-on.tif"
-OFF = "<mac work>/critic/<item_id>-off.tif"
+ON = "<mac work>/critic/<name>-on.tif"
+OFF = "<mac work>/critic/<name>-off.tif"
 
 project = resolve.GetProjectManager().GetCurrentProject()
 tl = project.GetCurrentTimeline()
@@ -59,7 +59,7 @@ Check `on["success"]`, `off["success"]` and `restored`. `ExportFrame` returns `{
 Then, on the shell side:
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py bbox "<sandbox work>/critic/<item_id>-on.tif" "<sandbox work>/critic/<item_id>-off.tif"
+python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py bbox "<sandbox work>/critic/<name>-on.tif" "<sandbox work>/critic/<name>-off.tif"
 ```
 
 It prints `{"bbox": [x0, y0, x1, y1] | null, "width", "height", "kinds": [[kind, severity], ...]}` in pixels of the render: `offscreen` (touches the frame edge, error), `unsafe` (outside the 5 % action-safe margin, error), `unsafe-title` (outside the 10 % title-safe margin, warn). `null` means nothing changed between the renders: the element is invisible at that frame.

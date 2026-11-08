@@ -12,6 +12,7 @@ allowed-tools:
   - "Bash(python3 *motion.py *)"
   - "Bash(python3 *catalog.py *)"
   - "Bash(python3 *tc.py *)"
+  - "Bash(python3 *placed.py *)"
   - "Read"
 hooks:
   PreToolUse:
@@ -67,6 +68,13 @@ Show the plan before building: `# | TC | kind | anim | text | duration | route (
 5. Item length is the user's *Standard generator duration* preference. Fusion compositions and titles have no handles, so `SetRightOffset` returns `False` on them (only media items can be trimmed). The animation fades out at `visible[1]`, so a longer item is just transparent. If the hold needs more than the item length, tell the user to raise the preference (Preferences → User → Editing) or trim by hand; never shorten the hold to fit.
 6. Apply the spec with the builder in `resolve-core/reference.md` (Fusion builds from a spec). First build of the session: discover the comp's start frame and the Text+ / Transform / Merge input ids (`tool.GetInputList()`), as listed under runtime discovery there, and pass `--comp-start` accordingly; the Text+ box behind the text uses shading element 3 (`Enabled3`, `Alpha3`, `ExtendHorizontal3`…), check those ids exist. A different id → adjust the spec and say so.
 7. Verify every graphic: export stills at `visible[0] + in` (fully in) and `visible[1]` (gone), Read them. Use `tl.ExportFrame` (it renders all tracks and Fusion titles; `item.ExportFrame` only works on media items) at timeline offset `item.GetStart() + (comp_frame - comp_start) - tl.GetStartFrame()`; older Resolve: playhead there + `ExportCurrentFrameAsStill`. For any `--anim` but `slide` also export `visible[0] + in // 2` (mid-intro), which must show the effect working: `scramble` different letters, `word-grow` later words smaller, `fade-reveal` the lower part of the text hidden, `spin` a line turned toward edge-on, `pop` the text larger, `swipe-down` the text higher; for `flicker` compare two frames one step apart (one with text, one without). `scramble` can also be read without a still: the modifier's `ScrambledText` output (`txt.StyledText.GetConnectedOutput().GetTool().GetOutputList()`, `.GetValue(frame)`) differs from the phrase mid-intro and equals it at the hold. Check: Cyrillic glyphs render in the brand font (no boxes, no fallback font), text inside the action-safe area, plate behind the whole text, nothing covers the face or the demo, alpha 0 at the end.
+8. Record every graphic that passed step 7 in the ledger `frame-critic` reads. Take `tl.GetUniqueId()`, `item.GetUniqueId()`, `item.GetStart()`, `item.GetEnd()` and the name of the track it landed on (`Titles` or `Titles 2`) from the step 4 script's result, or read them back from the item. From the spec, with `start` = `item.GetStart()`: `full = start + (visible[0] - comp_start) + timing_frames.in`, `gone = start + (visible[1] - comp_start)`, `hold_end = gone - timing_frames.out`.
+   ```bash
+   python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py add "<work>/placed-<timeline>.json" --timeline-id <tl id> --item-id <item id> \
+     --owner fusion-motion-graphics --kind <spec kind> --track "<track name>" --start <start> --end <item.GetEnd()> \
+     --full <full> --hold-end <hold_end> --gone <gone> --spec "<work>/graphics/<n>.json" --text="<text> <sub>"
+   ```
+   `--text=` carries both lines joined by a space (reading time counts them); for a counter, the final number. A MotionVFX title (§2) has no spec: record it without `--spec`, with `--full` = start and `--hold-end` = `--gone` = `item.GetEnd()`, since its timing is the template's own.
 
 Counter: the number is driven by a Fusion expression on `StyledText`; read `GetInput("StyledText", t)` at the start and end of the count to confirm it runs.
 
@@ -96,6 +104,16 @@ Animations (`--anim`; default `${user_config.brand_text_anim}`, a marker note ma
 ## 5. Finish
 
 `track-layout recolor`, restore the locks, save. Mark handled Cyan / Blue markers `claude:done:fusion-motion-graphics:<date>`. Report the table with the final TCs, any graphic that needs a longer generator duration, and the stills to look at. Suggest `sound-design` for whooshes on titles (2–4 frames before they appear).
+
+Then run `frame-critic <timeline> fusion-motion-graphics` on the graphics just placed. When `shorts-cutdown` asked for the title, skip it: that skill runs the critic once for the whole Short.
+
+## 6. Fix from frame-critic
+
+`frame-critic` hands over findings whose `fix.skill` is `fusion-motion-graphics`: element id (`fusion-motion-graphics/<item_id>`), kind, TC, message and `fix.change`, a concrete spec change (`--hold-s 4`, `--at 0.85 0.15`, a line break or a shorter `--text` / `--sub` with the pixels to win).
+
+1. Find the graphic in `<work>/placed-<timeline>.json` by its item id; its `spec` is `<work>/graphics/<n>.json`. Re-run `motion.py build` (§3 step 3) with the same arguments, changing only what `fix.change` names. A line break is typography; different words change the user's text, so ask first, and a no leaves the finding open.
+2. Re-apply only those graphics, never by hand in Resolve: the new spec onto the same item with the builder (§3 step 6; a hold beyond the item length follows step 5), then the stills of step 7 and the ledger record of step 8 (same item id, new frames). A timing fix (`near-cut`, move by N frames) re-inserts the graphic at the new frame through §3 steps 4–8; delete the old item only after the user's yes (the guard asks), then `placed.py drop "<work>/placed-<timeline>.json" --item-id <old id>`.
+3. Return the ids of the re-applied elements (a re-inserted one under its new item id) so the critic re-checks them with `check --changed`. A fix you can't apply stays open: say which and why.
 
 ## Never
 

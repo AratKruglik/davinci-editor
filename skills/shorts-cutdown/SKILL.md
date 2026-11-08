@@ -66,10 +66,19 @@ It maps every range back to source clip ranges (with 3 frames of air before and 
 6. Sound: the source items' clip gain and Dialogue Leveler don't come along. Run `audio-finish` on the Short (YouTube plays Shorts at the same -14 LUFS).
 7. `subtitles-uk shorts` for the animated captions. Optional: a 2–3 word title at the top in the first 2 s (`fusion-motion-graphics` `kinetic`) if the hook needs it; ask.
 8. Save the project.
+9. `frame-critic <Short timeline> all`, once, after the captions and the title are on (inside this step `subtitles-uk` and `fusion-motion-graphics` skip their own critic run). Its fixes go to the skill named in `fix.skill`; then save again.
 
 The user changes the **end** of a built Short: on 21.1.2+ trim the last A-roll and Voice items, each with its own `SetRightOffset(ro + k, False, False)` (`ro - k` to extend) (`resolve-core/reference.md#resolve-2112-editing-calls`), before captions and titles. A changed start or inner join leaves gaps: re-plan and rebuild that Short.
 
-## 5. Report
+## 5. Fix from frame-critic
+
+`frame-critic` hands over findings whose `fix.skill` is `shorts-cutdown` with a `fix.change` of segment in / out frames (a caption or title that can't fit before a join, a range that ends mid-word on screen).
+
+1. Change only that range in `<work>/shorts/shorts.json`, still on sentence borders and within the configured length, and re-run `shorts.py plan`.
+2. Re-apply, never by hand in Resolve: an end change trims as above, then `subtitles-uk shorts` rebuilds that Short's captions; a changed start or inner join rebuilds that Short (§4), on a new timeline with new item ids.
+3. Return the Short's timeline and the re-recorded caption ids so the critic re-checks them with `check --changed`; a rebuilt Short is a new timeline, so the critic runs fresh on it. A fix you can't apply stays open: say which and why.
+
+## 6. Report
 
 Per Short: timeline name, length, joins, hook line, stills to check. Mark Mint markers `claude:done:shorts-cutdown:<date>`. Next: `deliver shorts`.
 
