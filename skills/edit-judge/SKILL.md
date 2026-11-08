@@ -77,7 +77,7 @@ Afterwards the caller restores the user's timeline and shows the result.
      --format <format> --pause-ms ${user_config.pause_threshold_ms} --out "<work>/judge/metrics-<timeline>.json"
    ```
    Read it: `hook_words`, `pauses`, `static` (TC ranges), `graphics_per_min`, `per_kind`, `tail_s`.
-4. **Look** (`source` "timeline" for both tools):
+4. **Look** (`source` "timeline" for both tools). `get_image` / `get_thumbnails` missing from this fork or failing: run no `verdict`; reply that the frames couldn't be seen and list the ranges you needed. A score from numbers alone could ship an unseen static span.
    - Hook: `get_image` at the start and every few seconds of the hook window (30 s / 3 s).
    - Each `static` range: `get_thumbnails` over it, about one per 2 s (`count` up to 48). Same picture throughout → confirmed static. Scrolling, typing, new output, a slide build or a moving cursor → the picture changes, so the span is not static; say so in the pace note.
    - Graphics and consistency: `get_image` at each ledger element's `full` frame, and `get_thumbnails` across the elements of one `kind`.

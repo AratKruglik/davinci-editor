@@ -11,6 +11,7 @@ scores.json: {criterion: {"score": 1..5, "evidence": [tc, ...], "note": str}} fo
 results.json: [{"pair": [x, y], "order": "xy"|"yx", "winner": x|y}], labels as in blind.json.
 --critic/--qc given but unreadable: exit 2, no verdict written; omitted: recorded as "missing" and counted as no findings.
 --stale critic|qc: that check is outdated (critic.py / qc.py stale), recorded as "stale" with a must-fix "re-run <skill>".
+judge.json: verdict, must_fix, critic, qc (verdict | "missing" | "stale") and the scores as given.
 blind keeps only range, still, text of a candidate.
 A pair judged in both orders with different winners is a tie: half a win for each.
 """
