@@ -51,6 +51,6 @@
   "01:00:05:00": "presenter centered slightly right, face at x 0.5-0.7, y 0.2-0.6; lower left is plain wall",
   "01:00:40:00": "router admin page; the Save button is in the top-right corner at x 0.86-0.94, y 0.04-0.09 (0..1 from top-left)"
  },
- "fusion_note": "InsertFusionCompositionIntoTimeline lands on the highest unlocked video track at the playhead; new items are 5 s long (Standard generator duration); comp frame 0 = item start; Text+ has inputs StyledText, Font, Style, Size, Center, HorizontalJustificationNew, Red1..Alpha1, Enabled3, Type3, Level3, Red3..Alpha3, ExtendHorizontal3, ExtendVertical3, Round3.",
+ "fusion_note": "InsertFusionCompositionIntoTimeline ripple-inserts at the playhead on V2 A-roll (the Edit page destination track) and returns None while V2 is locked; SetPosition onto a locked track returns False and onto an occupied range overwrites the item there; V6 Titles is empty; new items are 5 s long (Standard generator duration); comp frame 0 = item start; Text+ has inputs StyledText, Font, Style, Size, Center, HorizontalJustificationNew, Red1..Alpha1, Enabled3, Type3, Level3, Red3..Alpha3, ExtendHorizontal3, ExtendVertical3, Round3.",
  "transcript_note": "At 01:00:20:00 the presenter says 'швидкість зросла на сорок відсотків'."
 }

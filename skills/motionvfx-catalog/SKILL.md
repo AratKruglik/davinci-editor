@@ -43,7 +43,7 @@ No catalog yet → run `scan` first. Reply with the best 5–10 matches: exact `
 ## Facts for the skills that use the catalog
 
 - Name passed to Resolve = the `.setting` file name without extension, exactly as in the catalog (spaces, brackets and all).
-- Titles: `tl.InsertFusionTitleIntoTimeline(name)`; text goes into the macro's `StyledText` inputs (`text_inputs` says how many). It *inserts with ripple* on the lowest video track at the playhead (`resolve-core` §10): lock every other video track first and check afterwards that nothing moved; moving the title later doesn't undo the ripple.
+- Titles: `tl.InsertFusionTitleIntoTimeline(name)`; text goes into the macro's `StyledText` inputs (`text_inputs` says how many). It *inserts with ripple* at the playhead on a track the script can't choose (`resolve-core` §10): insert and move it onto `Titles` by the route in `fusion-motion-graphics` §3 step 4.
 - Transitions: `item.AddTransition({"type": name, "category": "fusion", "position": "end", "alignment": "center", "duration": frames})`.
 - Effects (placeholders, corner screens, frames, camera moves), Resolve 21.1.2+ (version gate in `resolve-core` §10): the calling skill attaches them to a **media** item with its own backup and guard; this helper only reads files. Recipe (`resolve-core/reference.md#resolve-2112-editing-calls`):
   - id: look the catalog `name` up in `resolve.GetEffectsList("video")` (`category` `fusion`); several hits → pick the one whose `id` contains the catalog `pack`. Never build the id by hand.

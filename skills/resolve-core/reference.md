@@ -47,7 +47,7 @@ Checked against the MCP server's stubs for 21.1.2 and live on 21.1.2.10 (see `do
 | Measure loudness, no render | 21.1.2: `item.AnalyzeAudioLevels(mode)` → `{"Integrated": LUFS, "TruePeak": dBTP}` per item (`-100.0` = nothing measured); `mode` from `GetNormalizeAudioModes()` except the peak-only two. All 12 standards gave identical numbers on a test tone, so don't expect different values per mode. Per item only: the mix still needs a mixdown render | summing items into a mix value |
 | Loudness | `tl.GetNormalizeAudioModes()` (21.1.2: `Sample Peak Program`, `True Peak`, `ITU-R BS.1770-1`, `ITU-R BS.1770-4`, `ATSC A/85`, `EBU R128`, `OP-59`, `TR-B32`, `AGCOM 219/09/CSP`, `Netflix`, `YouTube`, `Disney - 2.0`, `Disney - 5.1+`, `TencentVideo`), `tl.NormalizeAudioLevel(items, {"normalizationMode": m, "targetLoudness": -14.0, "setLevelMode": resolve.NORMALIZE_AUDIO_SET_LEVEL_INDEPENDENT})` | |
 | Dialogue leveler | item properties `AudioDialogueLevelerEnabled`, `AudioDialogueLevelerMode` (`resolve.DIALOGUE_LEVELER_MODE_*`), `…ReduceLoudDialogue`, `…LiftSoftDialogue`, `…BackgroundReduction`, `…OutputGain` 0–6; active timeline only | |
-| Titles / generators | `tl.InsertFusionTitleIntoTimeline(name)`, `tl.InsertTitleIntoTimeline(name)`, `tl.InsertFusionGeneratorIntoTimeline(name)` (at the playhead) | |
+| Titles / generators | `tl.InsertFusionTitleIntoTimeline(name)`, `tl.InsertTitleIntoTimeline(name)`, `tl.InsertFusionGeneratorIntoTimeline(name)` (ripple-insert at the playhead on a track the script can't choose; see the Fusion insert route) | |
 | Fusion inputs | `comp = item.GetFusionCompByIndex(1)`, `tool = comp.FindTool(name)` or `comp.GetToolList()`, `tool.GetInputList()`, `tool.SetInput(id, value, time)` | |
 | Audio-only mixdown | `project.SetCurrentRenderFormatAndCodec(fmt, codec)` (discover with `GetRenderFormats()`, `GetRenderCodecs(ext)`), `SetRenderSettings({"ExportVideo": False, "ExportAudio": True, "TargetDir": d, "CustomName": n, "SelectAllFrames": True})`, `AddRenderJob()`, `StartRendering([job])`, poll `IsRenderingInProgress()`, `GetRenderJobStatus(job)` | |
 
@@ -84,7 +84,29 @@ item.SetLeftOffset(lo + k, False, False)    # start k frames later
 - `k` can't exceed the handle (`ro`/`lo`). Generators, titles, Fusion compositions: no handles, `False`.
 - After a trim, re-read `GetStart()`, `GetEnd()`, both offsets, and the neighbours.
 
-**Placement:** `item.SetPosition({"trackIndex": t, "startFrame": f}, False)`; `tl.MoveItems(items, {"trackIndex": t, "startFrame": f}, False)` moves the leftmost item there and the rest keep their spacing; fails as a whole if any item can't land. `tl.DeleteGaps()` closes every gap on the timeline (guarded).
+**Placement:** `item.SetPosition({"trackIndex": t, "startFrame": f}, False)`; `tl.MoveItems(items, {"trackIndex": t, "startFrame": f}, False)` moves the leftmost item there and the rest keep their spacing; fails as a whole if any item can't land. `tl.DeleteGaps()` closes every gap on the timeline (guarded). Verified on 21.2.0.6: onto a locked track `SetPosition` returns `False` and nothing moves; onto an occupied range it returns `True` and **overwrites**: a 300-frame title moved to frame 450 over a composition at 300..600 cut that composition to 300..450.
+
+**Fusion insert route** (verified on 21.2.0.6, scratch timeline with V2 and V3 clips and audio): `InsertFusionTitleIntoTimeline` / `InsertFusionCompositionIntoTimeline` ripple-insert at the playhead on one track the script can't choose. On 21.1.2.10 it was V1; on 21.2 it was V3 both with nothing locked and with only V1 locked, so it is not "the lowest unlocked track" (most likely the Edit page destination track). With that track locked both calls return `None` and nothing changes; with V1–V4 locked and only Titles open, also `None`. Working route:
+
+```python
+# END_TC = tc.py to-tc <tl.GetEndFrame()> --fps <fps>, computed before this script
+assert tl.GetEndFrame() == END
+video = range(1, tl.GetTrackCount("video") + 1)
+locks = {i: tl.GetIsTrackLocked("video", i) for i in video}
+for i in video: tl.SetTrackLock("video", i, False)
+before = {(k, i): [(x.GetStart(), x.GetEnd()) for x in tl.GetItemListInTrack(k, i) or []]
+          for k in ("video", "audio") for i in range(1, tl.GetTrackCount(k) + 1)}
+tl.SetCurrentTimecode(END_TC)
+item = tl.InsertFusionCompositionIntoTimeline()          # lands after everything: nothing to ripple
+busy = [x for x in tl.GetItemListInTrack("video", TITLES) or []
+        if x.GetStart() < F + item.GetDuration() and x.GetEnd() > F]
+# busy → Titles 2; else:
+item.SetPosition({"trackIndex": TITLES, "startFrame": F}, False)
+for i in video: tl.SetTrackLock("video", i, locks[i])
+# re-read every (k, i) and compare with `before`, ignoring the new item
+```
+
+The insert at the end and the move left every other item on every track where it was. A ripple from inserting mid-timeline on other tracks was not tested; the before/after comparison covers it.
 
 **Silence:** `item.RippleDeleteSilence({"threshold": -25.0, "preHead": 2, "postTail": 4, "minimumToStrip": fps})` on an audio item. It ripples **every unlocked track**, linked or not; a locked track is left as it was (verified). Guarded by `guard.py`. Duplicate the timeline first.
 
@@ -138,12 +160,12 @@ These values are not documented for 21.1.x; discover them on the running app, ne
 - whether a transcript word's `end` timecode is its last frame or the first frame after it (`text-based-cut` assumes last frame; check one word against the waveform);
 - valid `colorScienceMode` / `colorSpace*` strings: read current values with `project.GetSettings()[key]` before writing.
 - units and signs of `Pan`/`Tilt` (pixels from center; is positive Tilt up?) and whether `ZoomX` 1.0 = 100 %: set one item, export a still, check it before laying out the rest;
-- whether `InsertFusionTitleIntoTimeline` accepts the template's file name as shown in the Effects library (the track is settled: it ripple-inserts on the lowest video track at the playhead, verified with `Text+` and V2 present);
+- whether `InsertFusionTitleIntoTimeline` accepts the template's file name as shown in the Effects library (the track is not chosen by script: see the Fusion insert route above);
 - whether `ApplyFairlightPresetToCurrentTimeline` replaces the timeline's tracks and busses (apply it on a duplicate timeline first);
 - whether timeline items built by `AppendToTimeline` keep the media pool clip's color group;
 - `CopyAttributes` (`audio-effects`): whether a source item on another timeline works, whether pasted plugins replace or stack on existing ones, whether it carries Music Remixer state; which `AudioPan` sign is left; whether `GetProperties()` on a music item shows any Remixer/stem key;
 - Fusion: the comp frame that matches a timeline item's first frame (`comp.GetAttrs()["COMPN_RenderStart"]`, `["COMPN_GlobalStart"]`), the input ids of `TextPlus`, `Background`, `Transform`, `Merge` (`tool.GetInputList()`), and whether `SetInput(id, value, time)` keys an input only after `tool.AddModifier(id, "BezierSpline")` (`"XYPath"` for point inputs such as `Center`; the builder's `mismatches` shows it);
-- the track `InsertFusionCompositionIntoTimeline()` uses and the length of the item it creates (the user preference *Standard generator duration*; Fusion compositions and generators have no handles, so `SetRightOffset` returns `False` on them);
+- the length of the item `InsertFusionCompositionIntoTimeline()` creates (the user preference *Standard generator duration*, 300 frames at 60 fps on the test machine; Fusion compositions and generators have no handles, so `SetRightOffset` returns `False` on them);
 - how `mp.ImportMedia([srt])` + `AppendToTimeline` places an SRT on a subtitle track, and whether SRT time 0 lands on the timeline start or on 00:00:00:00;
 - the H.265 codec key from `GetRenderCodecs("mp4")` (hardware vs software encoder names) and the unit of `VideoQuality` when it is an integer (kbit/s expected);
 - which items `SmartReframe()` accepts (expected: video items on a timeline whose aspect differs from the source) and how long `GetSmartReframeStatus()` takes per minute.
