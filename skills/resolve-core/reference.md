@@ -162,7 +162,7 @@ def items(kind, i):
     for it in tl.GetItemListInTrack(kind, i) or []:
         mpi = it.GetMediaPoolItem()
         p = mpi.GetClipProperty() if mpi else {}
-        rows.append({"name": it.GetName(), "clip_id": mpi.GetUniqueId() if mpi else None,
+        rows.append({"name": it.GetName(), "item_id": it.GetUniqueId(), "clip_id": mpi.GetUniqueId() if mpi else None,
                      "start": it.GetStart(), "end": it.GetEnd(),
                      "source_start": it.GetSourceStartFrame(), "source_end": it.GetSourceEndFrame(),
                      "left_offset": it.GetLeftOffset(), "right_offset": it.GetRightOffset(),
@@ -172,7 +172,7 @@ def items(kind, i):
                      "fusion_comps": it.GetFusionCompCount() if kind == "video" else 0})
     return rows
 
-dump = {"name": tl.GetName(), "fps": float(s["timelineFrameRate"]), "drop_frame": s.get("timelineDropFrameTimecode") == "1",
+dump = {"name": tl.GetName(), "timeline_id": tl.GetUniqueId(), "fps": float(s["timelineFrameRate"]), "drop_frame": s.get("timelineDropFrameTimecode") == "1",
         "width": int(s["timelineResolutionWidth"]), "height": int(s["timelineResolutionHeight"]),
         "start_frame": tl.GetStartFrame(), "end_frame": tl.GetEndFrame(), "start_tc": tl.GetStartTimecode(),
         "markers": {str(f): m for f, m in tl.GetMarkers().items()},
