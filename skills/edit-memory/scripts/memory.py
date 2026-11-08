@@ -1,16 +1,28 @@
-"""Compare a handoff snapshot with the timeline after the user's edits (no Resolve needed).
+"""Learn from the user's edits: compare handoff snapshots, keep an event log, turn repeated edits into approved rules.
 
 python3 memory.py changed <old snapshot.json> <new snapshot.json>      (exit 1 = the timeline changed)
 python3 memory.py diff <old snapshot.json> <new snapshot.json> [--ledger placed.json] --out events.json
+python3 memory.py log events.json --project P --timeline T [--date YYYY-MM-DD] [--memory edit-memory.json]
+python3 memory.py lessons|show [--memory edit-memory.json]
+python3 memory.py approve --candidate '<json or file>' --text T [--param name=value] [--format F] [--memory ...]
+python3 memory.py reject <event id>... | forget <rule id> | confirm <rule id> [--memory ...]
+python3 memory.py rules [--skill S] [--format F] [--memory ...]            (JSON list; frame-critic reads it via --rules)
 python3 memory.py selftest
+
+--memory is the rules file; the event log edit-memory-events.jsonl sits in the same folder.
 
 Snapshots: resolve-core/reference.md "Handoff snapshot". Frames are absolute timeline frames.
 """
 import argparse
+import contextlib
+import io
 import json
 import os
 import sys
+import tempfile
+import statistics
 from copy import deepcopy
+from datetime import date as today
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "resolve-core", "scripts"))
@@ -175,6 +187,173 @@ def diff(old, new, ledger):
         if j not in used and n.get("item_id") not in owners:
             emit("added_by_user", n, n.get("item_id"), None)
     return sorted(events, key=lambda e: (e["frame"], e["type"]))
+
+
+EVENTS_NAME = "edit-memory-events.jsonl"
+SAME_CUT_FRAMES = 2
+
+
+def events_path_for(memory_path):
+    return os.path.join(os.path.dirname(os.path.abspath(memory_path)), EVENTS_NAME)
+
+
+def write_atomic(path, text):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(os.path.abspath(path)), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        os.unlink(tmp)
+        raise
+
+
+def read_rules(memory_path):
+    if not os.path.exists(memory_path):
+        return {"version": 1, "rules": []}
+    with open(memory_path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def write_rules(memory_path, memory):
+    write_atomic(memory_path, json.dumps(memory, ensure_ascii=False, indent=1) + "\n")
+
+
+def read_events(events_path):
+    if not os.path.exists(events_path):
+        return []
+    with open(events_path, encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def write_events(events_path, events):
+    write_atomic(events_path, "".join(json.dumps(e, ensure_ascii=False) + "\n" for e in events))
+
+
+def log_events(events_path, events, project, timeline, date):
+    stored = read_events(events_path)
+    batch = f"{date}-{len(stored) + 1}"
+    new = [{**e, "id": f"{date}-{len(stored) + i + 1}", "batch": batch, "project": project, "timeline": timeline, "date": date}
+           for i, e in enumerate(events)]
+    if new:
+        write_events(events_path, stored + new)
+    return len(new)
+
+
+def direction(event):
+    value = event.get("value")
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value == 0:
+        return "none"
+    return "+" if value > 0 else "-"
+
+
+def group_of(event):
+    return event["owner"], event["kind"], event["type"], event.get("property")
+
+
+def counted(events):
+    """One edit, one event: a head drag also logs `moved` next to `retimed`, a synced cut logs `cut_changed` per track."""
+    retimed = {(e.get("batch"), e["item_id"]) for e in events if e["type"] == "retimed"}
+    kept, cuts = [], {}
+    for e in events:
+        if e["type"] == "moved" and (e.get("batch"), e["item_id"]) in retimed:
+            continue
+        if e["type"] == "cut_changed":
+            frames = cuts.setdefault(e.get("batch"), [])
+            if any(abs(e["frame"] - f) <= SAME_CUT_FRAMES for f in frames):
+                continue
+            frames.append(e["frame"])
+        kept.append(e)
+    return kept
+
+
+def rule_directions(rules, events):
+    """{(rule id, group): direction} read off the events each approved rule consumed."""
+    live = {r["id"] for r in rules}
+    values = {}
+    for e in events:
+        if e.get("rule_id") in live and direction(e) != "none":
+            values.setdefault((e["rule_id"], group_of(e)), []).append(e["value"])
+    return {key: "+" if statistics.median(v) > 0 else "-" for key, v in values.items()}
+
+
+def lessons(events_path, rules):
+    # shortcut: share is among the logged events of the group, not among all placed elements of that kind
+    events = read_events(events_path)
+    taught = rule_directions(rules.get("rules", []), events)
+    open_events = [e for e in counted(events) if e["owner"] != "user" and e.get("rule_id") is None and not e.get("rejected")]
+    totals = {}
+    for e in open_events:
+        totals[group_of(e)] = totals.get(group_of(e), 0) + 1
+    sides = {}
+    for e in open_events:
+        sides.setdefault((group_of(e), direction(e)), []).append(e)
+    found = []
+    for (group, side), members in sides.items():
+        values = [e["value"] for e in members if side != "none"]
+        opposite = {"+": "-", "-": "+"}.get(side)
+        conflicts = sorted(rid for (rid, g), d in taught.items() if g == group and d == opposite)
+        found.append({"group": list(group[:3]), "property": group[3], "count": len(members),
+                      "share": round(len(members) / totals[group], 2),
+                      "median": round(statistics.median(values), 4) if values else None, "direction": side,
+                      "events": [e["id"] for e in members], "conflicts_with": conflicts[0] if conflicts else None,
+                      "one_off": len(members) < 2})
+    return sorted(found, key=lambda c: (c["one_off"], -c["count"], c["group"]))
+
+
+def approve(memory_path, events_path, candidate, text, param=None, fmt=None):
+    memory, events = read_rules(memory_path), read_events(events_path)
+    chosen = [e for e in events if e["id"] in set(candidate["events"])]
+    if len(chosen) != len(candidate["events"]) or any(e.get("rule_id") is not None or e.get("rejected") for e in chosen):
+        raise ValueError("candidate is stale: its events are missing or already used")
+    owner, kind, _ = candidate["group"]
+    evidence = {}
+    for e in chosen:
+        evidence.setdefault((e["project"], e["timeline"], e["date"]), []).append(e["tc"])
+    rule_id = 1 + max([r["id"] for r in memory["rules"]] + [e["rule_id"] for e in events if e.get("rule_id") is not None], default=0)
+    rule = {"id": rule_id, "text": text, "scope": {"skill": owner, "kind": kind, **({"format": fmt} if fmt else {})},
+            "param": param, "evidence": [{"project": p, "timeline": t, "tcs": tcs, "date": d} for (p, t, d), tcs in evidence.items()],
+            "confirmed": 1, "created": today.today().isoformat()}
+    write_rules(memory_path, {**memory, "rules": memory["rules"] + [rule]})
+    used = {e["id"] for e in chosen}
+    write_events(events_path, [{**e, "rule_id": rule_id} if e["id"] in used else e for e in events])
+    return rule
+
+
+def reject(events_path, event_ids):
+    events, ids = read_events(events_path), set(event_ids)
+    if ids - {e["id"] for e in events}:
+        raise ValueError(f"unknown events: {sorted(ids - {e['id'] for e in events})}")
+    write_events(events_path, [{**e, "rejected": True} if e["id"] in ids else e for e in events])
+    return len(ids)
+
+
+def find_rule(memory, rule_id):
+    rule = next((r for r in memory["rules"] if r["id"] == rule_id), None)
+    if rule is None:
+        raise ValueError(f"no rule {rule_id}")
+    return rule
+
+
+def forget(memory_path, rule_id):
+    memory = read_rules(memory_path)
+    find_rule(memory, rule_id)
+    write_rules(memory_path, {**memory, "rules": [r for r in memory["rules"] if r["id"] != rule_id]})
+
+
+def confirm(memory_path, rule_id):
+    memory = read_rules(memory_path)
+    rule = find_rule(memory, rule_id)
+    rule["confirmed"] += 1
+    write_rules(memory_path, memory)
+    return rule
+
+
+def rules(memory_path, skill=None, fmt=None):
+    return [r for r in read_rules(memory_path)["rules"]
+            if (skill is None or r["scope"].get("skill") == skill)
+            and (fmt is None or r["scope"].get("format") in (None, fmt))]
 
 
 def selftest():
@@ -359,14 +538,127 @@ def selftest():
     assert changed(base, marked)
     assert changed(base, cut48()) and not changed(base, deepcopy(base))
     assert not changed(pre_task2, base) and changed(pre_task2, cut48())
+    selftest_memory()
     print("memory selftest ok")
 
 
-def main():
-    if sys.argv[1:] == ["selftest"]:
+def selftest_memory():
+    def ev(kind, value, owner="fusion-motion-graphics", type_="retimed", item="t1", frame=90250, **extra):
+        return {"type": type_, "owner": owner, "kind": kind, "item_id": item, "track": "Titles", "tc": "01:00:10:00",
+                "frame": frame, "value": value, **extra}
+
+    with tempfile.TemporaryDirectory() as tmp:
+        mem = os.path.join(tmp, "edit-memory.json")
+        log = events_path_for(mem)
+        assert os.path.basename(log) == "edit-memory-events.jsonl" and os.path.dirname(log) == tmp
+        assert rules(mem) == [] and lessons(log, read_rules(mem)) == []
+
+        assert log_events(log, [ev("lower-third", 26)], "Ep1", "main", "2026-11-01") == 1
+        assert log_events(log, [ev("lower-third", 24, item="t9")], "Ep2", "main", "2026-11-05") == 1
+        found = lessons(log, read_rules(mem))
+        assert len(found) == 1, found
+        cand = found[0]
+        assert cand["group"] == ["fusion-motion-graphics", "lower-third", "retimed"] and cand["count"] == 2
+        assert cand["median"] == 25 and cand["direction"] == "+" and cand["share"] == 1.0
+        assert cand["conflicts_with"] is None and not cand["one_off"] and len(set(cand["events"])) == 2
+
+        rule = approve(mem, log, cand, "Hold lower-thirds 1 s longer", {"name": "hold_extra_s", "value": 1.0}, fmt="youtube")
+        assert rule["id"] == 1 and rule["confirmed"] == 1 and rule["text"] == "Hold lower-thirds 1 s longer"
+        assert rule["scope"] == {"skill": "fusion-motion-graphics", "kind": "lower-third", "format": "youtube"}
+        assert rule["param"] == {"name": "hold_extra_s", "value": 1.0}
+        assert sorted((x["project"], x["timeline"], x["date"], tuple(x["tcs"])) for x in rule["evidence"]) == [
+            ("Ep1", "main", "2026-11-01", ("01:00:10:00",)), ("Ep2", "main", "2026-11-05", ("01:00:10:00",))]
+        assert lessons(log, read_rules(mem)) == []
+        assert [r["id"] for r in rules(mem)] == [1] and not [f for f in os.listdir(tmp) if f.endswith(".tmp")]
+
+        log_events(log, [ev("lower-third", -10), ev("lower-third", -14, item="t2")], "Ep3", "main", "2026-11-08")
+        opposite = lessons(log, read_rules(mem))
+        assert len(opposite) == 1 and opposite[0]["direction"] == "-" and opposite[0]["conflicts_with"] == 1, opposite
+        assert reject(log, opposite[0]["events"]) == 2
+        assert lessons(log, read_rules(mem)) == []
+        assert all(e.get("rejected") for e in read_events(log)[-2:])
+
+        assert confirm(mem, 1)["confirmed"] == 2 and rules(mem)[0]["confirmed"] == 2
+        approve(mem, log, {"group": ["tutorial-zooms", "zoom", "property_changed"], "events": []}, "Zoom less", None)
+        assert rules(mem, skill="tutorial-zooms")[0]["param"] is None
+        assert [r["id"] for r in rules(mem, skill="fusion-motion-graphics", fmt="youtube")] == [1]
+        assert rules(mem, skill="fusion-motion-graphics", fmt="shorts") == []
+        assert [r["id"] for r in rules(mem, fmt="shorts")] == [2] and [r["id"] for r in rules(mem)] == [1, 2]
+        forget(mem, 1)
+        assert [r["id"] for r in rules(mem)] == [2]
+        again = approve(mem, log, {"group": ["x", "y", "deleted"], "events": []}, "Next", None)
+        assert again["id"] == 3
+        try:
+            forget(mem, 1)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("forgetting an unknown rule must fail")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        mem = os.path.join(tmp, "m.json")
+        log = events_path_for(mem)
+        log_events(log, [ev("lower-third", 24), ev("lower-third", -20, item="t2")], "Ep1", "main", "2026-11-01")
+        found = lessons(log, read_rules(mem))
+        assert len(found) == 2 and all(f["one_off"] and f["count"] == 1 for f in found), found
+        assert {f["direction"] for f in found} == {"+", "-"} and {f["share"] for f in found} == {0.5}
+
+        log_events(log, [ev("lower-third", 20, type_="moved"), ev("lower-third", 20), ev("lower-third", 20, item="t3", type_="moved")],
+                   "Ep2", "main", "2026-11-02")
+        by_type = {}
+        for f in lessons(log, read_rules(mem)):
+            by_type.setdefault(f["group"][2], []).append(f)
+        retimed_up = next(f for f in by_type["retimed"] if f["direction"] == "+")
+        moved_up = next(f for f in by_type["moved"] if f["direction"] == "+")
+        assert retimed_up["count"] == 2 and moved_up["count"] == 1, (retimed_up, moved_up)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        mem = os.path.join(tmp, "m.json")
+        log = events_path_for(mem)
+        cuts = [ev(None, -48, owner="a-roll-cutter", type_="cut_changed", item="a1", frame=90000),
+                ev(None, -48, owner="a-roll-cutter", type_="cut_changed", item="s1", frame=90001)]
+        log_events(log, cuts, "Ep1", "main", "2026-11-01")
+        log_events(log, [ev(None, -48, owner="a-roll-cutter", type_="cut_changed", item="a1", frame=90000)], "Ep2", "main", "2026-11-02")
+        found = lessons(log, read_rules(mem))
+        assert len(found) == 1 and found[0]["count"] == 2 and not found[0]["one_off"], found
+
+        log_events(log, [ev("zoom", -0.3, owner="tutorial-zooms", type_="property_changed", property="ZoomX"),
+                         ev("zoom", 5.0, owner="tutorial-zooms", type_="property_changed", property="Opacity"),
+                         ev(None, 9, owner="user", type_="retimed"), ev(None, 9, owner="user", type_="retimed", item="u2"),
+                         ev("lower-third", None, type_="deleted"), ev("lower-third", None, type_="deleted", item="t2"),
+                         ev("lower-third", "Hi", type_="text_changed", item="t5")],
+                   "Ep3", "main", "2026-11-03")
+        found = lessons(log, read_rules(mem))
+        assert not [f for f in found if f["group"][0] == "user"]
+        deleted = next(f for f in found if f["group"][2] == "deleted")
+        assert deleted["count"] == 2 and deleted["direction"] == "none" and deleted["median"] is None and not deleted["one_off"]
+        props = sorted((f["property"], f["one_off"]) for f in found if f["group"][2] == "property_changed")
+        assert props == [("Opacity", True), ("ZoomX", True)], props
+        assert next(f for f in found if f["group"][2] == "text_changed")["one_off"]
+
+        count = log_events(log, [ev("lower-third", 26)], "Ep4", "main", "2026-11-04")
+        assert count == 1
+        ids = [e["id"] for e in read_events(log)]
+        assert len(ids) == len(set(ids))
+
+        main_out = io.StringIO()
+        with contextlib.redirect_stdout(main_out):
+            main(["rules", "--memory", mem])
+            main(["lessons", "--memory", mem])
+        first, second = main_out.getvalue().splitlines()
+        assert json.loads(first) == [] and isinstance(json.loads(second), list)
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv == ["selftest"]:
         return selftest()
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
+    def memory_arg(p):
+        p.add_argument("--memory", default="edit-memory.json")
+        return p
+
     ch = sub.add_parser("changed")
     ch.add_argument("old")
     ch.add_argument("new")
@@ -375,22 +667,75 @@ def main():
     df.add_argument("new")
     df.add_argument("--ledger")
     df.add_argument("--out", required=True)
-    a = ap.parse_args()
+    lg = memory_arg(sub.add_parser("log"))
+    lg.add_argument("events", help="events.json written by diff")
+    lg.add_argument("--project", required=True)
+    lg.add_argument("--timeline", required=True)
+    lg.add_argument("--date", default=today.today().isoformat())
+    memory_arg(sub.add_parser("lessons"))
+    memory_arg(sub.add_parser("show"))
+    ap_ = memory_arg(sub.add_parser("approve"))
+    ap_.add_argument("--candidate", required=True, help="a candidate from `lessons`: JSON text or a JSON file")
+    ap_.add_argument("--text", required=True)
+    ap_.add_argument("--param", help="name=value, value as JSON")
+    ap_.add_argument("--format")
+    rj = memory_arg(sub.add_parser("reject"))
+    rj.add_argument("ids", nargs="+")
+    fg = memory_arg(sub.add_parser("forget"))
+    fg.add_argument("id", type=int)
+    cf = memory_arg(sub.add_parser("confirm"))
+    cf.add_argument("id", type=int)
+    rl = memory_arg(sub.add_parser("rules"))
+    rl.add_argument("--skill")
+    rl.add_argument("--format")
+    a = ap.parse_args(argv)
 
     def read(path):
         with open(path, encoding="utf-8") as f:
             return json.load(f)
 
-    old, new = read(a.old), read(a.new)
-    if a.cmd == "changed":
-        result = changed(old, new)
-        print(json.dumps({"changed": result}))
-        return 1 if result else 0
-    events = diff(old, new, read(a.ledger) if a.ledger and os.path.exists(a.ledger) else {"items": []})
-    os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-    with open(a.out, "w", encoding="utf-8") as f:
-        json.dump(events, f, ensure_ascii=False, indent=1)
-    print(json.dumps({"out": a.out, "events": len(events), "shift": ripple_shift(old, new)}))
+    def out(value):
+        print(json.dumps(value, ensure_ascii=False))
+
+    if a.cmd in ("changed", "diff"):
+        old, new = read(a.old), read(a.new)
+        if a.cmd == "changed":
+            result = changed(old, new)
+            out({"changed": result})
+            return 1 if result else 0
+        events = diff(old, new, read(a.ledger) if a.ledger and os.path.exists(a.ledger) else {"items": []})
+        os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+        with open(a.out, "w", encoding="utf-8") as f:
+            json.dump(events, f, ensure_ascii=False, indent=1)
+        return out({"out": a.out, "events": len(events), "shift": ripple_shift(old, new)})
+
+    log = events_path_for(a.memory)
+    try:
+        if a.cmd == "log":
+            out({"logged": log_events(log, read(a.events), a.project, a.timeline, a.date)})
+        elif a.cmd == "lessons":
+            out(lessons(log, read_rules(a.memory)))
+        elif a.cmd == "show":
+            out({"rules": rules(a.memory), "lessons": lessons(log, read_rules(a.memory))})
+        elif a.cmd == "approve":
+            candidate = json.loads(a.candidate) if a.candidate.lstrip().startswith("{") else read(a.candidate)
+            param = None
+            if a.param:
+                name, _, value = a.param.partition("=")
+                param = {"name": name, "value": json.loads(value)}
+            out(approve(a.memory, log, candidate, a.text, param, a.format))
+        elif a.cmd == "reject":
+            out({"rejected": reject(log, a.ids)})
+        elif a.cmd == "forget":
+            forget(a.memory, a.id)
+            out({"forgotten": a.id})
+        elif a.cmd == "confirm":
+            out(confirm(a.memory, a.id))
+        else:
+            out(rules(a.memory, a.skill, a.format))
+    except ValueError as err:
+        print(err, file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

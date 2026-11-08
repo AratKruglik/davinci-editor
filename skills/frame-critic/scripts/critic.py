@@ -148,7 +148,8 @@ def apply_rules(cfg, rules):
     """Only numeric memory rules matter here; the judge reads the rest."""
     cfg = {**cfg, "hold_extra_s": dict(cfg.get("hold_extra_s", {}))}
     for rule in rules:
-        name, value = rule["param"]["name"], rule["param"]["value"]
+        param = rule.get("param") or {}
+        name, value = param.get("name"), param.get("value")
         if name == "hold_extra_s":
             kind = rule["scope"]["kind"]
             cfg["hold_extra_s"][kind] = max(cfg["hold_extra_s"].get(kind, 0), value)
@@ -328,7 +329,8 @@ def selftest():
     rules = [{"scope": {"kind": "lower-third"}, "param": {"name": "hold_extra_s", "value": 1.0}},
              {"scope": {"kind": "lower-third"}, "param": {"name": "hold_extra_s", "value": 0.5}},
              {"scope": {"kind": "zoom"}, "param": {"name": "max_scale", "value": 2.0}},
-             {"scope": {"kind": "callout"}, "param": {"name": "position", "value": "left"}}]
+             {"scope": {"kind": "callout"}, "param": {"name": "position", "value": "left"}},
+             {"scope": {"kind": "zoom"}, "param": None}]
     cfg = apply_rules(base, rules)
     assert cfg["hold_extra_s"] == {"lower-third": 1.0} and cfg["zoom_max"] == 2.0 and base.get("hold_extra_s") is None
     assert apply_rules(base, [])["zoom_max"] == 2.5
