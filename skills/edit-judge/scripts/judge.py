@@ -9,6 +9,8 @@ python3 judge.py selftest
 
 scores.json: {criterion: {"score": 1..5, "evidence": [tc, ...], "note": str}} for hook, pace, graphics, consistency, rules, ending.
 results.json: [{"pair": [x, y], "order": "xy"|"yx", "winner": x|y}], labels as in blind.json.
+--critic/--qc given but unreadable: exit 2, no verdict written; omitted: recorded as "missing" and counted as no findings.
+blind keeps only range, still, text of a candidate.
 A pair judged in both orders with different winners is a tie: half a win for each.
 """
 import argparse
@@ -25,6 +27,7 @@ HOOK_S = {"youtube": 30, "shorts": 3}
 STATIC_S = {"youtube": 20, "shorts": 4}
 STATIC_ROLES = ("a-roll", "screen", "b-roll")
 NOT_GRAPHICS = ("zoom", "caption")
+BLIND_FIELDS = ("range", "still", "text")
 
 
 def role(name):
@@ -99,7 +102,7 @@ def blind(candidates, seed):
     shuffled = list(candidates)
     random.Random(seed).shuffle(shuffled)
     labels = [chr(ord("A") + n) for n in range(len(shuffled))]
-    hidden = [{"label": label, **{k: v for k, v in c.items() if k not in ("id", "label")}} for label, c in zip(labels, shuffled)]
+    hidden = [{"label": label, **{k: c[k] for k in BLIND_FIELDS if k in c}} for label, c in zip(labels, shuffled)]
     return hidden, {label: c["id"] for label, c in zip(labels, shuffled)}
 
 
@@ -128,6 +131,39 @@ def rank(results, labels):
                 wins[label] += 0.5
     ranking = sorted(labels, key=lambda label: -wins[label])
     return {"ranking": ranking, "tie": len(ranking) > 1 and wins[ranking[0]] == wins[ranking[1]], "wins": wins}
+
+
+def cli_missing_inputs_selftest():
+    import contextlib
+    import io
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        path = lambda name: os.path.join(d, name)
+        write(path("scores.json"), {c: {"score": 4, "evidence": [], "note": ""} for c in CRITERIA})
+        write(path("ok.json"), {"findings": [], "verdict": "PASS"})
+        for flag in ("--critic", "--qc"):
+            out = path(f"v{flag}.json")
+            argv = ["judge.py", "verdict", path("scores.json"), flag, path("typo.json"), "--out", out]
+            old, sys.argv = sys.argv, argv
+            try:
+                with contextlib.redirect_stderr(io.StringIO()) as err:
+                    main()
+            except SystemExit as e:
+                assert e.code == 2 and "typo.json" in err.getvalue(), (flag, e.code, err.getvalue())
+            else:
+                raise AssertionError(f"{flag} with a missing file must exit 2")
+            finally:
+                sys.argv = old
+            assert not os.path.exists(out), "no verdict may be written"
+        out = path("v.json")
+        sys.argv, old = ["judge.py", "verdict", path("scores.json"), "--critic", path("ok.json"), "--out", out], sys.argv
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                main()
+        finally:
+            sys.argv = old
+        saved = read(out)
+        assert saved["verdict"] == "SHIP" and saved["critic"] == "PASS" and saved["qc"] == "missing", saved
 
 
 def selftest():
@@ -202,6 +238,8 @@ def selftest():
     b2, key2 = blind(cands, 7)
     assert (b1, key1) == (b2, key2) and [c["label"] for c in b1] == ["A", "B", "C", "D"]
     assert sorted(key1.values()) == sorted(c["id"] for c in cands) and "moment" not in json.dumps(b1) and "Секунда" not in json.dumps(b1)
+    leaky = blind([{"id": "x", "label": "L", "range": [1, 2], "score": 9, "favourite": True}], 1)[0]
+    assert leaky == [{"label": "A", "range": [1, 2]}], leaky
     assert all(c["range"] == cands[int(key1[c["label"]][-1])]["range"] for c in b1)
     assert blind(cands, 8)[1] != key1 or blind(cands, 9)[1] != key1
 
@@ -224,17 +262,19 @@ def selftest():
             pass
         else:
             raise AssertionError("incomplete or foreign results must be refused")
+    cli_missing_inputs_selftest()
     print("judge selftest ok")
 
 
 def read(path):
     if path is None:
         return None
-    if not os.path.exists(path):
-        print(f"note: {path} is missing: counted as no findings", file=sys.stderr)
-        return None
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError) as e:
+        print(f"error: cannot read {path}: {e}", file=sys.stderr)
+        sys.exit(2)
 
 
 def write(path, data):
