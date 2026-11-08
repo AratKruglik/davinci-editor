@@ -8,6 +8,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
   - "mcp__DaVinci_Resolve__search_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_api"
+  - "Bash(python3 *memory.py *)"
 hooks:
   PreToolUse:
     - matcher: "mcp__DaVinci_Resolve__run_script.*"
@@ -19,6 +20,8 @@ hooks:
 # AI Voice Isolation
 
 Follow `resolve-core` first. Target: `$target` (default: the Voice track, plus Voice 2 if present). Strength: `$amount` (default `${user_config.voice_isolation_amount}`).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 ## Choosing the strength
 

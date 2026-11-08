@@ -13,6 +13,7 @@ allowed-tools:
   - "Bash(python3 *shorts.py sentences *)"
   - "Bash(python3 *tc.py *)"
   - "Read"
+  - "Bash(python3 *memory.py *)"
 hooks:
   PreToolUse:
     - matcher: "mcp__DaVinci_Resolve__run_script.*"
@@ -24,6 +25,8 @@ hooks:
 # Chapters
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current: the final cut; chapters on a timeline that will still change go stale).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/chapters.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/chapters.py selftest`).
 

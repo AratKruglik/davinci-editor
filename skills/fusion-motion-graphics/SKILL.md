@@ -27,7 +27,7 @@ hooks:
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Request: `$request` (default: the Cyan and Blue markers).
 
-Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan (`hold_extra_s` of a kind: `--hold-s` = the marker duration, or the hold `motion.py build` reports (`timing_frames.hold` / fps), plus `hold_extra_s`), and take a snapshot as the last step of every write.
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan (`hold_extra_s` of a kind goes only onto a computed hold, for a point marker or a request without a duration: `--hold-s` = the hold `motion.py build` reports, `timing_frames.hold` / fps, plus `hold_extra_s`; never onto an explicit Cyan marker duration), and take a snapshot as the last step of every write.
 
 Brand (plugin config): font `${user_config.brand_font}` `${user_config.brand_font_style}`, text `${user_config.brand_text_color}`, accent `${user_config.brand_accent_color}`, plate `${user_config.brand_plate_color}` at `${user_config.brand_plate_opacity}`, animation `${user_config.brand_text_anim}`.
 

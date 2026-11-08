@@ -8,6 +8,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
   - "mcp__DaVinci_Resolve__search_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_api"
+  - "Bash(python3 *memory.py *)"
 hooks:
   PreToolUse:
     - matcher: "mcp__DaVinci_Resolve__run_script.*"
@@ -19,6 +20,8 @@ hooks:
 # Track layout by role
 
 Follow `resolve-core` first. Action: `$action` (default `setup`). Target: `$target` — the role for `add`, the stage (`sound` or `graphics`) for `lock` / `unlock`.
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 ## Layout (from plugin config)
 

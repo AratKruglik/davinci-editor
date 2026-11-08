@@ -8,6 +8,6 @@
   "end_inclusive": false,
   "source_offset": 0
  },
- "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones.",
+ "note": "Files that Resolve-side scripts (run_script_unsafe) would write in this session already exist in resolve-work; read them instead of expecting new ones. tl.GetUniqueId() of 'Router - rough cut 2026-11-02' is '5d2e9b14-7a3c-4f80-b6e1-rough0001102'. The edit-memory snapshot script (resolve-core §11, reference.md Handoff snapshot) returns {\"path\": \"resolve-work/Router Setup 2026-11/handoff/fresh-5d2e9b14-7a3c-4f80-b6e1-rough0001102.json\"} at the start and {\"path\": \"resolve-work/Router Setup 2026-11/handoff/5d2e9b14-7a3c-4f80-b6e1-rough0001102-<stamp>.json\"} at the end; there is no earlier snapshot of this timeline, so there is nothing to learn.",
  "render_formats_note": "GetRenderFormats has 'wav'; GetRenderCodecs('wav') has {'Linear PCM': 'LinearPCM'}. The audio mixdown requested by a script lands in resolve-work/.../audio/mix-check.wav (already there)."
 }

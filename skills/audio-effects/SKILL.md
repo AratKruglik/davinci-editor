@@ -8,6 +8,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
   - "mcp__DaVinci_Resolve__search_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_api"
+  - "Bash(python3 *memory.py *)"
 hooks:
   PreToolUse:
     - matcher: "mcp__DaVinci_Resolve__run_script.*"
@@ -19,6 +20,8 @@ hooks:
 # Audio effects
 
 Follow `resolve-core` first. Effect: `$effect` (none given → pick from the request; ask if two fit). Target: `$target` (default: `tl.GetSelectedClips()` audio items; none selected → ask which clips).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 ## What the API can and can't do
 

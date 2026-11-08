@@ -30,7 +30,7 @@ Progress saved so far: !`python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/sho
 
 Start: follow `resolve-core` §1–3 (connect, confirm project, save). Keep a running checklist in `${user_config.work_dir}/<project>/episode.md` (step, status `done|skipped|failed`, date, timeline names, notes) and update it after every step, so a later session resumes from it.
 
-Edit memory (`resolve-core` §11): every approval stop ends with a snapshot of each timeline the step wrote to (the step's own last snapshot counts), and new candidates from `memory.py lessons` (not `one_off`) are shown at that stop with `edit-memory learn` §2–§3, not inside the step. Resuming from `episode.md` in a new session: run `edit-memory learn` before the next step, so the user's edits since the last stop are learned before anything overwrites them.
+Edit memory (`resolve-core` §11): before every step run the §11 start step on the timeline that step will write to (cheap when nothing changed), every approval stop ends with a snapshot of each timeline the step wrote to (the step's own last snapshot counts), and new candidates from `memory.py lessons` (not `one_off`) are shown at that stop with `edit-memory learn` §2–§3, not inside the step. Resuming from `episode.md` in a new session: run `edit-memory learn` before the next step, so the user's edits since the last stop are learned before anything overwrites them.
 
 Every stage starts with `marker-edit` limited to that stage's colors (A: Sand; B: Red, Green, Yellow, Purple, Fuchsia, Cocoa; C: Lavender, Sky, Rose; D: Cyan, Pink, Blue, Mint, Lemon): the user's markers are the brief for the stage.
 

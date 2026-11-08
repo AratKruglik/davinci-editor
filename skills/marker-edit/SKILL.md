@@ -9,6 +9,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__search_scripting_api"
   - "mcp__DaVinci_Resolve__get_scripting_api"
   - "Bash(python3 *catalog.py *)"
+  - "Bash(python3 *memory.py *)"
 hooks:
   PreToolUse:
     - matcher: "mcp__DaVinci_Resolve__run_script.*"
@@ -20,6 +21,8 @@ hooks:
 # Edit by markers
 
 Follow `resolve-core` first. Stage filter: `$stage` (empty = all active colors). Timeline: `$timeline` (default current).
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 The user marks material while watching; a marker's **color is the task type**, its **name is the content** (title text, chapter name), its **note is a free instruction in Ukrainian**. Read them as a human assistant editor would: no strict syntax, ask when a note is unclear.
 

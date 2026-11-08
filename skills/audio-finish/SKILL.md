@@ -10,6 +10,7 @@ allowed-tools:
   - "mcp__DaVinci_Resolve__get_scripting_api"
   - "Bash(python3 *loudness.py *)"
   - "Read"
+  - "Bash(python3 *memory.py *)"
 hooks:
   PreToolUse:
     - matcher: "mcp__DaVinci_Resolve__run_script.*"
@@ -21,6 +22,8 @@ hooks:
 # Audio finish
 
 Follow `resolve-core` first. Timeline: `$timeline` (default current). Target: `$target` (default `${user_config.loudness_target_lufs}` LUFS integrated), peak ceiling `${user_config.true_peak_db}` dBFS.
+
+Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan, and take a snapshot as the last step of every write.
 
 Script: `${CLAUDE_SKILL_DIR}/scripts/loudness.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/loudness.py selftest`).
 
