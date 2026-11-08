@@ -85,10 +85,19 @@ def match(old, new):
         if owner is not None:
             take(owner, j)
 
+    # shortcut: source frames are read as timeline frames (100% speed); speed-changed cut items shift wrongly
     steps = set()
     for i, o in enumerate(olds):
-        if o["_role"] in CUT_ROLES and (d := sum(length(news[j]) for j in pairs.get(i, [])) - length(o)):
-            steps.add((o["end"], d))
+        if o["_role"] not in CUT_ROLES:
+            continue
+        pos, rest = o["source_start"], sum(length(news[j]) for j in pairs.get(i, [])) - length(o)
+        for p in sorted((news[j] for j in pairs.get(i, [])), key=lambda p: p["source_start"]):
+            if gap := p["source_start"] - pos:
+                steps.add((max(o["start"], o["start"] + p["source_start"] - o["source_start"]), -gap))
+                rest += gap
+            pos = p["source_start"] + length(p)
+        if rest:
+            steps.add((o["end"], rest))
     # shortcut: a clip inserted on A-roll/Screen with no old counterpart adds no step; later items then read as moved
     shifts, total = [], 0
     for f, d in sorted(steps):
@@ -133,7 +142,7 @@ def diff(old, new, ledger):
         if i not in pairs:
             if o["_role"] in CUT_ROLES:
                 emit("cut_changed", o, o.get("item_id"), -length(o))
-            elif o.get("clip_id") not in cut_clips:
+            elif o["_kind"] != "audio" or o.get("clip_id") not in cut_clips:
                 emit("deleted", o, o.get("item_id"), None)
             continue
         n = news[pairs[i][0]]
@@ -146,8 +155,8 @@ def diff(old, new, ledger):
             off = n["start"] - (o["start"] + shift_at(shifts, o["start"]))
             if abs(off) > 1:
                 emit("moved", n, item_id, off)
-            # audio and video linked to a cut clip get trimmed with it; that is the cut, not a retime
-            if delta and o.get("clip_id") not in cut_clips:
+            # audio linked to a cut clip gets trimmed with it; that is the cut, not a retime
+            if delta and (o["_kind"] != "audio" or o.get("clip_id") not in cut_clips):
                 emit("retimed", n, item_id, delta)
         if (o["_kind"], o["_index"]) != (n["_kind"], n["_index"]):
             emit("track_changed", n, item_id, n["_track"])
@@ -218,9 +227,21 @@ def selftest():
         return sorted((e["type"], e["item_id"]) for e in events)
 
     new = cut48()
-    assert ripple_shift(base, new) == [(90200, -48)]
+    assert ripple_shift(base, new) == [(90128, -48)]
     events = diff(base, new, ledger)
     assert kinds(events) == [("cut_changed", "a1")], events
+    over_a1, over_cut = deepcopy(base), deepcopy(new)
+    tracks(over_a1)["Titles"].append(title("t0", 90140, "Нуль"))
+    tracks(over_cut)["Titles"].append(title("t0", 90092, "Нуль"))
+    assert kinds(diff(over_a1, over_cut, ledger)) == [("cut_changed", "a1")]
+    head = deepcopy(base)
+    tracks(head)["A-roll"][0].update(start=90000, end=90152, source_start=48)
+    assert ripple_shift(base, head) == [(90048, -48)]
+    pip = deepcopy(base)
+    pip["tracks"]["video"].append({"index": 5, "name": "PiP", "items": [item("p1", "c1", 90000, 90100)]})
+    pip_cut = deepcopy(pip)
+    tracks(pip_cut)["PiP"][0]["end"] = 90080
+    assert kinds(diff(pip, pip_cut, ledger)) == [("retimed", "p1")]
     assert events[0]["value"] == -48 and events[0]["owner"] == "user" and events[0]["track"] == "A-roll"
 
     tracks(new)["Titles"][1]["start"] += 24

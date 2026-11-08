@@ -208,7 +208,7 @@ def fusion_of(it):
     tools = comp.GetToolList(False, "TextPlus") if comp else {}
     if not tools:
         return None
-    text = sorted(tools.values(), key=lambda t: t.Name)[0]
+    text = sorted(tools.values(), key=lambda t: t.GetAttrs()["TOOLS_Name"])[0]
     center = text.GetInput("Center") or {}
     return {"text": text.GetInput("StyledText"), "center": [center.get(1), center.get(2)], "size": text.GetInput("Size")}
 
@@ -233,7 +233,7 @@ python3 <plugin>/skills/edit-memory/scripts/memory.py changed "<last handoff>.js
 python3 <plugin>/skills/edit-memory/scripts/memory.py diff "<last handoff>.json" "<fresh>.json" --ledger "<work>/placed-<timeline>.json" --out "<work>/handoff/events.json"
 ```
 
-Events: `moved` (start off by more than 1 frame after ripple compensation from A-roll / Screen length changes), `retimed` (length change on other tracks, in frames), `cut_changed` (length change or removal of an A-roll / Screen item), `deleted`, `added_by_user`, `text_changed`, `property_changed` (one event per property, with `property` and a numeric delta: `ZoomX`, `Pan`, `Opacity`, `FadeIn`, `Center.x`, `Size`, ...), `volume_changed` (`AudioVolume` delta), `track_changed`. Items match by `item_id`, then media by track role + `clip_id` + overlapping source range, then Fusion items by role + text + nearest start after the shift.
+Events: `moved` (start off by more than 1 frame after ripple compensation: frames removed from or restored to A-roll / Screen items shift what comes after, at the point of the cut), `retimed` (length change on other tracks, in frames), `cut_changed` (length change or removal of an A-roll / Screen item), `deleted`, `added_by_user`, `text_changed`, `property_changed` (one event per property, with `property` and a numeric delta: `ZoomX`, `Pan`, `Opacity`, `FadeIn`, `Center.x`, `Size`, ...), `volume_changed` (`AudioVolume` delta), `track_changed`. Items match by `item_id`, then media by track role + `clip_id` + overlapping source range, then Fusion items by role + text + nearest start after the shift.
 
 ## Fusion builds from a spec
 
