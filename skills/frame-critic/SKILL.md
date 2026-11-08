@@ -43,7 +43,7 @@ The critic looks at what the skills placed and says what is wrong, with numbers 
      --zoom-max ${user_config.zoom_max_scale} --cps-max ${user_config.subtitle_max_cps} --chars-max ${user_config.subtitle_max_chars} \
      [--rules <numeric rules file>] [--changed <element id> ...] --out "<work>/critic-<timeline>.json"
    ```
-   It writes the timeline `state`, the findings and the `verdict`. With no file yet it starts at round 1. An existing file of the same timeline keeps its `round` and the findings recorded with `add` (§2–§3), except those of elements listed in `--changed` and of elements no longer in the inventory. A new run, not a re-check inside §4, lists every element id in `--changed`, so §2–§3 measure everything again. Kinds: `short-hold` (fully visible less than 0.5 s + characters / 14, at least 3 s for a lower third), `overlap` (two text elements on screen at once; a callout may sit over another title), `near-cut` (an edge closer than 6 frames to an A-roll / Screen cut), `zoom-scale`, `cps`, `chars`. Pass `--rules` only when `edit-memory` has numeric rules (`hold_extra_s`, `max_scale`) for these owners.
+   It writes the timeline `state`, the findings and the `verdict`. A new critic run calls `check` without `--changed`: it starts at round 1 and drops every earlier finding. Only the re-check after an owner fix (§4) passes `--changed`. Kinds: `short-hold` (fully visible less than 0.5 s + characters / 14, at least 3 s for a lower third), `overlap` (two text elements on screen at once; a callout may sit over another title), `near-cut` (an edge closer than 6 frames to an A-roll / Screen cut), `zoom-scale`, `cps`, `chars`. Pass `--rules` only when `edit-memory` has numeric rules (`hold_extra_s`, `max_scale`) for these owners.
 
 The numbers always run on every element, because an overlap needs all of them. `$scope` limits §2 and §3 to that owner's elements.
 
@@ -83,7 +83,7 @@ A fix changes the timeline through the owner skill, so it starts only after the 
 
 1. Before each hand-off: `python3 ${CLAUDE_SKILL_DIR}/scripts/critic.py next-round "<work>/critic-<timeline>.json"`. Exit 1 ("max 2 rounds") means both fix rounds are used: stop fixing; what is open goes to §5.
 2. Hand each owner its findings: element id, kind, TC, message and `fix.change`. The owner changes its own spec and re-applies only those elements; nobody edits them in Resolve by hand, the critic least of all. An owner that can't take the fix leaves the finding open.
-3. Re-check: fresh dump, `inventory`, then `check` into the same file with `--changed` listing the elements the owners re-applied. It keeps the round from step 1, writes the new `state` (so `critic.py stale` stays right) and keeps the §2–§3 findings of the untouched elements. A re-applied element that came back with a new item id counts as changed automatically, because its old id is gone from the inventory. Repeat §2–§3 only for the changed elements.
+3. Re-check: fresh dump, `inventory`, then `check` into the same file with `--changed` listing the elements the owners re-applied. With `--changed`, an existing file of the same timeline keeps its round from step 1 and the §2–§3 findings of the untouched elements; the `state` is new, so `critic.py stale` stays right. A re-applied element that came back with a new item id counts as changed automatically, because its old id is gone from the inventory. Repeat §2–§3 only for the changed elements.
 
 `fix.change` names the owner's own parameter and a value, never "fix it":
 

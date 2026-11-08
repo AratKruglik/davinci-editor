@@ -3,8 +3,9 @@
 python3 critic.py inventory <placed ledger.json> <dump.json> --out elements.json
 python3 critic.py check <elements.json> <dump.json> --zoom-max Z --cps-max C --chars-max N [--rules rules.json]
                         [--changed ELEMENT_ID ...] --out critic.json
-      (an existing critic.json of the same timeline keeps its round and its `add` findings, except those of
-       --changed elements and of elements no longer in the inventory)
+      (without --changed: a fresh run, round 1. With --changed: a re-check after a fix; an existing critic.json of
+       the same timeline keeps its round and its `add` findings, except those of the --changed elements and of
+       elements no longer in the inventory)
 python3 critic.py add <critic.json> --severity error|warn --kind K --element ID --tc TC --message M
                       [--frame F] [--still PATH] [--bbox x0 y0 x1 y1] [--fix-skill S --fix-change C]
 python3 critic.py bbox <track on.tif> <track off.tif>      (bounds of what changed between the two renders)
@@ -286,6 +287,28 @@ def selftest():
     other = carry_over(other, first, elements)
     assert other["round"] == 1 and [f["kind"] for f in other["findings"]] == ["short-hold"], other
 
+    with tempfile.TemporaryDirectory() as d:
+        paths = {n: os.path.join(d, f"{n}.json") for n in ("el", "dump", "critic")}
+        dump = dump_with(["a"])
+        elements, _ = inventory({"timeline_id": "tl", "items": [entry("a", hold=2)]}, dump)
+        stored = check(elements, dump, base)
+        add_finding(stored, "error", "offscreen", "fusion-motion-graphics/a", "01:00:12:12", "edge", frame=86700, source="add")
+        stored["round"] = 3
+        for name, data in (("el", elements), ("dump", dump), ("critic", stored)):
+            with open(paths[name], "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False)
+
+        def cli_check(*extra):
+            subprocess.run([sys.executable, os.path.abspath(__file__), "check", paths["el"], paths["dump"], "--zoom-max", "2.5",
+                            "--cps-max", "17", "--chars-max", "32", "--out", paths["critic"], *extra], check=True, capture_output=True)
+            with open(paths["critic"], encoding="utf-8") as f:
+                return json.load(f)
+
+        recheck = cli_check("--changed", "fusion-motion-graphics/other")
+        assert recheck["round"] == 3 and sorted(f["kind"] for f in recheck["findings"]) == ["offscreen", "short-hold"], recheck
+        fresh = cli_check()
+        assert fresh["round"] == 1 and [f["kind"] for f in fresh["findings"]] == ["short-hold"], fresh
+
     rules = [{"scope": {"kind": "lower-third"}, "param": {"name": "hold_extra_s", "value": 1.0}},
              {"scope": {"kind": "lower-third"}, "param": {"name": "hold_extra_s", "value": 0.5}},
              {"scope": {"kind": "zoom"}, "param": {"name": "max_scale", "value": 2.0}},
@@ -345,7 +368,7 @@ def main():
     ck.add_argument("--cps-max", type=float, required=True)
     ck.add_argument("--chars-max", type=int, required=True)
     ck.add_argument("--rules")
-    ck.add_argument("--changed", nargs="+", default=[])
+    ck.add_argument("--changed", nargs="+")
     ck.add_argument("--out", required=True)
     bb = sub.add_parser("bbox")
     bb.add_argument("on")
@@ -388,7 +411,7 @@ def main():
             cfg = apply_rules(cfg, read(a.rules))
         elements = read(a.elements)
         result = check(elements, read(a.dump), cfg)
-        if os.path.exists(a.out):
+        if a.changed and os.path.exists(a.out):
             result = carry_over(result, read(a.out), elements, a.changed)
         write(a.out, result)
         return print(json.dumps({"out": a.out, "round": result["round"], "verdict": result["verdict"], "counts": result["counts"]}))
