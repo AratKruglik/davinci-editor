@@ -1,6 +1,6 @@
 ---
 name: thumbnail-frames
-description: Finds thumbnail candidate frames in a graded, cut timeline in DaVinci Resolve Studio 21+ - the user's Lemon markers plus strong moments from the transcript (result, reveal, emotion), exports a short burst of clean stills around each (titles and subtitles hidden) so a blink or motion blur doesn't cost the moment, ranks them by sharpness and exposure with a script, looks at the best ones for eyes, expression and room for text, and writes a thumbnail brief with full-resolution PNGs.
+description: Finds thumbnail candidate frames in a graded, cut timeline in DaVinci Resolve Studio 21+ - the user's Lemon markers plus strong moments from the transcript (result, reveal, emotion), exports a short burst of clean stills around each (titles and subtitles hidden) so a blink or motion blur doesn't cost the moment, ranks them by sharpness and exposure with a script, looks at the best ones for eyes, expression and room for text, has edit-judge rank them blind on content, and writes a thumbnail brief with full-resolution PNGs.
 when_to_use: User wants frames for a YouTube thumbnail / cover, the best shot of the face, or has Lemon markers; the thumbnail step of edit-episode stage D. Triggers - "кадри для обкладинки", "знайди кадр для превʼю", "кадр для мініатюри", "thumbnail frames", "обкладинка", "найкращий кадр".
 argument-hint: "[timeline] [count]"
 arguments: [timeline, count]
@@ -42,9 +42,16 @@ What makes a frame work at 160 px wide: one readable face, eyes open and looking
 
 ## 3. Look
 
-Read the two best-scored stills of every moment (more if they're close). For each, judge: eyes open and sharp, expression readable, mouth not mid-word in an awkward shape, face size (≥ ~⅓ of frame height is best), head not cut, space for text (left or right third), background not busy. Discard frames that fail on eyes or sharpness, whatever their score.
+Read the two best-scored stills of every moment (more if they're close). For each, judge: eyes open and sharp, expression readable, mouth not mid-word in an awkward shape, face size (≥ ~⅓ of frame height is best), head not cut, space for text (left or right third), background not busy. Discard frames that fail on eyes or sharpness, whatever their score. Keep the best remaining still of each moment and your own order of them to yourself until the judge has answered.
 
-Pick `$count`. For each pick export a full-resolution PNG for the designer, the same call without `maxDimension` and with `.png` (older Resolve: `ExportCurrentFrameAsStill` with `.png`); on 21.1.2+ also a full-resolution 16-bit `.tif` for retouching, into `<work>/thumbnails/full/` (the burst stills in `thumbnails/` stay the 1280 px ones `thumbs.py` scored). Put a Cream marker at each pick (`customData` `claude:thumbnail`, name = short description).
+**Blind ranking** (2 or more moments left; `edit-judge` §1 pick): the judge adds the content criteria (clear topic, readable when small, emotion).
+1. Export each kept still again as a neutral PNG, `<work>/thumbnails/blind/cand-NN.png`, numbered in timeline order (never by score), with `maxDimension` 1280 and the tracks hidden and restored as in §2 (older Resolve: `ExportCurrentFrameAsStill` with `.png`). Stills come from the timeline already current, so no switch is needed.
+2. Write `<work>/candidates-thumbnails.json`: `[{"id": "<moment>_<offset>", "label": "<moment>", "still": "thumbnails/blind/cand-NN.png"}]`.
+3. `edit-judge pick "<work>/candidates-thumbnails.json"` and wait for the reply.
+
+Show the judge's ranking first (and whether first place is a tie), then yours with the technical scores, then ask the user to pick; the user's choice decides. A judge reply without a ranking is shown as that.
+
+For each of the `$count` picks (the user's, or the judge's top `$count` if the user leaves it to you) export a full-resolution PNG for the designer, the same call without `maxDimension` and with `.png` (older Resolve: `ExportCurrentFrameAsStill` with `.png`); on 21.1.2+ also a full-resolution 16-bit `.tif` for retouching, into `<work>/thumbnails/full/` (the burst stills in `thumbnails/` stay the 1280 px ones `thumbs.py` scored). Put a Cream marker at each pick (`customData` `claude:thumbnail`, name = short description).
 
 ## 4. Brief
 

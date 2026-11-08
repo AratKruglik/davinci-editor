@@ -1,6 +1,6 @@
 ---
 name: shorts-cutdown
-description: Cuts YouTube Shorts / Reels from a finished horizontal episode in DaVinci Resolve Studio 21+ - finds self-contained 30-60 s moments in the transcript (a hook in the first seconds, one idea, a payoff, no "as I said earlier") and the user's Mint markers, proposes them for approval, builds each on its own vertical timeline from the source media (so it stays editable), reframes with Smart Reframe and checks the face on stills, then hands over to animated captions and delivery.
+description: Cuts YouTube Shorts / Reels from a finished horizontal episode in DaVinci Resolve Studio 21+ - finds self-contained 30-60 s moments in the transcript (a hook in the first seconds, one idea, a payoff, no "as I said earlier") and the user's Mint markers, has edit-judge rank them blind, proposes them for approval, builds each on its own vertical timeline from the source media (so it stays editable), reframes with Smart Reframe and checks the face on stills, then hands over to animated captions and delivery.
 when_to_use: User wants Shorts, Reels, TikToks, vertical clips or a teaser from an episode, or has Mint markers; the Shorts step of edit-episode stage D. Triggers - "зроби шортс", "наріж шортсів", "вертикальні відео", "рілс з цього відео", "знайди моменти для шортс", "shorts", "vertical cutdown".
 argument-hint: "[timeline] [count]"
 arguments: [timeline, count]
@@ -46,7 +46,14 @@ For each candidate (Mint first, then your own if `$count` asks for more), judge 
 - **Self-contained:** no references to earlier parts, slides or "this screen above"; no step that only makes sense with a horizontal screen recording (code and UI are unreadable in 9:16; prefer talking-head moments).
 - **Tight:** you may drop a digression inside the range (up to 2 extra joins), cutting on sentence borders only.
 
-Propose in one table: `# | source TC range | seconds | hook (first words) | payoff (last words) | joins | why it works | risk`. Put a Cream marker at each proposal's start on the source timeline (`customData` `claude:shorts:<id>`, name = proposed title). Put the whole table, every proposal with its ranges, hook and payoff, into the approval question itself (not a pointer to a later report), and wait for the yes; the user may change ranges.
+Propose in one table: `# | source TC range | seconds | hook (first words) | payoff (last words) | joins | why it works | risk`. Put a Cream marker at each proposal's start on the source timeline (`customData` `claude:shorts:<id>`, name = proposed title).
+
+**Blind ranking** (2 or more proposals; `edit-judge` §1 pick): keep your own order to yourself until the judge has answered.
+1. Make the source timeline current if it isn't, keeping the user's one to restore ([frame-critic reference](../frame-critic/reference.md#make-the-checked-timeline-current)).
+2. Write `<work>/candidates-shorts.json`: `[{"id": "<id>", "label": "<proposed title>", "range": ["<start TC>", "<end TC>"], "text": "<excerpt>"}]`. `range` runs from the first range's start to the last range's end on the source timeline, converted with `tc.py` (the judge passes it to `get_thumbnails`, which reads a bare number as an offset from the timeline start, not an absolute frame). `text` is the transcript of the kept sentences in playing order, cold open first, and nothing else: no number, title, "why it works" or rank.
+3. `edit-judge pick "<work>/candidates-shorts.json"` and wait for the reply; don't switch timelines or edit meanwhile. Then restore the user's timeline.
+
+Put the whole table, every proposal with its ranges, hook and payoff, into the approval question itself (not a pointer to a later report): the judge's ranking first (and whether first place is a tie), then yours, then the line that the user's choice decides. A judge reply without a ranking is shown as that. Wait for the yes; the user may change ranges or pick any proposal.
 
 Write the approved ones to `<work>/shorts/shorts.json` (`[{"id", "title", "ranges": [[start, end], …]}]`, cut-timeline frames from `sentences.json`).
 
