@@ -2,7 +2,8 @@
 
 python3 memory.py changed <old snapshot.json> <new snapshot.json>      (exit 1 = the timeline changed)
 python3 memory.py diff <old snapshot.json> <new snapshot.json> [--ledger placed.json] --out events.json
-python3 memory.py log events.json --project P --timeline T [--date YYYY-MM-DD] [--memory edit-memory.json]
+python3 memory.py log events.json --project P --timeline T [--date YYYY-MM-DD] [--memory edit-memory.json] [--promote FRESH]
+python3 memory.py promote <handoff/fresh-<timeline_id>.json>     (rename it to <timeline_id>-<YYYYMMDD-HHMMSS>.json)
 python3 memory.py lessons|show [--memory edit-memory.json]
 python3 memory.py approve --candidate '<json or file>' --text T [--param name=value] [--format F] [--memory ...]
 python3 memory.py reject <event id>... | forget <rule id> | confirm <rule id> [--memory ...]
@@ -10,6 +11,7 @@ python3 memory.py rules [--skill S] [--format F] [--memory ...]            (JSON
 python3 memory.py selftest
 
 --memory is the rules file; the event log edit-memory-events.jsonl sits in the same folder.
+log --promote renames that fresh snapshot only after the events are logged, so a failed log keeps the old starting point.
 
 Snapshots: resolve-core/reference.md "Handoff snapshot". Frames are absolute timeline frames.
 """
@@ -22,7 +24,7 @@ import sys
 import tempfile
 import statistics
 from copy import deepcopy
-from datetime import date as today
+from datetime import date as today, datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "resolve-core", "scripts"))
@@ -145,6 +147,9 @@ def diff(old, new, ledger):
 
     def emit(kind, item, item_id, value, **extra):
         entry = owners.get(item_id)
+        # where a cut or a media clip sits is the user's edit, even on an item that holds a skill's zooms or PiP layout
+        if kind == "cut_changed" or (kind in ("moved", "retimed") and item.get("clip_id") is not None):
+            entry = None
         events.append({"type": kind, "owner": entry["owner"] if entry else "user", "kind": entry["kind"] if entry else None,
                        "item_id": item_id, "track": item["_track"], "tc": frames_to_tc(item["start"], new["fps"], new.get("drop_frame", False)),
                        "frame": item["start"], "value": value, **extra})
@@ -190,6 +195,7 @@ def diff(old, new, ledger):
 
 
 EVENTS_NAME = "edit-memory-events.jsonl"
+FRESH_PREFIX = "fresh-"
 SAME_CUT_FRAMES = 2
 
 
@@ -207,6 +213,23 @@ def write_atomic(path, text):
     except BaseException:
         os.unlink(tmp)
         raise
+
+
+def snapshot_name(fresh):
+    name = os.path.basename(fresh)
+    timeline_id = name[len(FRESH_PREFIX):-len(".json")]
+    if not (name.startswith(FRESH_PREFIX) and name.endswith(".json") and timeline_id and os.path.isfile(fresh)):
+        raise ValueError(f"not a fresh snapshot file: {fresh}")
+    target = os.path.join(os.path.dirname(os.path.abspath(fresh)), f"{timeline_id}-{datetime.now():%Y%m%d-%H%M%S}.json")
+    if os.path.exists(target):
+        raise ValueError(f"{target} exists already")
+    return target
+
+
+def promote(fresh, target=None):
+    target = target or snapshot_name(fresh)
+    os.rename(fresh, target)
+    return target
 
 
 def read_rules(memory_path):
@@ -458,6 +481,13 @@ def selftest():
     assert ripple_shift(screen, synced) == [(90180, -40)]
     assert {e["type"] for e in diff(screen, synced, ledger)} == {"cut_changed"}
     assert kinds(diff(base, screen, ledger)) == [("added_by_user", "s1")]
+    zoomed = {"items": ledger["items"] + [{"item_id": "s1", "owner": "tutorial-zooms", "kind": "zoom", "part": "0"}]}
+    for edge in ("start", "end"):
+        screen_trim = deepcopy(screen)
+        s1 = tracks(screen_trim)["Screen"][0]
+        s1.update(start=90030, source_start=30) if edge == "start" else s1.update(end=90570)
+        trim_events = diff(screen, screen_trim, zoomed)
+        assert [(e["type"], e["owner"], e["kind"], e["value"]) for e in trim_events] == [("cut_changed", "user", None, -30)], trim_events
     shifted = deepcopy(base)
     shifted["tracks"]["video"].insert(0, {"index": 1, "name": "Backgrounds", "items": []})
     for i, t in enumerate(shifted["tracks"]["video"]):
@@ -471,6 +501,9 @@ def selftest():
     pip_cut = deepcopy(pip)
     tracks(pip_cut)["PiP"][0]["end"] = 90080
     assert kinds(diff(pip, pip_cut, ledger)) == [("retimed", "p1")]
+    pip_owned = {"items": ledger["items"] + [{"item_id": "p1", "owner": "dual-video-sync-pip", "kind": "pip", "part": None}]}
+    assert [(e["type"], e["owner"]) for e in diff(pip, pip_cut, pip_owned)] == [("retimed", "user")]
+    assert [e["owner"] for e in diff(base, trimmed, ledger)] == ["user"], "a B-roll trim is not a tutorial-zooms habit"
     assert events[0]["value"] == -48 and events[0]["owner"] == "user" and events[0]["track"] == "A-roll"
 
     tracks(new)["Titles"][1]["start"] += 24
@@ -647,6 +680,38 @@ def selftest_memory():
             main(["lessons", "--memory", mem])
         first, second = main_out.getvalue().splitlines()
         assert json.loads(first) == [] and isinstance(json.loads(second), list)
+    selftest_promote()
+
+
+def selftest_promote():
+    with tempfile.TemporaryDirectory() as tmp:
+        mem, handoff = os.path.join(tmp, "m.json"), os.path.join(tmp, "handoff")
+        os.makedirs(handoff)
+        fresh, other = os.path.join(handoff, "fresh-tl-1.json"), os.path.join(handoff, "fresh-tl-2.json")
+        events, broken = os.path.join(tmp, "events.json"), os.path.join(tmp, "broken.json")
+        for path, text in ((fresh, '{"timeline_id": "tl-1"}'), (other, '{"timeline_id": "tl-2"}'),
+                           (events, json.dumps([{"type": "retimed", "owner": "o", "kind": "lower-third", "item_id": "t1",
+                                                 "track": "Titles", "tc": "01:00:00:00", "frame": 0, "value": 5}])), (broken, "[{")):
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
+        log_args = ["--project", "P", "--timeline", "T", "--memory", mem, "--promote"]
+        quiet = io.StringIO()
+        with contextlib.redirect_stdout(quiet), contextlib.redirect_stderr(quiet):
+            assert main(["log", os.path.join(tmp, "missing.json"), *log_args, fresh]) == 2
+            assert main(["log", broken, *log_args, fresh]) == 2
+            assert os.path.exists(fresh) and read_events(events_path_for(mem)) == [], "a failed log renames nothing"
+            assert main(["log", events, *log_args, events]) == 2 and read_events(events_path_for(mem)) == [], \
+                "a wrong --promote path is refused before anything is logged"
+            assert main(["log", events, *log_args, fresh]) is None
+        snapshots = sorted(f for f in os.listdir(handoff) if not f.startswith(FRESH_PREFIX))
+        assert len(snapshots) == 1 and snapshots[0].startswith("tl-1-") and len(snapshots[0]) == len("tl-1-YYYYMMDD-HHMMSS.json"), snapshots
+        assert not os.path.exists(fresh) and os.path.exists(other) and len(read_events(events_path_for(mem))) == 1
+        with open(os.path.join(handoff, snapshots[0]), encoding="utf-8") as f:
+            assert json.load(f) == {"timeline_id": "tl-1"}
+        with contextlib.redirect_stdout(quiet), contextlib.redirect_stderr(quiet):
+            assert main(["promote", fresh]) == 2
+            main(["promote", other])
+        assert not os.path.exists(other) and len([f for f in os.listdir(handoff) if f.startswith("tl-2-")]) == 1
 
 
 def main(argv=None):
@@ -672,6 +737,9 @@ def main(argv=None):
     lg.add_argument("--project", required=True)
     lg.add_argument("--timeline", required=True)
     lg.add_argument("--date", default=today.today().isoformat())
+    lg.add_argument("--promote", metavar="FRESH", help="handoff/fresh-<timeline_id>.json to rename once the log is written")
+    pr = sub.add_parser("promote")
+    pr.add_argument("fresh")
     memory_arg(sub.add_parser("lessons"))
     memory_arg(sub.add_parser("show"))
     ap_ = memory_arg(sub.add_parser("approve"))
@@ -708,11 +776,19 @@ def main(argv=None):
         with open(a.out, "w", encoding="utf-8") as f:
             json.dump(events, f, ensure_ascii=False, indent=1)
         return out({"out": a.out, "events": len(events), "shift": ripple_shift(old, new)})
+    if a.cmd == "promote":
+        try:
+            return out({"snapshot": promote(a.fresh)})
+        except (ValueError, OSError) as err:
+            print(err, file=sys.stderr)
+            return 2
 
     log = events_path_for(a.memory)
     try:
         if a.cmd == "log":
-            out({"logged": log_events(log, read(a.events), a.project, a.timeline, a.date)})
+            target = snapshot_name(a.promote) if a.promote else None
+            logged = log_events(log, read(a.events), a.project, a.timeline, a.date)
+            out({"logged": logged, **({"snapshot": promote(a.promote, target)} if target else {})})
         elif a.cmd == "lessons":
             out(lessons(log, read_rules(a.memory)))
         elif a.cmd == "show":
@@ -733,7 +809,7 @@ def main(argv=None):
             out(confirm(a.memory, a.id))
         else:
             out(rules(a.memory, a.skill, a.format))
-    except ValueError as err:
+    except (ValueError, OSError) as err:
         print(err, file=sys.stderr)
         return 2
 

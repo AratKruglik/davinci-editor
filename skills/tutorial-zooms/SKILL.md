@@ -55,11 +55,11 @@ Build, per item (all zooms on one item go into one comp):
    It eases in and out (`inout` cubic), keeps the scaled image covering the frame (focus clamped near edges), and chains zooms closer than 1 s into a pan. Report its warnings.
 3. Apply the spec with the Fusion builder (`resolve-core/reference.md#fusion-builds-from-a-spec`): `MediaIn1 → ZOOM (Transform) → MediaOut1`. The zoom lives inside the comp, so the clip's Inspector transform (PiP layout from `dual-video-sync-pip`) stays as it is; check the PiP still sits right after the first build.
 4. Verify each zoom: stills (same `tl.ExportFrame` call) at its middle and 1 s after its end, Read them: the element is centered and readable, no black edge, back to full frame afterwards. Fusion on 4K screen recordings is heavy: offer `item.SetFusionOutputCache("Auto")` for smooth playback.
-5. Record the item's zooms in the ledger `frame-critic` reads: `tl.GetUniqueId()`, `item.GetUniqueId()` and the item's track name, then every row of the spec's `zooms` as one part (its frames are timeline frames; `full` = start + ease, `hold_end` = end − ease, or the end when it pans on to the next zoom). Drop the item first, so a rebuild with fewer zooms leaves no old parts; one Bash call, chained with `&&`:
+5. Record the item's zooms in the ledger `frame-critic` reads: `tl.GetUniqueId()`, `item.GetUniqueId()`, `item.GetStart()` (the `item_start` of `zooms.json`) and the item's track name, then every row of the spec's `zooms` as one part (its frames are timeline frames; `full` = start + ease, `hold_end` = end − ease, or the end when it pans on to the next zoom). Drop the item first, so a rebuild with fewer zooms leaves no old parts; one Bash call, chained with `&&`:
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py drop "<work>/placed-<timeline>.json" --item-id <item id> && \
    python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py add "<work>/placed-<timeline>.json" --timeline-id <tl id> --item-id <item id> --owner tutorial-zooms --kind zoom --track "<track name>" --part "<row id>" \
-     --start <row start> --end <row end> --full <row full> --hold-end <row hold_end> --gone <row end> --scale <row scale> --spec "<work>/zooms/<item>-spec.json" && …
+     --item-start <item.GetStart()> --start <row start> --end <row end> --full <row full> --hold-end <row hold_end> --gone <row end> --scale <row scale> --spec "<work>/zooms/<item>-spec.json" && …
    ```
 
 **MotionVFX zoom (only when the user asks for it, Resolve 21.1.2+).** The `mHowTo Zoom` effect instead of the Transform route, on a media item only:

@@ -72,7 +72,7 @@ Report what was written: new rules (id, text, param), confirmations, rejected ev
 Every `learn` report lists it:
 
 - Volume keyframes (no API), grades, keyframes of Transform and other inputs inside Fusion comps (the moves of screen zooms included), and Fusion tools other than the first Text+ (its text, `Center` and `Size` are compared).
-- Edits to items no skill recorded in a ledger: cuts on A-roll, B-roll, music, the user's own titles. They are logged as owner `user` and never become rules, so cut decisions of `text-based-cut`, `split-edits` and `sound-design` aren't learned.
+- Edits to items no skill recorded in a ledger: cuts on A-roll, B-roll, music, the user's own titles. They are logged as owner `user` and never become rules, so cut decisions of `text-based-cut`, `split-edits` and `sound-design` aren't learned. The same holds for every `cut_changed` and for moving or trimming a media item (A-roll, Screen, B-roll, PiP footage) even when a skill recorded it (the zooms on a screen recording, a PiP): where footage sits is the user's cut; only Fusion comps and generators keep their skill as owner for timing, and property changes keep it on any item.
 - Edits on a timeline without an earlier snapshot (from before this skill, or a copy Claude never handed off).
 - Items that lost their id (Resolve restart, blade in the UI: unverified) are matched by content, which can miss an edit or read one as delete + add.
 

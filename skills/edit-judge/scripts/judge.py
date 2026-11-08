@@ -26,6 +26,7 @@ import random
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "resolve-core", "scripts"))
+from placed import live
 from tc import frames_to_tc
 
 CRITERIA = ("hook", "pace", "graphics", "consistency", "rules", "ending")
@@ -58,7 +59,7 @@ def metrics(dump, words, ledger, fmt, pause_ms):
     tracks = dump["tracks"].get("video", []) + dump["tracks"].get("audio", [])
     end = dump.get("end_frame") or max((i["end"] for t in tracks for i in t["items"]), default=t0)
     spoken = sorted(words.get("words", []), key=lambda w: w["start"])
-    entries = ledger.get("items", [])
+    entries, _ = live(ledger, dump)
 
     hook = [w["text"] for w in spoken if w["start"] < t0 + HOOK_S[fmt] * fps]
     pauses = [[tc(a["end"]), tc(b["start"])] for a, b in zip(spoken, spoken[1:])
@@ -240,15 +241,21 @@ def selftest():
     def item(start, end, item_id="i"):
         return {"item_id": item_id, "start": start, "end": end, "enabled": True}
 
-    def dump_of(video, end, start=90000):
+    def dump_of(video, end, start=90000, ledger=None):
+        placed = [item(e["item_start"], e["item_start"] + e["end"] - e["start"], e["item_id"]) for e in (ledger or {}).get("items", [])]
         return {"fps": fps, "start_frame": start, "end_frame": end,
-                "tracks": {"video": [{"name": n, "items": items} for n, items in video.items()], "audio": []}}
+                "tracks": {"video": [{"name": n, "items": items} for n, items in video.items()] + [{"name": "Titles", "items": placed}],
+                           "audio": []}}
 
     def word(text, start, end):
         return {"text": text, "start": start, "end": end}
 
     def entry(kind, start, end):
-        return {"item_id": f"{kind}{start}", "kind": kind, "start": start, "end": end, "full": start, "hold_end": end, "gone": end, "part": None}
+        return {"item_id": f"{kind}{start}", "owner": "o", "kind": kind, "track": "Titles", "item_start": start, "start": start, "end": end,
+                "full": start, "hold_end": end, "gone": end, "part": None}
+
+    def placed_metrics(video, end, words, ledger, fmt="youtube"):
+        return metrics(dump_of(video, end, ledger=ledger), words, ledger, fmt, 700)
 
     t0 = 90000
     long = dump_of({"A-roll": [item(t0, t0 + 25 * fps)]}, t0 + 25 * fps)
@@ -256,10 +263,17 @@ def selftest():
     assert m["static"] == [["01:00:00:00", "01:00:25:00"]], m["static"]
     cut = dump_of({"A-roll": [item(t0, t0 + 10 * fps), item(t0 + 10 * fps, t0 + 25 * fps)]}, t0 + 25 * fps)
     assert metrics(cut, {"words": []}, {"items": []}, "youtube", 700)["static"] == [], "cuts end the static span"
-    zoomed = metrics(long, {"words": []}, {"items": [entry("zoom", t0 + 12 * fps, t0 + 14 * fps)]}, "youtube", 700)
+    a_roll = {"A-roll": [item(t0, t0 + 25 * fps)]}
+    zoomed = placed_metrics(a_roll, t0 + 25 * fps, {"words": []}, {"items": [entry("zoom", t0 + 12 * fps, t0 + 14 * fps)]})
     assert zoomed["static"] == [], zoomed["static"]
-    titled = metrics(long, {"words": []}, {"items": [entry("lower-third", t0 + 2 * fps, t0 + 4 * fps)]}, "youtube", 700)
+    titled = placed_metrics(a_roll, t0 + 25 * fps, {"words": []}, {"items": [entry("lower-third", t0 + 2 * fps, t0 + 4 * fps)]})
     assert titled["static"] == [["01:00:04:00", "01:00:25:00"]], titled["static"]
+    deleted = metrics(long, {"words": []}, {"items": [entry("lower-third", t0 + 2 * fps, t0 + 4 * fps)]}, "youtube", 700)
+    assert deleted["static"] == [["01:00:00:00", "01:00:25:00"]] and deleted["per_kind"] == {}, "an entry gone from the timeline is ignored"
+    moved_lt = entry("lower-third", t0 + 2 * fps, t0 + 4 * fps)
+    moved_dump = dump_of(a_roll, t0 + 25 * fps, ledger={"items": [{**moved_lt, "item_start": t0 + 21 * fps}]})
+    moved = metrics(moved_dump, {"words": []}, {"items": [moved_lt]}, "youtube", 700)
+    assert moved["static"] == [["01:00:00:00", "01:00:21:00"]], moved["static"]
     overlay = dump_of({"A-roll": [item(t0, t0 + 25 * fps)], "Titles 2": [item(t0 + 10 * fps, t0 + 12 * fps)]}, t0 + 25 * fps)
     assert metrics(overlay, {"words": []}, {"items": []}, "youtube", 700)["static"] == [["01:00:00:00", "01:00:25:00"]]
     for seconds, expected in ((3, 0), (5, 1)):
@@ -268,9 +282,8 @@ def selftest():
 
     words = {"words": [word("Привіт", t0 + 10, t0 + 20), word("світ", t0 + 25, t0 + 50), word("тут", t0 + 100, t0 + 110),
                        word("пізно", t0 + 40 * fps, t0 + 41 * fps)]}
-    m = metrics(dump_of({"A-roll": [item(t0, t0 + 50 * fps)]}, t0 + 50 * fps), words,
-                {"items": [entry("lower-third", t0 + 100, t0 + 200), entry("lower-third", t0 + 300, t0 + 400), entry("zoom", t0 + 500, t0 + 600)]},
-                "youtube", 700)
+    m = placed_metrics({"A-roll": [item(t0, t0 + 50 * fps)]}, t0 + 50 * fps, words,
+                       {"items": [entry("lower-third", t0 + 100, t0 + 200), entry("lower-third", t0 + 300, t0 + 400), entry("zoom", t0 + 500, t0 + 600)]})
     assert m["hook_words"]["count"] == 3 and m["hook_words"]["text"] == "Привіт світ тут", m["hook_words"]
     assert m["pauses"] == [["01:00:02:00", "01:00:04:00"], ["01:00:04:10", "01:00:40:00"]], m["pauses"]
     assert m["per_kind"] == {"lower-third": 2, "zoom": 1}, m["per_kind"]

@@ -104,7 +104,7 @@ Show the plan (sections with timecodes, mode, duration; layout) and get a yes. B
 7. Record every PiP item in the ledger `frame-critic` reads, with its real place on the timeline: `tl.GetUniqueId()`, and per item `GetUniqueId()`, `GetStart()`, `GetEnd()` (return them from the step 2 append script, or read the PiP track back). A PiP is fully on screen for its whole segment. One Bash call, chained with `&&`:
    ```bash
    python3 ${CLAUDE_SKILL_DIR}/../resolve-core/scripts/placed.py add "<work>/placed-<timeline>.json" --timeline-id <tl id> --item-id <item id> --owner dual-video-sync-pip --kind pip --track "<PiP track name>" \
-     --start <GetStart> --end <GetEnd> --full <GetStart> --hold-end <GetEnd> --gone <GetEnd> --spec "<work>/pip-plan.json" && …
+     --item-start <GetStart> --start <GetStart> --end <GetEnd> --full <GetStart> --hold-end <GetEnd> --gone <GetEnd> --spec "<work>/pip-plan.json" && …
    ```
 
 ## 6. Optional: MotionVFX placeholder

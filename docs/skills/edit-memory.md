@@ -43,7 +43,7 @@ Ukrainian trigger phrases: «чого ти навчився», «запам'ят
 
 - Volume keyframes (Resolve has no API for them) and grades.
 - Keyframes inside Fusion comps (the moves of screen zooms included) and Fusion tools other than a title's first Text+.
-- Cut decisions of `text-based-cut`, `split-edits` and `sound-design`: they don't record what they place, so a changed cut is logged as yours and not learned.
+- Cut decisions of `text-based-cut`, `split-edits` and `sound-design`: they don't record what they place, so a changed cut is logged as yours and not learned. Moving or trimming footage (A-roll, Screen, B-roll, PiP) is logged as yours too, even on a screen recording that holds zooms or a PiP clip: only titles and other Fusion graphics teach their skill timing, while scale, position and opacity changes teach the skill on any item.
 - Items whose Resolve id changed (after a restart, or a blade in the UI: unverified) are matched by content instead, which can miss an edit or read it as delete + add.
 
 Every `learn` report repeats this list.

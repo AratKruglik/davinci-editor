@@ -112,9 +112,9 @@ def caption_spec(caps, item_start, comp_start, brand, highlight=True):
     size, spot = brand.get("size", 0.075), (0.5, 0.36)   # above the Shorts UI at the bottom, clear of the right icons
     tools = [{"name": "CLEAR", "id": "Background", "inputs": {"Width": brand["width"], "Height": brand["height"], "TopLeftAlpha": 0.0}}]
     layer = "CLEAR"
+    pop = max(2, round(0.12 * fps))
     for n, c in enumerate(caps["captions"], 1):
         s, e = to_comp(c["start"]), to_comp(c["end"])
-        pop = max(2, round(0.12 * fps))
         base = text_tool(f"CAP{n}", c["text"], brand["font"], brand["style"], size, hex_rgb(brand["text"]), spot, 1)
         base["inputs"].update({"Enabled2": 1, "Red2": 0.0, "Green2": 0.0, "Blue2": 0.0, "Alpha2": 0.85, "Thickness2": 0.08})
         base["keys"] = {"Size": merge_keys(ramp(s, s + pop, size * 0.9, size, "out"))}
@@ -135,7 +135,7 @@ def caption_spec(caps, item_start, comp_start, brand, highlight=True):
                            "connect": {"Background": f"{layer}.Output", "Foreground": f"HI{n}.Output"}}]
             layer = f"HMIX{n}"
     tools.append({"name": "MediaOut1", "id": "MediaOut", "connect": {"Input": f"{layer}.Output"}})
-    return {"captions": len(caps["captions"]), "highlight": highlight, "tools": tools,
+    return {"captions": len(caps["captions"]), "highlight": highlight, "pop_frames": pop, "tools": tools,
             "visible": [to_comp(caps["captions"][0]["start"]), to_comp(caps["captions"][-1]["end"])] if caps["captions"] else None}
 
 
@@ -179,6 +179,8 @@ def selftest():
     assert spec["tools"][-1]["connect"]["Input"] == f"HMIX{len(caps['captions'])}.Output"
     mix1 = next(t for t in spec["tools"] if t["name"] == "MIX1")["keys"]["Blend"]
     assert mix1["0"] == 1.0 and mix1[str(caps["captions"][0]["end"] - 1000)] == 0.0, mix1
+    size = next(t for t in spec["tools"] if t["name"] == "CAP1")["keys"]["Size"]
+    assert spec["pop_frames"] == 3 and max(size, key=int) == str(spec["pop_frames"]), size
     plain = caption_spec(caps, 1000, 0, brand, highlight=False)
     assert not any(t["name"].startswith("HI") for t in plain["tools"])
     print("subtitles selftest ok")
@@ -223,7 +225,8 @@ def main():
         os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
         with open(a.out, "w", encoding="utf-8") as f:
             json.dump(spec, f, ensure_ascii=False, indent=1)
-        return print(json.dumps({"out": a.out, "captions": spec["captions"], "tools": len(spec["tools"]), "visible": spec["visible"]}))
+        return print(json.dumps({"out": a.out, "captions": spec["captions"], "tools": len(spec["tools"]), "visible": spec["visible"],
+                                 "pop_frames": spec["pop_frames"]}))
     if a.cmd == "srt":
         srt, cues, warnings = build_srt(data, a.max_chars, a.max_lines, a.max_cps, a.min_s, a.max_s)
         os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)

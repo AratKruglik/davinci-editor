@@ -10,7 +10,8 @@ python3 critic.py check <elements.json> <dump.json> --zoom-max Z --cps-max C --c
 python3 critic.py add <critic.json> --severity error|warn --kind K --element ID --tc TC --message M
                       [--frame F] [--still PATH] [--bbox x0 y0 x1 y1] [--fix-skill S --fix-change C]
 python3 critic.py bbox <track on.tif> <track off.tif>      (bounds of what changed between the two renders)
-python3 critic.py stale <critic.json> <fresh dump.json>      (exit 1 = the timeline changed since the check)
+python3 critic.py stale <critic.json> <fresh dump.json> [--ledger placed.json]
+      (exit 1 = the timeline changed since the check, or an owner re-recorded the ledger after it)
 python3 critic.py next-round <critic.json>                   (round + 1; exit 1 once two fix rounds are used up)
 python3 critic.py selftest
 
@@ -30,7 +31,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "..", "resolve-core", "scripts"))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "pre-delivery-qc", "scripts"))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "chart-match", "scripts"))
 from chart_match import read_tiff
-from placed import load
+from placed import live, load
 from qc import ORDER, stale, state_of, summarize
 from tc import frames_to_tc
 
@@ -50,15 +51,19 @@ def cut_frames(dump):
 
 
 def inventory(ledger, dump):
-    present = {i.get("item_id") for tracks in dump["tracks"].values() for t in tracks for i in t["items"]}
-    elements, notes = [], []
-    for entry in ledger["items"]:
-        label = f"{entry['owner']}/{entry['item_id']}" + (f"#{entry['part']}" if entry.get("part") is not None else "")
-        if entry["item_id"] in present:
-            elements.append({**entry, "id": label, "mid": (entry["full"] + entry["hold_end"]) // 2})
-        else:
-            notes.append(f"{label} ({entry['kind']}, {entry['track']}) is not on the timeline any more: skipped")
-    return elements, notes
+    entries, notes = live(ledger, dump)
+    return [{**e, "id": f"{e['owner']}/{e['item_id']}" + (f"#{e['part']}" if e.get("part") is not None else ""),
+             "mid": (e["full"] + e["hold_end"]) // 2} for e in entries], notes
+
+
+def critic_stale(result, dump, ledger_path=None):
+    """Owners re-record the ledger on every re-apply, and a fix may keep the item count and the end frame."""
+    if stale(result, dump):
+        return True
+    if not ledger_path or not os.path.exists(ledger_path):
+        return False
+    written = datetime.fromtimestamp(int(os.path.getmtime(ledger_path)))   # checked_at keeps whole seconds
+    return written > datetime.fromisoformat(result["checked_at"])
 
 
 def add_finding(result, severity, kind, element, tc, message, frame=None, owner=None, evidence=None, fix=None, source="check"):
@@ -111,7 +116,7 @@ def check(elements, dump, cfg):
     texts = [e for e in elements if e["kind"] in TEXT_KINDS]
     for e in texts:
         hold = (e["hold_end"] - e["full"]) / fps
-        bonus = extra.get(e["kind"], 0)
+        bonus = 0 if e.get("explicit_hold") else extra.get(e["kind"], 0)
         reading = 0.5 + len(e["text"]) / 14
         need = max(3, reading) + bonus if e["kind"] == "lower-third" else reading + bonus
         if hold < need:
@@ -213,6 +218,9 @@ def selftest():
     assert elements[0]["mid"] == (86700 + 86700 + 48) // 2 and notes == []
     assert kinds(run([entry("a", hold=3.5)])[0]) == [] and run([entry("a", hold=3.5)])[0]["verdict"] == "PASS"
     assert kinds(run([entry("a", hold=3.5)], hold_extra_s={"lower-third": 1.0})[0]) == [("short-hold", "fusion-motion-graphics/a")]
+    assert kinds(run([{**entry("a", hold=3.5), "explicit_hold": True}], hold_extra_s={"lower-third": 1.0})[0]) == [], \
+        "a marker-timed hold gets no hold_extra_s bonus"
+    assert kinds(run([{**entry("a", hold=2.5), "explicit_hold": True}])[0]) == [("short-hold", "fusion-motion-graphics/a")]
     assert kinds(run([entry("a", text="Олексій Круглик, засновник і керівник відділу монтажу", hold=3.5)])[0]) == [("short-hold", "fusion-motion-graphics/a")]
     assert kinds(run([entry("k", "kinetic", "Привіт", hold=0.5)])[0]) == [("short-hold", "fusion-motion-graphics/k")]
     assert kinds(run([entry("k", "kinetic", "Привіт", hold=1.0)])[0]) == []
@@ -265,6 +273,28 @@ def selftest():
     shrunk = dump_with(["a", "k"])
     shrunk["tracks"]["video"][1]["items"].pop()
     assert stale(r, shrunk)
+    with tempfile.TemporaryDirectory() as d:
+        ledger_path = os.path.join(d, "placed-t.json")
+        checked = datetime.fromisoformat(r["checked_at"]).timestamp()
+        assert not critic_stale(r, dump_with(["a", "k"]), ledger_path), "no ledger file: only the timeline state counts"
+        open(ledger_path, "w").close()
+        for mtime, expected in ((checked - 60, False), (checked + 0.9, False), (checked + 1, True)):
+            os.utime(ledger_path, (mtime, mtime))
+            assert critic_stale(r, dump_with(["a", "k"]), ledger_path) == expected, (mtime - checked, expected)
+            assert critic_stale(r, dump_with(["a", "k"])) is False
+        assert critic_stale(r, shrunk, ledger_path)
+        for name, data in (("c.json", r), ("d.json", dump_with(["a", "k"]))):
+            with open(os.path.join(d, name), "w", encoding="utf-8") as f:
+                json.dump(data, f)
+        cli = [sys.executable, os.path.abspath(__file__), "stale", os.path.join(d, "c.json"), os.path.join(d, "d.json")]
+        assert subprocess.run(cli, capture_output=True).returncode == 0
+        assert subprocess.run(cli + ["--ledger", ledger_path], capture_output=True).returncode == 1
+
+    moved_entry = {**entry("m", full=86712, start=86700), "item_start": 86700}
+    moved_dump = dump_with(["m"])
+    moved_dump["tracks"]["video"][1]["items"][0].update(start=86750, end=86850)
+    (moved,), notes = inventory({"timeline_id": "tl", "items": [moved_entry]}, moved_dump)
+    assert (moved["start"], moved["full"], moved["mid"]) == (86750, 86762, (86762 + 86762 + 84) // 2) and "moved +50" in notes[0], (moved, notes)
     assert r["round"] == 1 and next_round(r)["round"] == 2 and next_round(r)["round"] == 3
     try:
         next_round(r)
@@ -407,6 +437,7 @@ def main():
     st = sub.add_parser("stale")
     st.add_argument("critic")
     st.add_argument("dump")
+    st.add_argument("--ledger")
     nr = sub.add_parser("next-round")
     nr.add_argument("critic")
     a = ap.parse_args()
@@ -440,7 +471,7 @@ def main():
         return print(json.dumps({"bbox": box, "width": w, "height": h, "kinds": safe_kinds(box, w, h) if box else []}))
     result = read(a.critic)
     if a.cmd == "stale":
-        is_stale = stale(result, read(a.dump))
+        is_stale = critic_stale(result, read(a.dump), a.ledger)
         print(json.dumps({"stale": is_stale, "verdict": result.get("verdict")}))
         sys.exit(1 if is_stale else 0)
     if a.cmd == "next-round":

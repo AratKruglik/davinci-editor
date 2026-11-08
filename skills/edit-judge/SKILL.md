@@ -70,7 +70,7 @@ Afterwards the caller restores the user's timeline and shows the result. A reply
 1. **Inputs.** Read `$input` (the dump: `name` = `<timeline>`, `width` / `height`, `fps`) and `<work>/words-<timeline>.json`. Either missing, or `$input` isn't a timeline dump: stop and reply with §1 gate as the list of what to prepare. Format: `$format`, else `shorts` when the dump is taller than wide, else `youtube`. Read `<work>/judge/rules-<timeline>.json`; missing → `python3 ${CLAUDE_SKILL_DIR}/../edit-memory/scripts/memory.py rules --format <format> --memory "<M>"` (`M` = `${user_config.edit_memory_file}`, empty → `${user_config.work_dir}/edit-memory.json`), read-only. Try to Read `placed-<timeline>.json`, `critic-<timeline>.json` and `qc-<timeline>.json` in `<work>`: a file that doesn't exist is "not run" and is never passed to a script (an explicit path that doesn't exist makes `judge.py` exit 2).
 2. **Stale checks**, for each of the two that exists:
    ```bash
-   python3 ${CLAUDE_SKILL_DIR}/../frame-critic/scripts/critic.py stale "<work>/critic-<timeline>.json" "$input"
+   python3 ${CLAUDE_SKILL_DIR}/../frame-critic/scripts/critic.py stale "<work>/critic-<timeline>.json" "$input" --ledger "<work>/placed-<timeline>.json"
    python3 ${CLAUDE_SKILL_DIR}/../pre-delivery-qc/scripts/qc.py stale "<work>/qc-<timeline>.json" "$input"
    ```
    Pass every existing file to `verdict`: its open `error` findings count either way. Exit 1 (the timeline changed since that check) adds `--stale critic` / `--stale qc`, an info row "re-run frame-critic" / "re-run pre-delivery-qc" that doesn't force `REWORK` by itself. Any other exit: stop and reply with the error.
