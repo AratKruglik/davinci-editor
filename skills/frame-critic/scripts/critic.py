@@ -2,10 +2,11 @@
 
 python3 critic.py inventory <placed ledger.json> <dump.json> --out elements.json
 python3 critic.py check <elements.json> <dump.json> --zoom-max Z --cps-max C --chars-max N [--rules rules.json]
-                        [--changed ELEMENT_ID ...] --out critic.json
+                        [--changed ELEMENT_ID ... | --scope OWNER] --out critic.json
       (without --changed: a fresh run, round 1. With --changed: a re-check after a fix; an existing critic.json of
        the same timeline keeps its round and its `add` findings, except those of the --changed elements and of
-       elements no longer in the inventory)
+       elements no longer in the inventory. With --scope: a fresh run for one owner that keeps the `add` findings
+       of the other owners' elements, but not their round)
 python3 critic.py add <critic.json> --severity error|warn --kind K --element ID --tc TC --message M
                       [--frame F] [--still PATH] [--bbox x0 y0 x1 y1] [--fix-skill S --fix-change C]
 python3 critic.py bbox <track on.tif> <track off.tif>      (bounds of what changed between the two renders)
@@ -71,12 +72,16 @@ def add_finding(result, severity, kind, element, tc, message, frame=None, owner=
     return summarize(result)
 
 
-def carry_over(result, previous, elements, changed=()):
-    """A re-check after a fix round keeps the round and the measured or seen findings of elements nobody touched."""
+def carry_over(result, previous, elements, changed=(), scope=None):
+    """A re-check after a fix round keeps the round and the measured or seen findings of elements nobody touched.
+    A fresh run scoped to one owner keeps only the other owners' measured or seen findings."""
     if previous.get("timeline_id") != result["timeline_id"]:
         return result
-    result["round"] = previous["round"]
-    keep = {e["id"] for e in elements} - set(changed)
+    if scope:
+        keep = {e["id"] for e in elements if e["owner"] != scope}
+    else:
+        result["round"] = previous["round"]
+        keep = {e["id"] for e in elements} - set(changed)
     for f in previous["findings"]:
         if f.get("source") == "add" and f["element"] in keep:
             add_finding(result, f["severity"], f["kind"], f["element"], f["tc"], f["message"], frame=f["frame"],
@@ -285,6 +290,14 @@ def selftest():
     assert again["round"] == 2, again["round"]
     assert sorted((f["kind"], f["element"], f["source"]) for f in again["findings"]) == [
         ("offscreen", "fusion-motion-graphics/a", "add"), ("short-hold", "fusion-motion-graphics/a", "check")], again["findings"]
+    two = [entry("a", hold=2), {**entry("z", "zoom", "", scale=1.5), "owner": "tutorial-zooms"}]
+    scoped, elements, _ = run(two)
+    scoped = carry_over(scoped, {**first, "findings": first["findings"] + [
+        {**first["findings"][-1], "element": "tutorial-zooms/z", "owner": "tutorial-zooms", "kind": "covers-demo"}]},
+        elements, scope="tutorial-zooms")
+    assert scoped["round"] == 1, scoped["round"]
+    assert sorted((f["kind"], f["element"]) for f in scoped["findings"] if f["source"] == "add") == [
+        ("offscreen", "fusion-motion-graphics/a")], scoped["findings"]
     other, elements, _ = run([entry("a", hold=2)])
     other["timeline_id"] = "another"
     other = carry_over(other, first, elements)
@@ -372,6 +385,7 @@ def main():
     ck.add_argument("--chars-max", type=int, required=True)
     ck.add_argument("--rules")
     ck.add_argument("--changed", nargs="+")
+    ck.add_argument("--scope")
     ck.add_argument("--out", required=True)
     bb = sub.add_parser("bbox")
     bb.add_argument("on")
@@ -414,8 +428,8 @@ def main():
             cfg = apply_rules(cfg, read(a.rules))
         elements = read(a.elements)
         result = check(elements, read(a.dump), cfg)
-        if a.changed and os.path.exists(a.out):
-            result = carry_over(result, read(a.out), elements, a.changed)
+        if (a.changed or a.scope) and os.path.exists(a.out):
+            result = carry_over(result, read(a.out), elements, a.changed or (), None if a.changed else a.scope)
         write(a.out, result)
         return print(json.dumps({"out": a.out, "round": result["round"], "verdict": result["verdict"], "counts": result["counts"]}))
     if a.cmd == "bbox":
