@@ -1,7 +1,10 @@
 """Numeric checks on elements that skills placed on the timeline (no Resolve needed).
 
 python3 critic.py inventory <placed ledger.json> <dump.json> --out elements.json
-python3 critic.py check <elements.json> <dump.json> --zoom-max Z --cps-max C --chars-max N [--rules rules.json] --out critic.json
+python3 critic.py check <elements.json> <dump.json> --zoom-max Z --cps-max C --chars-max N [--rules rules.json]
+                        [--changed ELEMENT_ID ...] --out critic.json
+      (an existing critic.json of the same timeline keeps its round and its `add` findings, except those of
+       --changed elements and of elements no longer in the inventory)
 python3 critic.py add <critic.json> --severity error|warn --kind K --element ID --tc TC --message M
                       [--frame F] [--still PATH] [--bbox x0 y0 x1 y1] [--fix-skill S --fix-change C]
 python3 critic.py bbox <track on.tif> <track off.tif>      (bounds of what changed between the two renders)
@@ -56,13 +59,27 @@ def inventory(ledger, dump):
     return elements, notes
 
 
-def add_finding(result, severity, kind, element, tc, message, frame=None, owner=None, evidence=None, fix=None):
+def add_finding(result, severity, kind, element, tc, message, frame=None, owner=None, evidence=None, fix=None, source="check"):
     if severity not in ORDER:
         raise SystemExit(f"severity must be one of {list(ORDER)}")
     result["findings"].append({
         "id": f"f{len(result['findings']) + 1}", "element": element, "owner": owner or element.split("/")[0],
         "tc": tc, "frame": frame, "severity": severity, "kind": kind, "message": message,
-        "evidence": evidence or {"still": None, "bbox": None}, "fix": fix or {"skill": None, "change": None}})
+        "evidence": evidence or {"still": None, "bbox": None}, "fix": fix or {"skill": None, "change": None},
+        "source": source})
+    return summarize(result)
+
+
+def carry_over(result, previous, elements, changed=()):
+    """A re-check after a fix round keeps the round and the measured or seen findings of elements nobody touched."""
+    if previous.get("timeline_id") != result["timeline_id"]:
+        return result
+    result["round"] = previous["round"]
+    keep = {e["id"] for e in elements} - set(changed)
+    for f in previous["findings"]:
+        if f.get("source") == "add" and f["element"] in keep:
+            add_finding(result, f["severity"], f["kind"], f["element"], f["tc"], f["message"], frame=f["frame"],
+                        owner=f["owner"], evidence=f["evidence"], fix=f["fix"], source="add")
     return summarize(result)
 
 
@@ -255,6 +272,20 @@ def selftest():
         with open(path, encoding="utf-8") as f:
             assert refused.returncode != 0 and "max 2 rounds" in refused.stderr and json.load(f)["round"] == 3, refused
 
+    first = run([entry("a", hold=2), entry("k", "kinetic", "Привіт", full=87000, hold=3)])[0]
+    for element in ("fusion-motion-graphics/a", "fusion-motion-graphics/k", "fusion-motion-graphics/gone"):
+        add_finding(first, "error", "offscreen", element, "01:00:12:12", "edge", frame=86700, source="add")
+    first["round"] = 2
+    again, elements, _ = run([entry("a", hold=2), entry("k", "kinetic", "Привіт", full=87000, hold=3)])
+    again = carry_over(again, first, elements, changed=["fusion-motion-graphics/k"])
+    assert again["round"] == 2, again["round"]
+    assert sorted((f["kind"], f["element"], f["source"]) for f in again["findings"]) == [
+        ("offscreen", "fusion-motion-graphics/a", "add"), ("short-hold", "fusion-motion-graphics/a", "check")], again["findings"]
+    other, elements, _ = run([entry("a", hold=2)])
+    other["timeline_id"] = "another"
+    other = carry_over(other, first, elements)
+    assert other["round"] == 1 and [f["kind"] for f in other["findings"]] == ["short-hold"], other
+
     rules = [{"scope": {"kind": "lower-third"}, "param": {"name": "hold_extra_s", "value": 1.0}},
              {"scope": {"kind": "lower-third"}, "param": {"name": "hold_extra_s", "value": 0.5}},
              {"scope": {"kind": "zoom"}, "param": {"name": "max_scale", "value": 2.0}},
@@ -314,6 +345,7 @@ def main():
     ck.add_argument("--cps-max", type=float, required=True)
     ck.add_argument("--chars-max", type=int, required=True)
     ck.add_argument("--rules")
+    ck.add_argument("--changed", nargs="+", default=[])
     ck.add_argument("--out", required=True)
     bb = sub.add_parser("bbox")
     bb.add_argument("on")
@@ -354,9 +386,12 @@ def main():
         cfg = {"zoom_max": a.zoom_max, "cps_max": a.cps_max, "chars_max": a.chars_max}
         if a.rules:
             cfg = apply_rules(cfg, read(a.rules))
-        result = check(read(a.elements), read(a.dump), cfg)
+        elements = read(a.elements)
+        result = check(elements, read(a.dump), cfg)
+        if os.path.exists(a.out):
+            result = carry_over(result, read(a.out), elements, a.changed)
         write(a.out, result)
-        return print(json.dumps({"out": a.out, "verdict": result["verdict"], "counts": result["counts"]}))
+        return print(json.dumps({"out": a.out, "round": result["round"], "verdict": result["verdict"], "counts": result["counts"]}))
     if a.cmd == "bbox":
         box = bbox_diff(a.on, a.off)
         w, h, _ = read_tiff(a.on)
@@ -372,7 +407,7 @@ def main():
         return print(json.dumps({"round": result["round"]}))
     fix = {"skill": a.fix_skill, "change": a.fix_change} if a.fix_skill else None
     result = add_finding(result, a.severity, a.kind, a.element, a.tc, a.message, frame=a.frame,
-                         evidence={"still": a.still, "bbox": a.bbox}, fix=fix)
+                         evidence={"still": a.still, "bbox": a.bbox}, fix=fix, source="add")
     write(a.critic, result)
     print(json.dumps({"verdict": result["verdict"], "counts": result["counts"]}))
 
