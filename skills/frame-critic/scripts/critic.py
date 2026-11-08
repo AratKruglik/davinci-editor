@@ -25,7 +25,7 @@ from tc import frames_to_tc
 
 TEXT_KINDS = ("lower-third", "callout", "kinetic", "counter")
 CUT_ROLES = ("a-roll", "screen")
-MAX_ROUNDS = 2
+MAX_FIX_ROUNDS = 2
 
 
 def role(track_name):
@@ -61,8 +61,8 @@ def add_finding(result, severity, kind, element, tc, message, frame=None, owner=
 
 
 def next_round(result):
-    if result["round"] >= MAX_ROUNDS:
-        raise SystemExit(f"max {MAX_ROUNDS} rounds: report what is left instead of fixing again")
+    if result["round"] > MAX_FIX_ROUNDS:
+        raise SystemExit(f"max {MAX_FIX_ROUNDS} rounds: report what is left instead of fixing again")
     result["round"] += 1
     return result
 
@@ -83,7 +83,8 @@ def check(elements, dump, cfg):
     for e in texts:
         hold = (e["hold_end"] - e["full"]) / fps
         bonus = extra.get(e["kind"], 0)
-        need = 3 + bonus if e["kind"] == "lower-third" else 0.5 + len(e["text"]) / 14 + bonus
+        reading = 0.5 + len(e["text"]) / 14
+        need = max(3, reading) + bonus if e["kind"] == "lower-third" else reading + bonus
         if hold < need:
             flag(e, "error", "short-hold", e["full"], f"{e['kind']} {e['text']!r} is fully visible {hold:.1f} s, needs {need:.1f} s",
                  f"hold at least {need:.1f} s")
@@ -102,7 +103,7 @@ def check(elements, dump, cfg):
                 flag(e, "warn", "near-cut", edge, f"{e['kind']} edge is {abs(near - edge)} frames from the cut at frame {near}")
 
     for e in elements:
-        if e["kind"] == "zoom" and e["scale"] > cfg["zoom_max"]:
+        if e["kind"] == "zoom" and e["scale"] is not None and e["scale"] > cfg["zoom_max"]:
             flag(e, "error", "zoom-scale", e["full"], f"zoom {e['scale']} exceeds {cfg['zoom_max']}", f"scale at most {cfg['zoom_max']}")
         if e["kind"] == "caption":
             cps = len(e["text"]) / max((e["gone"] - e["full"]) / fps, 1 / fps)
@@ -159,6 +160,7 @@ def selftest():
     assert elements[0]["mid"] == (86700 + 86700 + 48) // 2 and notes == []
     assert kinds(run([entry("a", hold=3.5)])[0]) == [] and run([entry("a", hold=3.5)])[0]["verdict"] == "PASS"
     assert kinds(run([entry("a", hold=3.5)], hold_extra_s={"lower-third": 1.0})[0]) == [("short-hold", "fusion-motion-graphics/a")]
+    assert kinds(run([entry("a", text="Олексій Круглик, засновник і керівник відділу монтажу", hold=3.5)])[0]) == [("short-hold", "fusion-motion-graphics/a")]
     assert kinds(run([entry("k", "kinetic", "Привіт", hold=0.5)])[0]) == [("short-hold", "fusion-motion-graphics/k")]
     assert kinds(run([entry("k", "kinetic", "Привіт", hold=1.0)])[0]) == []
 
@@ -179,6 +181,7 @@ def selftest():
     assert kinds(run([entry("z", "zoom", "", scale=2.8)])[0]) == [("zoom-scale", "fusion-motion-graphics/z")]
     assert kinds(run([entry("z", "zoom", "", scale=2.0, start=86400)])[0]) == []
     assert kinds(run([entry("z", "zoom", "", scale=2.8)], zoom_max=3.0)[0]) == []
+    assert kinds(run([entry("z", "zoom", "", scale=None)])[0]) == []
 
     fast = entry("s", "caption", "x" * 40, full=86700, hold=1, gone_pad=0)
     assert sorted(k for k, _ in kinds(run([fast])[0])) == ["chars", "cps"]
@@ -206,7 +209,7 @@ def selftest():
     shrunk = dump_with(["a", "k"])
     shrunk["tracks"]["video"][1]["items"].pop()
     assert stale(r, shrunk)
-    assert r["round"] == 1 and next_round(r)["round"] == 2
+    assert r["round"] == 1 and next_round(r)["round"] == 2 and next_round(r)["round"] == 3
     try:
         next_round(r)
     except SystemExit as e:
