@@ -40,7 +40,7 @@ The judge can't run Resolve scripts, so whoever calls it prepares the inputs:
 - A fresh timeline dump and the transcript mapped onto the timeline (`words-<timeline>.json`).
 - Your approved edit-memory rules for that format.
 - `frame-critic` and `pre-delivery-qc` results are used when they exist. A missing one is reported as "not run". One from before the last edit still counts with its open errors, and the report adds "re-run …" as information; that alone doesn't make it `REWORK`.
-- For `pick`: a candidates file whose stills have neutral names, so nothing hints at a favorite.
+- For `pick`: a candidates file of at most 6 candidates (every pair is compared twice, so 6 means 30 comparisons) whose stills have neutral names, so nothing hints at a favorite.
 
 ## Isolation
 

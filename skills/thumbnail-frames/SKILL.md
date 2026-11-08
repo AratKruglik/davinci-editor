@@ -45,7 +45,7 @@ What makes a frame work at 160 px wide: one readable face, eyes open and looking
 Read the two best-scored stills of every moment (more if they're close). For each, judge: eyes open and sharp, expression readable, mouth not mid-word in an awkward shape, face size (≥ ~⅓ of frame height is best), head not cut, space for text (left or right third), background not busy. Discard frames that fail on eyes or sharpness, whatever their score. Keep the best remaining still of each moment and your own order of them to yourself until the judge has answered.
 
 **Blind ranking** (2 or more moments left; `edit-judge` §1 pick): the judge adds the content criteria (clear topic, readable when small, emotion).
-1. Export each kept still again as a neutral PNG, `<work>/thumbnails/blind/cand-NN.png`, numbered in timeline order (never by score), with `maxDimension` 1280 and the tracks hidden and restored as in §2 (older Resolve: `ExportCurrentFrameAsStill` with `.png`). Stills come from the timeline already current, so no switch is needed.
+1. Take the top 6 kept stills by technical score (`scores.json`; the judge takes at most 6) and say which moments stayed out. Export each again as a neutral PNG, `<work>/thumbnails/blind/cand-NN.png`, numbered in timeline order (never by score), with `maxDimension` 1280 and the tracks hidden and restored as in §2 (older Resolve: `ExportCurrentFrameAsStill` with `.png`). Stills come from the timeline already current, so no switch is needed.
 2. Write `<work>/candidates-thumbnails.json`: `[{"id": "<moment>_<offset>", "label": "<moment>", "still": "thumbnails/blind/cand-NN.png"}]`.
 3. `edit-judge pick "<work>/candidates-thumbnails.json"` and wait for the reply.
 

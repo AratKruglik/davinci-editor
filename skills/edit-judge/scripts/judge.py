@@ -14,10 +14,12 @@ results.json: [{"pair": [x, y], "order": "xy"|"yx", "winner": x|y}], labels as i
 --stale critic|qc: that file is outdated (critic.py / qc.py stale); its open errors still count, and an info row "re-run <skill>"
   is added that doesn't force REWORK by itself. Needs the file passed too.
 judge.json: verdict, must_fix, info, critic, qc (verdict | "missing") and the scores as given.
-blind keeps only range, still, text of a candidate.
+blind keeps only range, still, text of a candidate; more than 6 candidates: exit 2 (a pick runs N*(N-1) comparisons).
 A pair judged in both orders with different winners is a tie: half a win for each.
 """
 import argparse
+import contextlib
+import io
 import json
 import os
 import random
@@ -32,6 +34,7 @@ STATIC_S = {"youtube": 20, "shorts": 4}
 STATIC_ROLES = ("a-roll", "screen", "b-roll")
 NOT_GRAPHICS = ("zoom", "caption")
 BLIND_FIELDS = ("range", "still", "text")
+MAX_CANDIDATES = 6
 CHECK_SKILL = {"critic": "frame-critic", "qc": "pre-delivery-qc"}
 
 
@@ -141,6 +144,9 @@ def blind(candidates, seed):
     ids = [c["id"] for c in candidates]
     if len(set(ids)) != len(ids):
         raise SystemExit("candidate ids must be unique")
+    if len(candidates) > MAX_CANDIDATES:
+        print(f"error: {len(candidates)} candidates, at most {MAX_CANDIDATES} per pick; the caller pre-selects", file=sys.stderr)
+        sys.exit(2)
     shuffled = list(candidates)
     random.Random(seed).shuffle(shuffled)
     labels = [chr(ord("A") + n) for n in range(len(shuffled))]
@@ -309,6 +315,15 @@ def selftest():
     assert leaky == [{"label": "A", "range": [1, 2]}], leaky
     assert all(c["range"] == cands[int(key1[c["label"]][-1])]["range"] for c in b1)
     assert blind(cands, 8)[1] != key1 or blind(cands, 9)[1] != key1
+    many = [{"id": f"m{n}", "label": "", "text": str(n)} for n in range(MAX_CANDIDATES + 1)]
+    assert len(blind(many[:MAX_CANDIDATES], 1)[0]) == MAX_CANDIDATES
+    try:
+        with contextlib.redirect_stderr(io.StringIO()):
+            blind(many, 1)
+    except SystemExit as e:
+        assert e.code == 2, e.code
+    else:
+        raise AssertionError("more than MAX_CANDIDATES must be refused")
 
     assert rank([], ["A"]) == {"ranking": ["A"], "tie": False, "wins": {"A": 0}}
     assert [p["pair"] + [p["order"]] for p in pairs(["A", "B"])] == [["A", "B", "xy"], ["A", "B", "yx"]]

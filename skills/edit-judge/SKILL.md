@@ -60,7 +60,7 @@ The skill that calls the judge (`edit-episode`, `shorts-cutdown`, `thumbnail-fra
 
 **pick**
 1. Make the timeline the ranges belong to current.
-2. Write `<work>/candidates-<kind>.json`: `[{"id", "label", "range" | "still" | "text"}]`, `range` = `[start TC, end TC]` on that timeline, `still` = image path relative to `<work>`. Name stills neutrally (`cand-01.png`, not `best-7.png`): `blind` hides `id` and `label`, not a revealing file name or text.
+2. Write `<work>/candidates-<kind>.json`, at most 6 candidates (a pick runs every pair in both orders, 30 comparisons for 6; pre-select with your own filter and tell the user which ones stayed out): `[{"id", "label", "range" | "still" | "text"}]`, `range` = `[start TC, end TC]` on that timeline, `still` = image path relative to `<work>`. Name stills neutrally (`cand-01.png`, not `best-7.png`): `blind` hides `id` and `label`, not a revealing file name or text.
 3. Call `edit-judge pick "<work>/candidates-<kind>.json"`. `<kind>` is `shorts` or `thumbnails`, or name the criteria in the call for another kind.
 
 Afterwards the caller restores the user's timeline and shows the result. A reply without a verdict (inputs missing, frames not seen) is shown as that: the caller never scores or decides in the judge's place.
@@ -102,7 +102,7 @@ Afterwards the caller restores the user's timeline and shows the result. A reply
    python3 ${CLAUDE_SKILL_DIR}/scripts/judge.py blind "$input" --out "<work>/judge/blind-<kind>.json" --key "<work>/judge/key-<kind>.json"
    python3 ${CLAUDE_SKILL_DIR}/scripts/judge.py pairs "<work>/judge/blind-<kind>.json"
    ```
-   `<kind>` from the file name `candidates-<kind>.json`. Read `blind-<kind>.json`: candidates `A`, `B`, … with only `range`, `still` or `text`.
+   `<kind>` from the file name `candidates-<kind>.json`. `blind` refuses more than 6 candidates (exit 2): stop and reply that the caller must pre-select at most 6. Read `blind-<kind>.json`: candidates `A`, `B`, … with only `range`, `still` or `text`.
 2. Look at each candidate once: `range` → `get_thumbnails` over it (`count` up to 24); `still` → Read the image (`<work>/<still>`); `text` → as written. Keep a short neutral description per label.
 3. Every comparison from `pairs`, in its listed order: `xy` = consider `pair[0]` first, `yx` = `pair[1]` first. Decide each one fresh by the criteria of `<kind>` in [reference.md](reference.md#pick-criteria) (another kind: the criteria named in the call; none named → stop and ask the caller). Each comparison has a winner; a pair whose two orders disagree becomes a tie in `rank`.
 4. ```bash
