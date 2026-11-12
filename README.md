@@ -4,7 +4,7 @@
 
 <p align="center">
   <b>Your colored markers in, a finished YouTube episode out.</b><br>
-  26 Claude skills that grade, cut, mix, title and deliver inside DaVinci Resolve Studio 21+,<br>
+  30 Claude skills that grade, cut, mix, title and deliver inside DaVinci Resolve Studio 21+,<br>
   stopping for your approval at every step and never touching your source timeline.
 </p>
 
@@ -12,7 +12,7 @@
   <a href="https://github.com/AratKruglik/davinci-editor/releases/latest"><img src="https://img.shields.io/github/v/release/AratKruglik/davinci-editor?label=release&color=D97757" alt="Latest release"></a>
   <img src="https://img.shields.io/badge/DaVinci%20Resolve%20Studio-21%2B-233A5E" alt="DaVinci Resolve Studio 21+">
   <img src="https://img.shields.io/badge/Claude%20Code%20%C2%B7%20Cowork-plugin-D97757" alt="Claude Code and Cowork plugin">
-  <img src="https://img.shields.io/badge/skills-26-2BB3A6" alt="26 skills">
+  <img src="https://img.shields.io/badge/skills-30-2BB3A6" alt="30 skills">
   <img src="https://img.shields.io/badge/macOS-Apple%20Silicon-111111?logo=apple" alt="macOS, Apple Silicon">
   <img src="https://img.shields.io/badge/Python-3.10%2B%20stdlib%20only-3776AB?logo=python&logoColor=white" alt="Python 3.10+, standard library only">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3DBE6B" alt="MIT license"></a>
