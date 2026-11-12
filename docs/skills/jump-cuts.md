@@ -57,7 +57,7 @@ The first rule that fits wins.
 
 | # | When | Decision |
 |---|---|---|
-| 1 | the join is under a B-roll or Screen item | hidden, nothing |
+| 1 | the join is under a B-roll or Screen item, or one starts or ends exactly on it | hidden, nothing |
 | 2 | the clip changes, or the source goes backwards (another take) | not a jump cut, nothing |
 | 3 | the frame difference is below `jump_diff_threshold` | leave |
 | 4 | closed eyes or a mouth mid-move on the last frame before or the first after, and the cut can move | roll by a few frames |
@@ -67,7 +67,7 @@ The first rule that fits wins.
 
 The frame difference is measured on two exported stills: the last frame before the join and the first after. Joins above the threshold are also looked at for blinks, the mouth, how far the pose moved and whether the background moves.
 
-**Rolling a cut.** Both the picture and the sound move by the same number of frames, at most 6, and never closer than 2 frames to the end of the previous word or 0.15 s to the start of the next. The timeline length and everything to the right stay where they were.
+**Rolling a cut.** Both the picture and the sound move by the same number of frames, at most 6, and never closer than 2 frames to the end of a word or 0.15 s to the start of one, on both sides of the cut. The frames a roll brings in are checked on the source clip before you see the table. The timeline length and everything to the right stay where they were.
 
 **Punch-ins are planned along the chain.** A punch-in is a state of a segment, not of a join. Segments joined by leave, roll or Smooth Cut share one scale; a punch-in join needs two different ones. A segment keeps 100 % when it is shorter than 2 s (a size jump every second is worse than the jump cut), has its own Inspector transform (PiP, your reframe) or lies under B-roll. When both sides of a join must stay at 100 %, the join gets cover advice instead.
 
@@ -89,14 +89,14 @@ All under `<work_dir>/<project>/`:
 |---|---|
 | `timeline-<name>.json` | timeline dump; a fresh one of the copy before verifying |
 | `jump/joins.json` | every join with its measurements, what was seen, the decision and its reason, and the scale of every segment |
-| `jump/<id>-a.tif`, `jump/<id>-b.tif` | the frame before and the frame of each join |
+| `jump/<id>-a.tif`, `jump/<id>-b.tif` | the frame before and the frame of each join, 1280 px, used only for measuring |
 | `jump-before.json` | offsets and Inspector properties of every item before the changes: the undo record |
 
 ## Workflow and approval stops
 
 1. Dumps the timeline, lists the A-roll joins and the segments that must keep their scale.
 2. Exports two stills per join and measures the difference; looks at the ones above the threshold.
-3. **Approval: the table.** `TC | removed | difference | decision | scale left → right | reason`, with the stills of every join that changes. You can change any decision; a punch-in that can't get two different scales and a roll outside the safe range are refused with the reason.
+3. **Approval: the table.** `TC | removed | difference | decision | scale left → right | reason`. You can change any decision; a punch-in that can't get two different scales and a roll outside the safe range are refused with the reason.
 4. Duplicates the timeline (`<name> - jump <date>`) and applies on the copy: rolls first (each rolled join is measured and judged again), then Smooth Cuts, then punch-ins, then cover markers. The first roll, the first Smooth Cut and the first punch-in are each checked before the rest.
 5. Verifies the copy: same items, same length, the same words in the same order, every property read back.
 6. Reports what was done to which join and how to undo it.

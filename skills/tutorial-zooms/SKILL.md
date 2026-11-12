@@ -41,7 +41,7 @@ Principle: a zoom answers "where do I look?" exactly when the speaker says it. L
 ## 1. Screen zooms
 
 Targets: **Pink** markers (timeline and items, `marker-edit` rules, skip `claude:done:*`); requests from the user. Each target needs:
-- **The item**: the `Screen` track item under the marker; no Screen track (screen-only lesson) → the `A-roll` item. Talking-head camera → wrong mode, ask.
+- **The item**: the `Screen` track item under the marker; no Screen track (screen-only lesson) → the `A-roll` item. Talking-head camera → not a screen zoom, ask (jump cuts there are the `jump-cuts` skill).
 - **Range**: marker with duration → exactly that; point marker → from the marker to the end of the sentence that talks about the spot (words file), 2–5 s; never across an edit point on that track: end 2 frames before the cut and say so.
 - **Region**: still at the marker: `tl.ExportFrame(frame - tl.GetStartFrame(), {"outputType": "file", "filePath": "<work>/stills/zoom-<n>.png", "maxDimension": 1920})` (Resolve 21.1.2+, `resolve-core` §10; no playhead move; Mac path, `resolve-core` §8). Older: playhead to the marker, `project.ExportCurrentFrameAsStill("<work>/stills/zoom-<n>.tif")`. Read the image, and find what the note names ("кнопка Save", "код праворуч", "термінал"). Write the box as `[x, y, w, h]`, 0..1 from the top-left, around the whole element plus a little context (a line of code, not one word). Can't find it on the still → ask, with the still's path.
 - **Strength** from the note: "трохи" ≈ 1.3, nothing ≈ default, "сильно" up to the max. Above the max, screen text turns soft on a 4K timeline; tell the user instead of exceeding it.

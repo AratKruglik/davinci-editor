@@ -54,7 +54,7 @@ def roll_range(left_out, right_in, left_words, right_words, fps):
     if kept:
         lo = max(lo, max(kept) + AFTER_WORD - left_out)
     if removed_next:
-        hi = min(hi, min(removed_next) - left_out)
+        hi = min(hi, min(removed_next) - round(ATTACK_S * fps) - left_out)
     if removed_prev:
         lo = max(lo, max(removed_prev) + AFTER_WORD - right_in)
     if first:
@@ -106,7 +106,7 @@ def build_joins(dump, transcripts, fixed_transform=frozenset(), source_offset=0)
         join = {"id": f"j{len(joins) + 1}", "frame": frame, "left": n, "right": n + 1,
                 "removed": marker.get("note", "") if marker.get("customData") == "claude:cut" else "",
                 "split": marker.get("customData") == "claude:split",
-                "covered": covered(frame - 1, frame + 1),
+                "covered": covered(frame - 1, frame) or covered(frame, frame + 1),
                 "source_change": left.get("clip_id") != right.get("clip_id") or right_in < left_out,
                 "skip": unusable(left) or unusable(right), "roll_range": None, "rolled": False,
                 "diff": None, "max_cell": None, "observation": None, "auto": None, "decision": None, "reason": ""}
@@ -237,6 +237,8 @@ def decide(data, join_id, decision, scale, k=None):
 
 def rolled(data, join_id, k):
     join = find_join(data, join_id)
+    if effective(join) != "roll" or join.get("k") != k:
+        raise SystemExit(f"{join_id}: not decided as a roll by {k} frames (decision {effective(join)!r}, k {join.get('k')})")
     left, right = data["segments"][join["left"]], data["segments"][join["right"]]
     left["end"] += k
     left["right_offset"] -= k
@@ -251,9 +253,15 @@ def rolled(data, join_id, k):
 
 def table(data):
     segs = data["segments"]
-    return [{"id": j["id"], "tc": frames_to_tc(j["frame"], data["fps"]), "frame": j["frame"], "removed": j["removed"],
-             "diff": j["diff"], "decision": effective(j), "k": j.get("k"), "by_user": j["decision"] is not None,
-             "scale": [segs[j["left"]]["scale"], segs[j["right"]]["scale"]], "reason": j["reason"]} for j in data["joins"]]
+
+    def row(j):
+        left, right = segs[j["left"]], segs[j["right"]]
+        return {"id": j["id"], "tc": frames_to_tc(j["frame"], data["fps"]), "frame": j["frame"], "removed": j["removed"],
+                "covered": j["covered"], "source_change": j["source_change"], "skip": j["skip"], "split": j["split"],
+                "roll_range": j["roll_range"], "diff": j["diff"], "decision": effective(j), "k": j.get("k"),
+                "by_user": j["decision"] is not None, "scale": [left["scale"], right["scale"]], "reason": j["reason"],
+                "source": {"left_last": left["source_start"] + left["end"] - left["start"] - 1, "right_first": right["source_start"]}}
+    return [row(j) for j in data["joins"]]
 
 
 def load_transcripts(folder):
@@ -289,10 +297,10 @@ def _fixture():
             "markers": {"250": {"customData": "claude:cut", "note": "pause"}, "600": {"customData": "claude:split", "note": "J"}},
             "tracks": {"video": [
                 {"index": 2, "name": "A-roll", "enabled": True, "items": a_roll},
-                {"index": 3, "name": "B-roll", "enabled": True, "items": [item("id-x", 90250, 90410, 0, clip="b1")]},
+                {"index": 3, "name": "B-roll", "enabled": True, "items": [item("id-x", 90260, 90410, 0, clip="b1")]},
                 {"index": 4, "name": "Titles", "enabled": True, "items": [item("id-t", 90000, 91000, 0, clip=None)]}],
                 "audio": [{"index": 1, "name": "Voice", "enabled": True, "items": []}]}}
-    transcripts = {"c1": transcript("c1", [(200, 245), (254, 290), (310, 330), (505, 530)]),
+    transcripts = {"c1": transcript("c1", [(200, 245), (258, 290), (310, 330), (505, 530)]),
                    "c2": transcript("c2", [(10, 150), (405, 590), (705, 880)])}
     return dump, transcripts, item
 
@@ -307,7 +315,12 @@ def selftest():
     assert by["j2"]["covered"] and by["j2"]["roll_range"] is None, by["j2"]
     assert by["j3"]["source_change"], by["j3"]
     assert by["j4"]["split"] and by["j4"]["roll_range"] is None, by["j4"]
-    assert seg[2]["fixed"] == "short" and seg[1]["fixed"] == "hidden" and seg[0]["fixed"] is None, seg
+    assert seg[2]["fixed"] == "short" and seg[1]["fixed"] is None and seg[0]["fixed"] is None, seg
+    snapped = json.loads(json.dumps(dump))
+    snapped["tracks"]["video"][1]["items"][0]["start"] = 90250
+    snap = build_joins(snapped, transcripts)
+    assert snap["joins"][0]["covered"] and snap["joins"][0]["roll_range"] is None, "B-roll that starts on the join hides it"
+    assert snap["segments"][1]["fixed"] == "hidden", snap["segments"][1]
     assert build_joins(dump, transcripts, {"id-a"})["segments"][0]["fixed"] == "transform"
     assert all(x["frame"] != 90810 for x in j["joins"])
     assert not by["j3"]["covered"], "a title above the join must not count as cover"
@@ -321,7 +334,8 @@ def selftest():
     assert build_joins(dump, {})["joins"][0]["roll_range"] is None
 
     assert roll_range(250, 400, [(200, 240), (260, 280)], [(380, 390), (410, 430)], 25.0) == [-6, 6]
-    assert roll_range(250, 400, [(200, 249), (252, 280)], [(380, 399), (405, 430)], 25.0) == [1, 1]
+    assert roll_range(250, 400, [(200, 249), (255, 280)], [(380, 399), (405, 430)], 25.0) == [1, 1]
+    assert roll_range(250, 400, [(200, 240), (253, 270)], [(380, 390), (410, 430)], 25.0) == [-6, -1], "attack kept before a removed word too"
     assert roll_range(250, 400, [(200, 250), (250, 280)], [(380, 400), (402, 430)], 25.0) is None
     assert roll_range(250, 400, [], [], 25.0) is None
 
@@ -411,6 +425,9 @@ def selftest():
     empty = chain()
     classify(empty, 0.02, 1.12)
     assert table(empty) == [] and len(table(data)) == 7
+    assert {"covered", "source_change", "skip", "split", "roll_range", "source"} <= set(table(data)[0]), table(data)[0]
+    assert table(data)[4]["source"] == {"left_last": 899, "right_first": 1000}, table(data)[4]
+    assert exits(lambda: rolled(data, "j6", 50)), "only a join decided as roll, by its own k"
     print("jump_cuts selftest ok")
 
 
@@ -475,7 +492,8 @@ def main():
         transcripts = load_transcripts(a.transcripts) if a.transcripts and os.path.isdir(a.transcripts) else {}
         data = build_joins(load(a.dump), transcripts, set(a.fixed_transform), a.source_offset)
         save(a.out, data)
-        return print(json.dumps({"joins": len(data["joins"]), "segments": len(data["segments"]), "out": a.out}))
+        return print(json.dumps({"joins": len(data["joins"]), "segments": len(data["segments"]),
+                                 "transcripts": len(transcripts), "out": a.out}))
 
 
 if __name__ == "__main__":
