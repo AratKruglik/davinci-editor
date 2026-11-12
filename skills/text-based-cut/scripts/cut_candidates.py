@@ -1,6 +1,6 @@
 """Find cut candidates in Resolve transcripts and turn approved cuts into keep ranges.
 
-analyze:  python3 cut_candidates.py analyze <transcripts dir> --out <cuts.json> [--fillers ...] [--soft-fillers ...] [--pause-ms 700] [--handle-ms 120] [--markers markers.json]
+analyze:  python3 cut_candidates.py analyze <transcripts dir> --out <cuts.json> [--fillers ...] [--soft-fillers ...] [--pause-ms 700] [--handle-ms 150] [--sentence-ms 400] [--markers markers.json]
 assemble: python3 cut_candidates.py assemble <cuts.json> --out <plan.json>
 
 All frames are source frames relative to the clip start (Start TC), end exclusive.
@@ -20,6 +20,7 @@ from tc import ms_to_frames, tc_to_frames
 SILENCE = "(...)"
 RETAKE_WINDOW_S = 45
 PUNCT = "\"'«»„“”.,!?…:;()[]—–-"
+SENTENCE_END = ".!?…"
 
 
 def norm(word):
@@ -60,7 +61,7 @@ def context(words, i, j, pad=6):
     return f"{spoken(max(0, i - pad), i)} [{spoken(i, j)}] {spoken(j, j + pad)}".strip()
 
 
-def analyze_clip(clip, fillers, soft_fillers, pause_frames, handle):
+def analyze_clip(clip, fillers, soft_fillers, pause_frames, handle, sentence=0):
     words, out = clip["words"], []
     speech = [i for i, w in enumerate(words) if w["norm"]]
 
@@ -77,15 +78,21 @@ def analyze_clip(clip, fillers, soft_fillers, pause_frames, handle):
 
     for i, w in enumerate(words):
         if w["norm"] is None and speech and speech[0] < i < speech[-1] and w["end"] - w["start"] > pause_frames:
-            add("pause", i, i + 1, w["start"] + handle, w["end"] - handle, "cut",
-                f"silence {round((w['end'] - w['start']) / clip['fps'], 2)} s")
+            before = next(words[x]["text"] for x in reversed(speech) if x < i)
+            beat = before.rstrip("\"'»”)")[-1:] in SENTENCE_END
+            add("pause", i, i + 1, w["start"] + (max(handle, sentence - handle) if beat else handle), w["end"] - handle, "cut",
+                f"silence {round((w['end'] - w['start']) / clip['fps'], 2)} s" + (", after a sentence: a beat is kept" if beat else ""))
 
     for k, i in enumerate(speech):
         for phrases, kind, decision in ((fillers, "filler", "cut"), (soft_fillers, "soft_filler", "review")):
             for phrase in phrases:
                 idx = speech[k:k + len(phrase)]
                 if len(idx) == len(phrase) and tuple(words[x]["norm"] for x in idx) == phrase:
-                    add(kind, idx[0], idx[-1] + 1, words[idx[0]]["start"], words[idx[-1]]["end"], decision, " ".join(phrase))
+                    start, end = words[idx[0]]["start"], words[idx[-1]]["end"]
+                    around = [words[x] for x in speech[max(0, k - 1):k] + speech[k + len(phrase):k + len(phrase) + 1]]
+                    glued = decision == "cut" and len(around) == 2 and around[0]["end"] >= start and around[1]["start"] <= end
+                    add(kind, idx[0], idx[-1] + 1, start, end, "review" if glued else decision,
+                        " ".join(phrase) + ("; no pause on either side, the neighbours may get clipped: check by ear" if glued else ""))
 
     for k in range(len(speech)):
         for n in (4, 3, 2, 1):
@@ -195,7 +202,8 @@ def analyze(args):
     fillers, soft = parse_list(args.fillers), parse_list(args.soft_fillers)
     candidates = []
     for c in clips:
-        candidates += analyze_clip(c, fillers, soft, ms_to_frames(args.pause_ms, c["fps"]), ms_to_frames(args.handle_ms, c["fps"]))
+        candidates += analyze_clip(c, fillers, soft, ms_to_frames(args.pause_ms, c["fps"]), ms_to_frames(args.handle_ms, c["fps"]),
+                                    ms_to_frames(args.sentence_ms, c["fps"]))
     candidates += cross_clip_retakes(clips, ms_to_frames(args.handle_ms, clips[0]["fps"]) if clips else 0)
     if args.markers:
         with open(args.markers, encoding="utf-8") as f:
@@ -254,7 +262,8 @@ if __name__ == "__main__":
     a.add_argument("--fillers", default="е,ее,еее,ем,емм,мм,ммм,хм")
     a.add_argument("--soft-fillers", default="ну,типу,коротше,значить,як би,власне,так би мовити")
     a.add_argument("--pause-ms", type=float, default=700)
-    a.add_argument("--handle-ms", type=float, default=120)
+    a.add_argument("--handle-ms", type=float, default=150)
+    a.add_argument("--sentence-ms", type=float, default=400, help="silence kept after a sentence end when its pause is cut")
     a.add_argument("--markers", help="JSON list of user markers: {id, clip, frame (source, from clip start), duration, color, task: cut|keep|doubt, note}")
     b = sub.add_parser("assemble")
     b.add_argument("cuts")

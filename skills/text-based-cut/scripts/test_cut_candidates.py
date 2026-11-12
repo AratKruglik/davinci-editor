@@ -98,6 +98,18 @@ def run():
             spaced = [c for c in json.load(f)["candidates"] if c["clip"] == "C001"]
         assert {"filler", "pause"} <= {c["type"] for c in spaced}, spaced
         assert all("  " not in c["text"] and "(...)" not in c["text"] for c in spaced), spaced
+
+        beats = build([[("Готово.", 10), ("(...)", 25), ("Тепер", 10), ("(...)", 25), ("далі", 10), ("ем", 5), ("йдемо.", 10)]])
+        with open(os.path.join(d, "D001.json"), "w", encoding="utf-8") as f:
+            json.dump({**data, "clip_name": "D001", "clip_id": "D001", "transcription": {"segments": beats}}, f, ensure_ascii=False)
+        assert cli("analyze", d, "--out", cuts).returncode == 0
+        with open(cuts, encoding="utf-8") as f:
+            paced = [c for c in json.load(f)["candidates"] if c["clip"] == "D001"]
+        after_sentence, mid_phrase = [c for c in paced if c["type"] == "pause"]
+        kept = lambda c, silence=26: silence - (c["end"] - c["start"])
+        assert kept(after_sentence) == 10 and kept(mid_phrase) == 8, (after_sentence, mid_phrase)   # 400 ms vs 2 x 150 ms
+        glued = next(c for c in paced if c["type"] == "filler")
+        assert glued["decision"] == "review" and "by ear" in glued["reason"], glued
     print("ok", sorted(types), len(plan), "segments")
 
 

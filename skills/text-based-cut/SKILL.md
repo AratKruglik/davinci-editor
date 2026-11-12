@@ -48,7 +48,7 @@ Read them from the media pool clips (`clip.GetMarkers()`, frames from clip start
 
 ## 2. Mechanical candidates
 
-Pace presets (pause threshold / handle): `gentle` 1200 / 200 ms, `normal` ${user_config.pause_threshold_ms} / ${user_config.cut_handle_ms} ms, `tight` 450 / 80 ms.
+Pace presets (pause threshold / handle): `gentle` 1200 / 200 ms, `normal` ${user_config.pause_threshold_ms} / ${user_config.cut_handle_ms} ms, `tight` 450 / 80 ms (below the 0.15 s rule of §3 on purpose: Shorts only). Where a cut pause follows the end of a sentence the script keeps 400 ms of it (`--sentence-ms`), not two handles: the beat after a finished thought.
 
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/scripts/cut_candidates.py analyze "<work>/transcripts" --out "<work>/cuts.json" \
@@ -62,7 +62,7 @@ Candidate types and default decision:
 |---|---|---|
 | `head` / `tail` | silence before the first / after the last word | cut |
 | `pause` | silence longer than the threshold; handles are kept on both sides | cut |
-| `filler` | hard fillers (е, ем, мм…) | cut |
+| `filler` | hard fillers (е, ем, мм…) | cut; glued to words on both sides (no pause to cut in): review |
 | `soft_filler` | ну, типу, коротше… — often meaningful | review |
 | `repeat` | immediately repeated 2–4 words ("я хочу я хочу") | cut; single word: review |
 | `marker` | the user's Red (cut) or Yellow (review) marker; Green turns overlapping candidates into `keep` and, on an earlier take, proposes cutting the later repeat | as marked |
@@ -118,7 +118,7 @@ Offer its proposals (J/L, frames, words around the join, reason; rejected ones w
    Then relink each video/audio pair with `tl.SetClipsLinked([video_item, audio_item], True)` and verify it (whether separate appends keep the link is unverified; linking explicitly is safe either way). Camera audio with several channels: check `clip.GetAudioMapping()` once and tell the user which channels landed on Voice.
 6. Verify: number of video items on A-roll and audio items on Voice == plan entries; each item's `GetDuration()` equals the planned length (for Voice with split edits: `source_end - source_start` from `split-audio.json`); timeline end == start + total. Report any mismatch with the entry id — don't "fix" by nudging silently.
 7. At every join add a timeline marker in **Cream** (a split join gets the `split-edits` marker instead: name `J` / `L`, `customData` = `claude:split`) (Claude's color; Blue means "chapter" for the user), name `cut`, note = removed text/type, `customData` = `claude:cut`, duration 1, so the user can review jump cuts quickly and delete them all with `DeleteMarkersByColor("Cream")`.
-8. Optional (ask): 2-frame audio crossfades at joins against clicks: `item.AddTransition({"type": "Cross Fade +3 dB", "category": "audio", "position": "end", "alignment": "center", "duration": 2})`. Try on the first join, check the result, then continue; if the API refuses, tell the user (Fairlight → select all → Ctrl/Cmd+T does it manually).
+8. 2-frame audio crossfades at every join against clicks, unless the user said no: `item.AddTransition({"type": "Cross Fade +3 dB", "category": "audio", "position": "end", "alignment": "center", "duration": 2})`. Try on the first join, check the result, then continue; if the API refuses, tell the user (Fairlight → select all → Ctrl/Cmd+T does it manually).
 9. Grades: check `GetCurrentVersion()` on a few items; load the remote `claude` version where needed (see `resolve-core` §7), or `CopyGrades` from the source timeline item.
 10. Mark the user's handled markers: `clip.UpdateMarkerCustomData(frame, "claude:done:text-based-cut:<date>")`, re-read; never change their color, name or note.
 11. Run `track-layout` recolor on the new timeline, then save the project.

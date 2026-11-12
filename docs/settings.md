@@ -24,7 +24,7 @@ The defaults suit Ukrainian-language YouTube tutorials; change only what differs
 | `filler_words` | `е,ее,еее,ем,…` | hard filler sounds, always proposed for cutting |
 | `soft_filler_words` | `ну,типу,коротше,…` | soft fillers, only flagged; you decide |
 | `pause_threshold_ms` | `700` | pauses longer than this are proposed for tightening |
-| `cut_handle_ms` | `120` | silence kept on each side of a cut so words aren't clipped |
+| `cut_handle_ms` | `150` | silence kept on each side of a cut so words aren't clipped |
 | `voice_isolation_amount` | `60` | AI Voice Isolation strength, 0–100 |
 | `marker_colors` | `Red=cut,Green=keep,Yellow=doubt,Sand=chart,…` | what each marker color means |
 | `video_tracks` | `Backgrounds:Tan,A-roll:Blue,B-roll:Teal,Effects:Orange,Titles:Pink` | video tracks bottom to top and the clip color of each role |

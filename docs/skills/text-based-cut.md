@@ -28,8 +28,10 @@ Pace presets (pause threshold / handle kept on each side of a cut):
 | Pace | Pause threshold | Handle | Use for |
 |---|---|---|---|
 | `gentle` | 1200 ms | 200 ms | calm lessons, interviews where pauses carry meaning |
-| `normal` | `pause_threshold_ms` (700) | `cut_handle_ms` (120) | a regular tutorial |
+| `normal` | `pause_threshold_ms` (700) | `cut_handle_ms` (150) | a regular tutorial |
 | `tight` | 450 ms | 80 ms | Shorts and fast videos; too dense for lessons |
+
+A cut pause that follows the end of a sentence keeps 400 ms instead of two handles, so a finished thought still gets its beat. A hard filler glued to words on both sides is not cut automatically: it comes to you as a review item, because there is no pause to cut in.
 
 ## Before you start
 
@@ -74,7 +76,7 @@ Between two takes, the **last** complete one is kept by default: presenters usua
 | `filler_words` | `е,ее,еее,ем,…` | hard fillers, always proposed for cutting |
 | `soft_filler_words` | `ну,типу,коротше,…` | soft fillers, only flagged |
 | `pause_threshold_ms` | `700` | pause threshold of the `normal` pace |
-| `cut_handle_ms` | `120` | handle of the `normal` pace |
+| `cut_handle_ms` | `150` | handle of the `normal` pace |
 | `split_j_lead_frames`, `split_l_tail_frames`, `split_max_frames`, `split_fade_frames`, `split_max_in_row` | `12`, `12`, `50`, `4`, `3` | J/L cuts at joins between different clips (`split-edits` mode 1) |
 
 Any setting can be overridden in the prompt: "pause threshold 500 ms", "cut the soft fillers too".
@@ -101,7 +103,7 @@ All under `<work_dir>/<project>/`:
 6. Creates the new timeline `<source name> - rough cut <date>` (` v2` if the name is taken), lays out the tracks with `track-layout`, puts video on A-roll and audio on Voice, and links each pair.
 7. Verifies the item count, every item's length and the timeline end. Mismatches are reported with their id, never nudged silently.
 8. At every join adds a **Cream** marker named `cut` with the removed text in the note (a split join gets a `J` / `L` marker instead).
-9. On request, adds 2-frame audio crossfades at the joins against clicks.
+9. Adds 2-frame audio crossfades at the joins against clicks, unless you said no.
 10. Checks the grade (remote version `claude`) came along, marks handled markers in `customData`, recolors clips by role and saves the project.
 
 ## What it never does

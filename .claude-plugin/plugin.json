@@ -81,7 +81,7 @@
       "type": "number",
       "title": "Cut handle (ms)",
       "description": "Breathing room kept on each side of a cut so words are not clipped.",
-      "default": 120,
+      "default": 150,
       "min": 0,
       "max": 1000
     },
