@@ -215,7 +215,7 @@ python3 <plugin>/skills/resolve-core/scripts/timeline_map.py words "<work>/timel
   --track Voice --source-offset <calibration offset> --out "<work>/words-<name>.json"
 ```
 
-Items with a speed change or disabled are skipped with a warning; report those warnings, don't drop them silently.
+Items with a speed change, disabled, or from a clip whose frame rate differs from the timeline's are skipped with a warning; report those warnings, don't drop them silently.
 
 ## Handoff snapshot
 

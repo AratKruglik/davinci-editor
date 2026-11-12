@@ -47,13 +47,18 @@ def source_words(data):
                 yield start, end, w["text"].strip(), seg.get("speaker")
 
 
-def usable(item, warnings, track_name):
+def usable(item, warnings, track_name, fps):
     where = f'{track_name} item {item["name"]!r} @ {item["start"]}'
     if not item.get("enabled", True):
         warnings.append(f"{where}: disabled, skipped")
         return False
     if abs(item.get("speed", 100.0) - 100.0) > 0.01:
         warnings.append(f'{where}: speed {item["speed"]} %, skipped (timing would drift)')
+        return False
+    # shortcut: source frames count in the clip's rate, timeline frames in the timeline's; such an item is skipped,
+    # not rescaled, until the unit of GetSourceStartFrame() on a mixed-rate item is verified in Resolve
+    if item.get("fps") and abs(float(item["fps"]) - float(fps)) > 0.01:
+        warnings.append(f'{where}: clip is {item["fps"]} fps on a {fps} fps timeline, skipped (frames would not line up)')
         return False
     return True
 
@@ -67,7 +72,7 @@ def words_on_timeline(dump, transcripts, role="Voice", source_offset=0):
         if data is None:
             warnings.append(f'{role} item {item["name"]!r} @ {item["start"]}: no transcript for this clip')
             continue
-        if not usable(item, warnings, role):
+        if not usable(item, warnings, role, dump["fps"]):
             continue
         lo = item["source_start"] - source_offset
         hi = lo + item["end"] - item["start"]
@@ -90,7 +95,7 @@ def sources_for_range(dump, kind, role, start, end):
     pieces, warnings = [], []
     for item in sorted(track["items"], key=lambda i: i["start"]):
         s, e = max(start, item["start"]), min(end, item["end"])
-        if s >= e or not usable(item, warnings, role):
+        if s >= e or not usable(item, warnings, role, dump["fps"]):
             continue
         src = item["source_start"] + s - item["start"]
         pieces.append({"clip_id": item["clip_id"], "name": item["name"], "source_start": src,
@@ -127,6 +132,10 @@ def selftest():
         {"speaker": None, "words": [{"start": "01:00:00:28", "end": "01:00:01:10", "text": "Пароль"}]}]})}
     order = [w["text"] for w in words_on_timeline(dump, overlap)["words"]]
     assert order == ["чия", "вона.", "Пароль"], order
+
+    mixed = dict(dump, tracks={"audio": [{"name": "Voice", "items": [dict(dump["tracks"]["audio"][0]["items"][0], fps="50.000")]}]})
+    out = words_on_timeline(mixed, tr)
+    assert not out["words"] and "50.000 fps on a 25 fps" in out["warnings"][0], out
 
     shifted = words_on_timeline(dump, tr, source_offset=5)
     assert shifted["words"][0]["start"] == 90015, shifted["words"][0]

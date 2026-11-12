@@ -75,7 +75,7 @@ def dump_segments(dump, offset, warnings):
     """A-roll items as segments; Voice items matched to each end by clip, position and sync."""
     segs = [dict(segment(it, offset), left=it.get("left_offset", it["source_start"]), right=it.get("right_offset"))
             for it in sorted(find_track(dump, "video", "A-roll")["items"], key=lambda i: i["start"])
-            if usable(it, warnings, "A-roll")]
+            if usable(it, warnings, "A-roll", dump["fps"])]
     voice = [segment(it, offset) for it in find_track(dump, "audio", "Voice")["items"]]
     for s in segs:
         synced = [v for v in voice if v["clip_id"] == s["clip_id"] and v["start"] - v["src_start"] == s["start"] - s["src_start"]]
