@@ -117,7 +117,7 @@ Any script that deletes or resets something becomes a permission prompt (the `gu
 
 `uk-transcribe` → `track-layout` → **`text-based-cut`** → `dual-video-sync-pip` → `marker-edit` (Fuchsia, Cocoa) → `split-edits`
 
-Next: review at the Cream markers, then `voice-isolation`, sound design, zooms over jump cuts (`tutorial-zooms punch-in`).
+Next: review at the Cream markers, then `voice-isolation`, sound design; [`jump-cuts`](jump-cuts.md) for the joins that show.
 
 ## Example prompts
 

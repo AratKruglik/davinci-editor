@@ -125,7 +125,7 @@ Offer its proposals (J/L, frames, words around the join, reason; rejected ones w
 
 ## 7. Report
 
-Timeline name, duration before → after, cuts by type, ids the user kept, anything that didn't verify. Suggest next steps: watch the Cream `cut` markers, then `voice-isolation`, sound design, zooms on jump cuts.
+Timeline name, duration before → after, cuts by type, ids the user kept, anything that didn't verify. Suggest next steps: watch the Cream `cut` markers, then `jump-cuts` for the joins that show, `voice-isolation`, sound design.
 
 ## Never
 

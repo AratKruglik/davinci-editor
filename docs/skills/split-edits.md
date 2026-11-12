@@ -68,7 +68,7 @@ A marker overrides the automatic choice at its join, but **not** the hard checks
 | B-roll with live sound | its own sound on the `Ambience` track before / after the picture | J in, L out | this skill, only adding to Ambience |
 | Chapter boundary (Blue) | music or ambience of the next chapter starts earlier | J | handed to `sound-design` as a Sky cue a few frames before the chapter |
 
-Never split a join inside one clip from one camera. A punch-in (`tutorial-zooms`) does not change the source, so it is still a jump cut.
+Never split a join inside one clip from one camera. A punch-in does not change the source, so it is still a jump cut; those joins belong to [`jump-cuts`](jump-cuts.md).
 
 Out of scope (Claude says so if asked):
 

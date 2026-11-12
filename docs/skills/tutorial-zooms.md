@@ -1,37 +1,33 @@
-# `tutorial-zooms`: zooms on the screen recording and punch-ins over jump cuts
+# `tutorial-zooms`: zooms on the screen recording
 
 [← All skills](README.md)
 
 ## What it does
 
-Two jobs for video tutorials:
+Eased push-ins onto the part of a screen recording being talked about (a button, a code line, a terminal), driven by your Pink markers. The region is read off an exported still, and the zoom is keyframed in a Fusion Transform inside the clip, so the frame never shows black edges and zooms that follow each other closely pan from one spot to the next instead of bouncing out and in.
 
-- **`screen`**: eased push-ins onto the part of a screen recording being talked about (a button, a code line, a terminal), driven by your Pink markers. The region is read off an exported still, and the zoom is keyframed in a Fusion Transform inside the clip, so the frame never shows black edges and zooms that follow each other closely pan from one spot to the next instead of bouncing out and in.
-- **`punch-in`**: static punch-ins on alternate A-roll segments of a talking head to hide jump cuts.
+Punch-ins that hide jump cuts in a talking head moved to [`jump-cuts`](jump-cuts.md), which decides join by join.
 
 Principle: a zoom answers "where do I look?" exactly when the speaker says it. Late, too strong or too frequent zooms make viewers seasick and hide context they need.
 
 ## When it triggers
 
-Automatically when you ask to zoom into the screen, enlarge a detail, hide jump cuts with punch-ins, or when you have Pink markers. Ukrainian trigger phrases: «зроби зуми», «наближення на екран», «збільш код», «покажи ближче», «зум на кнопку», «наблизь на кнопку», «сховай джамп-кати». In `edit-episode` it is stage D, step 2.
+Automatically when you ask to zoom into the screen, enlarge a detail, or when you have Pink markers. Ukrainian trigger phrases: «зроби зуми», «наближення на екран», «збільш код», «покажи ближче», «зум на кнопку», «наблизь на кнопку». In `edit-episode` it is stage D, step 2.
 
 Explicit call:
 
 ```
-/davinci-editor:tutorial-zooms [timeline] [screen|punch-in]
+/davinci-editor:tutorial-zooms [timeline]
 ```
 
 | Argument | Meaning | Default |
 |---|---|---|
 | `timeline` | timeline to work on | the current timeline |
-| `mode` | `screen`: zooms on the screen recording; `punch-in`: alternate punch-ins on talking-head A-roll to hide jump cuts | `screen` |
 
 ## Before you start
 
-- `screen`: a cut timeline with the screen recording on the `Screen` track. In a screen-only lesson without a Screen track, the `A-roll` item is zoomed. A talking-head camera under a Pink marker is the wrong mode: the skill asks.
-- `punch-in`: a talking-head cut with the Cream `cut` markers that `text-based-cut` puts at every join; the segments between them alternate.
+- A cut timeline with the screen recording on the `Screen` track. In a screen-only lesson without a Screen track, the `A-roll` item is zoomed. A talking-head camera under a Pink marker is not a screen zoom: the skill asks.
 - Optional but recommended: transcripts from `uk-transcribe`, so zooms are timed to speech.
-- In `edit-episode` the A-roll track is locked in stage D; `punch-in` changes A-roll items, so it is unlocked for this step only and locked again after.
 
 ## Markers it reads
 
@@ -61,8 +57,6 @@ Name what is on screen ("Save button", "the code on the right", "the terminal"),
 - The scaled image always covers the frame; the focus is clamped near the edges, so there are no black edges.
 - Zooms closer than 1 s apart on one item are chained into a pan instead of bouncing out and in.
 - No more than one zoom every ~10 s on average unless you ask; otherwise the weakest are proposed for dropping.
-- Punch-ins skip segments shorter than 2 s (a size jump every second is worse than the jump cut), items under a B-roll / Screen insert (not visible), and items with a non-default Inspector transform (PiP, your reframe).
-- Punch-ins enlarge the shot and keep the eyes where they were.
 
 ## Settings
 
@@ -71,7 +65,6 @@ Name what is on screen ("Save button", "the code on the right", "the terminal"),
 | `zoom_default_scale` | `1.6` | screen zoom when the region gives no better fit |
 | `zoom_max_scale` | `2.5` | strongest screen zoom |
 | `zoom_ease_s` | `0.5` | duration of the zoom-in and zoom-out moves, seconds |
-| `punch_in_scale` | `1.12` | scale of the alternate A-roll segments in `punch-in` |
 
 Any setting can be overridden in the prompt: "max zoom 2 in this lesson", "ease 0.3 s".
 
@@ -89,8 +82,6 @@ Under `<work_dir>/<project>/` (the work folder from `resolve-core`):
 
 ## Workflow and approval stops
 
-**`screen`:**
-
 1. Dumps the timeline, maps the words onto the cut if transcripts exist, backs up the timeline, saves the project and records the item properties in `zooms-before.json`.
 2. For each Pink marker or request: finds the item, the range and the region on an exported still, and the strength from the note.
 3. **Approval: the zoom table.** `# | TC | item | region (what) | scale | duration | chained`. Nothing is built before your yes.
@@ -102,13 +93,7 @@ On Resolve 21.1.2+ stills are exported straight from the timeline at the exact f
 
 **MotionVFX zoom (on request, Resolve 21.1.2+):** ask for the MotionVFX look and the skill attaches the installed `mHowTo Zoom` effect to the screen item instead of building the Transform, and sets its Zoom Scale and Movement Target. Its scale unit, target coordinates and timing aren't documented, and the effect covers the whole item rather than the zoom range, so the skill tries it on the first zoom, shows you stills from the start, middle and end of the item, and continues only after your yes. Not installed: the Transform route.
 
-**`punch-in`:**
-
-1. Lists the A-roll items in order and skips the ones the rules exclude.
-2. Reads the point between the eyes off a still of each shot setup and computes the punch-in with `zooms.py punch`.
-3. **Approval: the list of items that change.** Applied after your yes, to every second item; the first one is checked on a still before the rest.
-
-**Finish:** marks handled Pink markers in `customData`, saves, and reports zooms built (TC, what, scale), items skipped and why, punch-in items, stills to look at and how to undo (`zooms-before.json`, the Fusion comps named in the report).
+**Finish:** marks handled Pink markers in `customData`, saves, and reports zooms built (TC, what, scale), items skipped and why, stills to look at and how to undo (`zooms-before.json`, the Fusion comps named in the report).
 
 Any script that deletes or resets something becomes a permission prompt (the `guard.py` hook), so read what you approve.
 
@@ -116,7 +101,7 @@ Any script that deletes or resets something becomes a permission prompt (the `gu
 
 - Zoom beyond `zoom_max_scale`, across an edit point, or with a black edge in frame.
 - Change an item's existing Fusion comp that isn't its own `ZOOM`.
-- Change an item's Inspector transform in `screen` mode.
+- Change an item's Inspector transform.
 - Zoom more often than every ~10 s on average without your request.
 - Change the color, name or note of your markers (it writes only the hidden `customData`).
 
@@ -124,7 +109,7 @@ Any script that deletes or resets something becomes a permission prompt (the `gu
 
 Stage D: `fusion-motion-graphics` → **`tutorial-zooms`** → `subtitles-uk` → `chapters-markers` → `shorts-cutdown` → `thumbnail-frames` → `pre-delivery-qc` → `deliver`
 
-`punch-in` builds on the Cream `cut` markers of `text-based-cut`. A soft whoosh on big zooms is suggested only if `sound-design` runs again, never on every zoom.
+A soft whoosh on big zooms is suggested only if `sound-design` runs again, never on every zoom.
 
 ## Example prompts
 
@@ -132,16 +117,10 @@ Stage D: `fusion-motion-graphics` → **`tutorial-zooms`** → `subtitles-uk` �
 
 > Make the zooms from the Pink markers on the screen recording.
 
-**With arguments, screen mode:**
+**With arguments:**
 
 ```
-/davinci-editor:tutorial-zooms "Router - rough cut" screen
-```
-
-**With arguments, punch-in mode:**
-
-```
-/davinci-editor:tutorial-zooms "Router - rough cut" punch-in
+/davinci-editor:tutorial-zooms "Router - rough cut"
 ```
 
 **Overriding a setting:**
@@ -165,5 +144,4 @@ The strong prompt points to your markers and names the elements, so regions come
 - Watch every zoom in context: does it arrive when the speaker names the spot, is the element readable?
 - No black edge at any frame of a zoom; back to full frame after it.
 - The PiP camera still sits right on zoomed Screen items.
-- In `punch-in`: the jumps look intentional, the eyes stay in place.
 - Undo: `zooms-before.json` and the Fusion comps or MotionVFX effects named in the report.

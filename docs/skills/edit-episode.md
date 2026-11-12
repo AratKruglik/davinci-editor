@@ -61,6 +61,7 @@ All footage is graded before cutting, in remote versions, so the grade follows e
 5. `dual-video-sync-pip`: tutorials with a screen recording only.
 6. `marker-edit` for Fuchsia (B-roll inserts) and Cocoa (transitions) on the cut timeline.
 7. `split-edits`: J/L cuts where the picture source changes, and Cocoa markers with `J` / `L` / `split`. Clip changes were already offered in step 3 and camera ↔ screen switches in step 5; this step does the rest on a copy of the timeline. It comes before sound, because `sound-design` and `audio-finish` build on the final audio boundaries. Design note: [split-edits.md](../split-edits.md) (in Ukrainian).
+8. [`jump-cuts`](jump-cuts.md): talking-head parts only, if you want the jump cuts treated. Every join inside one shot is judged from its two frames and left alone, rolled a few frames, given a Smooth Cut, punched in or marked for cover footage (its own approval table; works on a copy). It comes after `split-edits` and before sound, because a rolled cut moves the Voice edges too.
 
 **Review:** watch the rough cut using the Cream `cut` markers.
 
@@ -75,7 +76,7 @@ All footage is graded before cutting, in remote versions, so the grade follows e
 Picture and sound are locked now: A-roll, B-roll and Voice are locked (`track-layout lock graphics`) until `deliver`. Steps 2–6 need the words on the cut, so Claude takes a timeline dump at the start of the stage and a fresh one after any step that changes items.
 
 1. `fusion-motion-graphics`: Cyan markers, name plates, callouts; chapter cards only if you want them (after step 4, from its titles).
-2. `tutorial-zooms`: Pink markers on the screen recording; `punch-in` for jump cuts in talking-head parts if you want it (A-roll is unlocked for this step only and locked again after).
+2. `tutorial-zooms`: Pink markers on the screen recording.
 3. `subtitles-uk`: YouTube SRT (and the `Subtitles UA` track if wanted).
 4. `chapters-markers`: Blue markers → `chapters.txt`.
 5. `shorts-cutdown`: Mint markers or proposals → vertical timelines; each Short gets `audio-finish` and `subtitles-uk shorts`.

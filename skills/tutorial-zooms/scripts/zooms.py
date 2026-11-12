@@ -1,4 +1,4 @@
-"""Eased zooms into regions of a screen recording (Fusion Transform spec) and static punch-ins for jump cuts.
+"""Eased zooms into regions of a screen recording (Fusion Transform spec) and the punch-in geometry the jump-cuts skill uses.
 
 python3 zooms.py plan zooms.json --out spec.json
 python3 zooms.py punch --width 3840 --height 2160 --scale 1.12 --face X Y

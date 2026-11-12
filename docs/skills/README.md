@@ -42,6 +42,7 @@ The order follows [`edit-episode`](edit-episode.md), which runs the whole workfl
 | [`text-based-cut`](text-based-cut.md) | cut list from transcript and markers → approval → new timeline |
 | [`dual-video-sync-pip`](dual-video-sync-pip.md) | camera + screen recording synced by sound, PiP by Purple markers |
 | [`split-edits`](split-edits.md) | J- and L-cuts where the picture source changes |
+| [`jump-cuts`](jump-cuts.md) | each jump cut judged from its two frames: left alone, rolled, Smooth Cut, punch-in or marked for cover |
 
 ### Stage C: sound
 
@@ -58,7 +59,7 @@ The order follows [`edit-episode`](edit-episode.md), which runs the whole workfl
 |---|---|
 | [`motionvfx-catalog`](motionvfx-catalog.md) | catalog of installed MotionVFX / Fusion templates (forked helper) |
 | [`fusion-motion-graphics`](fusion-motion-graphics.md) | lower thirds, callouts, kinetic phrases, counters from Cyan markers |
-| [`tutorial-zooms`](tutorial-zooms.md) | eased screen zooms from Pink markers; punch-ins over jump cuts |
+| [`tutorial-zooms`](tutorial-zooms.md) | eased screen zooms from Pink markers |
 | [`subtitles-uk`](subtitles-uk.md) | Ukrainian SRT from the transcript; animated captions for Shorts |
 | [`chapters-markers`](chapters-markers.md) | YouTube chapters from Blue markers, checked against YouTube's rules |
 | [`shorts-cutdown`](shorts-cutdown.md) | 30–60 s vertical Shorts from Mint markers or the transcript |

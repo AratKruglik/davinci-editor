@@ -43,7 +43,7 @@ The plugin's footage is mostly one camera, one voice, cut by text. Shift the sou
 | B-roll with live sound | its own sound on `Ambience` before / after the picture | J in, L out | `ambience` |
 | Chapter boundary (Blue) | music or ambience of the next chapter starts earlier | J | hand to `sound-design` as a Sky cue a few frames before the chapter |
 
-Never: a join inside one clip from one camera. A punch-in (`tutorial-zooms`) does not change the source — still a jump cut. Two speakers on two cameras with crossfaded overlapping voices (Voice / Voice 2), volume keyframes, nested timelines and multicam are out of scope: say so if asked.
+Never: a join inside one clip from one camera. A punch-in does not change the source — still a jump cut, and those belong to `jump-cuts`. Two speakers on two cameras with crossfaded overlapping voices (Voice / Voice 2), volume keyframes, nested timelines and multicam are out of scope: say so if asked.
 
 ## Hard checks (the script runs them on every proposal)
 

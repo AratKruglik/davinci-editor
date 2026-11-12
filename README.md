@@ -96,6 +96,7 @@ Click a name for its guide and example prompts.
 | [`text-based-cut`](docs/skills/text-based-cut.md) | rough cut from the transcript |
 | [`dual-video-sync-pip`](docs/skills/dual-video-sync-pip.md) | camera + screen sync, PiP |
 | [`split-edits`](docs/skills/split-edits.md) | J- and L-cuts |
+| [`jump-cuts`](docs/skills/jump-cuts.md) | judges each jump cut: leave, roll, Smooth Cut, punch-in |
 | [`track-layout`](docs/skills/track-layout.md) | tracks by role, colors, locks |
 | [`voice-isolation`](docs/skills/voice-isolation.md) | removes background noise from voice |
 | [`sound-design`](docs/skills/sound-design.md) | SFX, music, ambience from your library |
@@ -103,7 +104,7 @@ Click a name for its guide and example prompts.
 | [`audio-finish`](docs/skills/audio-finish.md) | level dialogue, -14 LUFS |
 | [`motionvfx-catalog`](docs/skills/motionvfx-catalog.md) | finds your MotionVFX / Fusion templates |
 | [`fusion-motion-graphics`](docs/skills/fusion-motion-graphics.md) | titles, callouts, counters |
-| [`tutorial-zooms`](docs/skills/tutorial-zooms.md) | zooms onto the screen, punch-ins |
+| [`tutorial-zooms`](docs/skills/tutorial-zooms.md) | zooms onto the screen |
 | [`subtitles-uk`](docs/skills/subtitles-uk.md) | Ukrainian subtitles, Shorts captions |
 | [`chapters-markers`](docs/skills/chapters-markers.md) | YouTube chapters |
 | [`shorts-cutdown`](docs/skills/shorts-cutdown.md) | vertical Shorts |

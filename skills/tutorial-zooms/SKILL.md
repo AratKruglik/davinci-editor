@@ -1,9 +1,9 @@
 ---
 name: tutorial-zooms
-description: Zooms for video tutorials in DaVinci Resolve Studio 21+ - eased push-ins onto the part of a screen recording being talked about (a button, a code line, a terminal), driven by the user's Pink markers (note = area and strength), with the region read off an exported still, keyframed in a Fusion Transform so the frame never shows black edges and close zooms pan from one spot to the next instead of bouncing out and in; plus static punch-ins on alternate A-roll segments to hide jump cuts.
-when_to_use: User wants to zoom into the screen, enlarge a detail, "наблизь на кнопку", has Pink markers, or wants jump cuts in a talking-head cut hidden with punch-ins; the zoom step of edit-episode stage D. Triggers - "зроби зуми", "наближення на екран", "збільш код", "покажи ближче", "зум на кнопку", "punch in", "сховай джамп-кати", "tutorial zooms".
-argument-hint: "[timeline] [screen|punch-in]"
-arguments: [timeline, mode]
+description: Zooms for video tutorials in DaVinci Resolve Studio 21+ - eased push-ins onto the part of a screen recording being talked about (a button, a code line, a terminal), driven by the user's Pink markers (note = area and strength), with the region read off an exported still, keyframed in a Fusion Transform so the frame never shows black edges and close zooms pan from one spot to the next instead of bouncing out and in.
+when_to_use: User wants to zoom into the screen, enlarge a detail, "наблизь на кнопку", or has Pink markers; the zoom step of edit-episode stage D. Triggers - "зроби зуми", "наближення на екран", "збільш код", "покажи ближче", "зум на кнопку", "tutorial zooms". Jump cuts and punch-ins on a talking head are the jump-cuts skill.
+argument-hint: "[timeline]"
+arguments: [timeline]
 effort: high
 allowed-tools:
   - "mcp__DaVinci_Resolve__get_resolve_status"
@@ -25,11 +25,11 @@ hooks:
 
 # Tutorial zooms
 
-Follow `resolve-core` first. Timeline: `$timeline` (default current). Mode: `$mode` (default `screen`; `punch-in` for jump cuts).
+Follow `resolve-core` first. Timeline: `$timeline` (default current).
 
 Edit memory (`resolve-core` §11): learn at the start, read this skill's rules before the plan (`max_scale` caps every zoom below `zoom_max_scale`), and take a snapshot as the last step of every write.
 
-Script: `${CLAUDE_SKILL_DIR}/scripts/zooms.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/zooms.py selftest`). Settings: default scale `${user_config.zoom_default_scale}`, max `${user_config.zoom_max_scale}`, ease `${user_config.zoom_ease_s}` s, punch-in `${user_config.punch_in_scale}`.
+Script: `${CLAUDE_SKILL_DIR}/scripts/zooms.py` (selftest: `python3 ${CLAUDE_SKILL_DIR}/scripts/zooms.py selftest`). Settings: default scale `${user_config.zoom_default_scale}`, max `${user_config.zoom_max_scale}`, ease `${user_config.zoom_ease_s}` s.
 
 Principle: a zoom answers "where do I look?" exactly when the speaker says it. Late, too strong or too frequent zooms make viewers seasick and hide context they need.
 
@@ -38,7 +38,7 @@ Principle: a zoom answers "where do I look?" exactly when the speaker says it. L
 1. Timeline dump (`resolve-core/reference.md#timeline-dump`) and, if transcripts exist, words on the timeline (`timeline_map.py words`) to time zooms to speech.
 2. Backup the timeline (`resolve-core` §3). Save the project. Record `GetProperties()` of every item you will touch in `<work>/zooms-before.json`.
 
-## 1. Screen zooms (`screen`)
+## 1. Screen zooms
 
 Targets: **Pink** markers (timeline and items, `marker-edit` rules, skip `claude:done:*`); requests from the user. Each target needs:
 - **The item**: the `Screen` track item under the marker; no Screen track (screen-only lesson) → the `A-roll` item. Talking-head camera → wrong mode, ask.
@@ -69,25 +69,15 @@ Build, per item (all zooms on one item go into one comp):
 4. Undo: `item.DeleteEffects([fx])` (guarded). Record the item's effects before the change in `zooms-before.json`.
 5. Not recorded in the ledger: the effect's scale unit and timing are unverified, so the critic would have nothing true to check.
 
-## 2. Punch-ins (`punch-in`)
+Punch-ins over jump cuts moved to the `jump-cuts` skill, which decides join by join; it still uses `zooms.py punch` for the geometry.
 
-Hides jump cuts in a talking head: segments between the Cream `cut` markers of `text-based-cut` alternate between 100 % and `${user_config.punch_in_scale}`.
-1. A-roll items in order; skip items under a B-roll / Screen insert (not visible), items with a non-default Inspector transform (PiP, user's reframe), and segments shorter than 2 s (a size jump every second is worse than the jump cut).
-2. Face position: still from the middle of the first item of each shot setup, Read it, take the point between the eyes as `X Y` (0..1 from the top-left).
-3. `python3 ${CLAUDE_SKILL_DIR}/scripts/zooms.py punch --width <w> --height <h> --scale ${user_config.punch_in_scale} --face X Y` → `ZoomX/ZoomY/Pan/Tilt` that enlarge the shot and keep the eyes where they were.
-4. Every second item: `item.SetProperties(props)`, re-read `GetProperties()`. Units of Pan/Tilt and Zoom are in the runtime-discovery list: check the first item on a still before doing the rest.
+## 2. Finish
 
-Show the list of items that change before applying; apply after the yes.
+Mark handled Pink markers `claude:done:tutorial-zooms:<date>`. Save. Report: zooms built (TC, what, scale), items skipped and why, stills to look at, how to undo (`zooms-before.json`; Fusion comps and MotionVFX effects named in the report). Suggest a soft whoosh on big zooms only if `sound-design` runs again (never on every zoom).
 
-Punch-ins are not recorded in the ledger: they reframe the A-roll itself at the configured `${user_config.punch_in_scale}`, nothing is placed over the picture.
+Then run `frame-critic <timeline> tutorial-zooms`.
 
-## 3. Finish
-
-Mark handled Pink markers `claude:done:tutorial-zooms:<date>`. Save. Report: zooms built (TC, what, scale), items skipped and why, punch-in items, stills to look at, how to undo (`zooms-before.json`; Fusion comps and MotionVFX effects named in the report). Suggest a soft whoosh on big zooms only if `sound-design` runs again (never on every zoom).
-
-Then, after screen zooms, run `frame-critic <timeline> tutorial-zooms`.
-
-## 4. Fix from frame-critic
+## 3. Fix from frame-critic
 
 `frame-critic` hands over findings whose `fix.skill` is `tutorial-zooms`: element id (`tutorial-zooms/<item_id>#<zoom id>`), kind, TC, message and `fix.change` (a scale at most `${user_config.zoom_max_scale}`, a zoom center away from the edge).
 
@@ -98,5 +88,5 @@ Then, after screen zooms, run `frame-critic <timeline> tutorial-zooms`.
 ## Never
 
 - Zoom beyond `${user_config.zoom_max_scale}`, across an edit point, or with a black edge in frame.
-- Change an item's existing Fusion comp that isn't Claude's `ZOOM`, or its Inspector transform in `screen` mode.
+- Change an item's existing Fusion comp that isn't Claude's `ZOOM`, or its Inspector transform.
 - Zoom on more than every ~10 s on average without the user asking; propose dropping the weakest instead.
