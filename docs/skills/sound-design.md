@@ -69,7 +69,7 @@ It also uses Blue markers (chapters) as music sections when there are no Sky mar
 | music without speech (intro, outro, pauses over 3 s) | `music_solo_lufs` (-20 LUFS) |
 | SFX | sample peak `sfx_peak_db` (-12 dBFS) |
 
-A music cue is split at speech borders into separate items so each part gets its own level: this is the ducking, because Resolve's API has no volume keyframes. Music gets a 1 s fade-in and 2 s fade-out, and short 8–12-frame fades at internal level changes. If this Resolve build has no LUFS normalization mode, Claude sets an estimated volume instead and tells you.
+A music cue is measured once as a whole, then split at speech borders into separate items: the parts under speech keep that level and the parts without speech get a fixed step up (`music_solo_lufs` − `music_bed_lufs`, 10 dB by default). This is the ducking, because Resolve's API has no volume keyframes, and it keeps the track's own dynamics. Music gets a 1 s fade-in at its start and a 2 s fade-out at its end; at the internal level changes the parts are joined with an 8–12-frame crossfade, never a fade-out next to a fade-in, which would leave a hole. If this Resolve build has no LUFS normalization mode, Claude sets an estimated volume instead and tells you.
 
 ## Settings
 

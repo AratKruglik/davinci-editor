@@ -65,7 +65,7 @@ item.SetProperties({
 
 Re-read with `GetProperties()`. Whispery or very dynamic presenters: `…LIFT_SOFT_WHISPERY_SOURCES` / `…ALLOW_WIDER_DYNAMICS`; ask if unsure.
 
-Then even out clips recorded on different days/distances: `tl.NormalizeAudioLevel(voice_items, {"normalizationMode": <BS.1770 / LUFS mode from tl.GetNormalizeAudioModes(), on 21.1.2 "ITU-R BS.1770-4">, "targetLoudness": target - 2, "setLevelMode": resolve.NORMALIZE_AUDIO_SET_LEVEL_INDEPENDENT})`. Dialogue sits ~2 LU under the target because music and SFX add the rest. No LUFS mode in this build → skip it and rely on step 4.
+Then even out clips recorded on different days/distances, **per source clip, not per item**: after the cut one take is dozens of short Voice items, and leveling each on its own would lift a quiet aside to the loudness of a full sentence. Group the Voice items by `GetMediaPoolItem().GetUniqueId()` and call once per group: `tl.NormalizeAudioLevel(group, {"normalizationMode": <BS.1770 / LUFS mode from tl.GetNormalizeAudioModes(), on 21.1.2 "ITU-R BS.1770-4">, "targetLoudness": target - 2, "setLevelMode": resolve.NORMALIZE_AUDIO_SET_LEVEL_RELATIVE})`, so the items of one take get the same gain. Whether RELATIVE measures the group as one is unverified: re-read `AudioVolume` of the first group, and if its items got different gains, set every item of a group to the group's median gain yourself. Dialogue sits ~2 LU under the target because music and SFX add the rest. No LUFS mode in this build → skip it and rely on step 4.
 
 Music and SFX levels come from `sound-design`; don't renormalize them here. If `sound-design` didn't run, normalize music to `${user_config.music_bed_lufs}` and SFX to `${user_config.sfx_peak_db}` peak the same way.
 

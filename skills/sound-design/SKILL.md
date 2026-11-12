@@ -46,7 +46,7 @@ Principle: sound supports the speech, never competes with it. A tutorial with a 
 ## 1. Read the material
 
 - Transcript: `<work>/transcripts/*.txt` (`uk-transcribe`), mapped to the timeline through the A-roll items, or a fresh look at the timeline's own subtitles if any.
-- Structure: timeline length; Blue markers (chapters); items on Titles (title appearances), transitions on A-roll/B-roll/Screen, B-roll and Screen inserts, Cream `cut` markers (jump cuts — not sound moments by themselves).
+- Structure: timeline length; Blue markers (chapters); items on Titles (title appearances; before the graphics stage there are none, so `edit-episode` runs this skill once more for them after the titles and zooms are placed), transitions on A-roll/B-roll/Screen, B-roll and Screen inserts, Cream `cut` markers (jump cuts — not sound moments by themselves).
 - The user's markers (timeline and clips, `marker-edit` rules): **Lavender** = SFX, note = which sound; **Sky** = music start / mood change / end, note = mood. They are decisions, not suggestions.
 
 ## 2. Cue sheet
@@ -80,12 +80,11 @@ Approval: show one table — `# | TC | kind | what / mood | reason | file (candi
 1. Tracks by role: `SFX`, `Music`, and `Ambience` if any cue needs it (`track_index(..., create=True)` for audio is fine: audio track order doesn't affect the mix). Lock `A-roll` and `Voice` for this stage (`track-layout lock sound`) if `edit-episode` hasn't.
 2. Import each chosen file once into `02_Sound/SFX` or `02_Sound/Music` (reuse an item whose `File Path` matches); never copy the file.
 3. Append with `mediaType: 2`, `trackIndex` of the role, `recordFrame` from the cue, `startFrame` 0 and `endFrame` = the cue length or the file length (append calibration from `resolve-core`). Overlapping cues on one track → put the later one on `SFX 2` / `Music 2` (`track-layout`).
-4. Levels (one call per group, then read back): `tl.NormalizeAudioLevel(items, {...})` with the BS.1770 / LUFS mode from `tl.GetNormalizeAudioModes()`:
-   - music under speech → `targetLoudness` `${user_config.music_bed_lufs}` (default -30 LUFS);
-   - music without speech (intro, outro, pauses > 3 s) → `${user_config.music_solo_lufs}` (default -20 LUFS); split the cue at speech borders into separate items so each gets its level (this is the ducking: Resolve's API has no volume keyframes);
-   - SFX → sample-peak mode, `targetLevel` `${user_config.sfx_peak_db}` (default -12 dBFS).
+4. Levels (then read back), `tl.NormalizeAudioLevel(items, {...})` with the BS.1770 / LUFS mode from `tl.GetNormalizeAudioModes()`:
+   - music: **one measurement per track, before it is split.** Normalize the whole cue item to `${user_config.music_bed_lufs}` (default -30 LUFS) and read back its `AudioVolume` = `G`. Then split the cue at speech borders into separate items (this is the ducking: Resolve's API has no volume keyframes) and set `AudioVolume` by hand: under speech `G`, without speech (intro, outro, pauses > 3 s) `G + (${user_config.music_solo_lufs} − ${user_config.music_bed_lufs})` (default +10 dB). Never normalize the pieces one by one: a quiet bridge and a loud chorus would come out equally loud and every border would jump by a different amount;
+   - SFX → sample-peak mode, `targetLevel` `${user_config.sfx_peak_db}` (default -12 dBFS), one call for the group.
    If no LUFS mode exists in this build, fall back to `item.SetProperties({"AudioVolume": dB})` with a level you estimate and say so.
-5. Fades: music items `item.SetFades({"FadeIn": 1 s, "FadeOut": 2 s})` in frames, shorter (8–12 frames) at internal level changes so the steps are smooth; re-read with `GetFades()`.
+5. Fades: `item.SetFades({"FadeIn": 1 s, "FadeOut": 2 s})` in frames only on the first and the last item of a cue. At the internal level changes the two pieces touch, so a fade-out next to a fade-in would drop the music to silence: put a crossfade there instead, `item.AddTransition({"type": "Cross Fade 0 dB", "category": "audio", "position": "end", "alignment": "center", "duration": 8–12 frames})` on the earlier piece (the exact name from Resolve's Effects → Audio Transitions). Try it on the first border and listen; `None` back (no handle, or the API refuses) → lay the two pieces overlapping by those frames on `Music` / `Music 2` with `SetFades` on the overlapping ends. Re-read with `GetFades()`.
 6. `track-layout recolor`, save.
 
 ## 4. Check and report
