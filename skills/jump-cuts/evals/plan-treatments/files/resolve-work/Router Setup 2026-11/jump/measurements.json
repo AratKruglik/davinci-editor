@@ -1,0 +1,60 @@
+{
+ "note": "Measured and looked at in an earlier session with jump_cuts.py diff; the stills are not in this sandbox. Joins under B-roll or at a clip change were not measured.",
+ "threshold_confirmed_by_user": 0.02,
+ "face": {
+  "IMG_4140": [
+   0.5,
+   0.38
+  ],
+  "IMG_4141": [
+   0.52,
+   0.4
+  ]
+ },
+ "joins": [
+  {
+   "frame": 90300,
+   "a": "jump/f90300-a.tif",
+   "b": "jump/f90300-b.tif",
+   "diff": 0.008,
+   "max_cell": 0.03,
+   "blink": null,
+   "mouth": null,
+   "pose": "same",
+   "background": "static"
+  },
+  {
+   "frame": 91300,
+   "a": "jump/f91300-a.tif",
+   "b": "jump/f91300-b.tif",
+   "diff": 0.09,
+   "max_cell": 0.41,
+   "blink": null,
+   "mouth": null,
+   "pose": "shifted",
+   "background": "static"
+  },
+  {
+   "frame": 91330,
+   "a": "jump/f91330-a.tif",
+   "b": "jump/f91330-b.tif",
+   "diff": 0.07,
+   "max_cell": 0.35,
+   "blink": null,
+   "mouth": null,
+   "pose": "shifted",
+   "background": "static"
+  },
+  {
+   "frame": 91700,
+   "a": "jump/f91700-a.tif",
+   "b": "jump/f91700-b.tif",
+   "diff": 0.09,
+   "max_cell": 0.44,
+   "blink": null,
+   "mouth": null,
+   "pose": "shifted",
+   "background": "static"
+  }
+ ]
+}

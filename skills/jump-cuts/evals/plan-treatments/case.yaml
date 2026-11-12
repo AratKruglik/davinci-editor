@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: plan-treatments
+expected_outcome: |
+  jump_cuts.py lists six A-roll joins on 'Router - rough cut 2026-11-02' and, with the measurements from jump/measurements.json recorded through `observe`, classifies them: the join under B-roll at 01:00:26:00 (frame 90650) and the IMG_4140 → IMG_4141 clip change at 01:00:40:00 (91000) get no treatment; the join at 01:00:12:00 (90300) with difference 0.008 is left alone; the two joins around the 30-frame segment (91300 and 91330) get no punch-in and are marked for cover with Cream markers; only the join at 01:01:08:00 (91700) gets a punch-in, on the segment after it at scale 1.12 with the geometry from zooms.py punch. The table is shown and approval asked before anything changes, and every change is made on a duplicate of the timeline.
+context:
+  scaffold_script: place-files.sh
