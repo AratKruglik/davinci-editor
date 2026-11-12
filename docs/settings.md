@@ -57,7 +57,8 @@ The defaults suit Ukrainian-language YouTube tutorials; change only what differs
 | `brand_text_anim` | `slide` | title intro: `slide`, `swipe-down`, `pop`, `flicker`, `fade-reveal`, `spin`, `scramble`, `word-grow` |
 | `zoom_default_scale` / `zoom_max_scale` | `1.6` / `2.5` | screen zoom strength and its limit |
 | `zoom_ease_s` | `0.5` | zoom move duration, seconds |
-| `punch_in_scale` | `1.12` | punch-in on alternate A-roll segments (hides jump cuts) |
+| `punch_in_scale` | `1.12` | punch-in that `jump-cuts` gives the segments it hides a jump cut with |
+| `jump_diff_threshold` | `0.02` | frame difference (0..1) below which `jump-cuts` leaves a jump cut alone; Smooth Cut below 3 × this |
 | `subtitle_max_chars` / `subtitle_max_cps` | `42` / `17` | subtitle line length and reading speed |
 | `shorts_min_s` / `shorts_max_s` | `30` / `60` | Shorts length |
 | `shorts_resolution` | `1080x1920` | Shorts frame |

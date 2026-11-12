@@ -185,7 +185,7 @@ def assign_scales(data, scale):
 
 def classify(data, threshold, scale):
     segs = data["segments"]
-    missing = [j["id"] for j in data["joins"] if not (j["covered"] or j["source_change"] or j["skip"]) and j["observation"] is None]
+    missing = [j["id"] for j in data["joins"] if not (j["covered"] or j["source_change"] or j["skip"]) and j["observation"] is None and not j["decision"]]
     if missing:
         raise SystemExit(f"no observation for {', '.join(missing)}: run `observe` for each join first")
     for j in data["joins"]:
@@ -193,6 +193,8 @@ def classify(data, threshold, scale):
         obs, diff = j["observation"] or {}, j["diff"]
         measured = "" if diff is not None else " (not measured)"
         trigger = obs.get("blink") or obs.get("mouth")
+        if j["observation"] is None and j["decision"]:
+            continue
         if j["covered"]:
             auto, reason = "hidden", "the join is under B-roll / Screen"
         elif j["source_change"] or j["skip"]:
@@ -386,6 +388,9 @@ def selftest():
     unobserved = chain(None)
     unobserved["joins"][0]["observation"] = None
     assert exits(lambda: classify(unobserved, 0.02, 1.12))
+    decide(unobserved, "j1", "leave", 1.12)
+    classify(unobserved, 0.02, 1.12)
+    assert effective(unobserved) == {"j1": "leave"}, "a join the user already decided needs no observation"
 
     decide(data, "j6", "leave", 1.12)
     classify(data, 0.02, 1.12)
