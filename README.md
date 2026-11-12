@@ -139,6 +139,7 @@ python3 skills/natural-skin-grade/scripts/test_skin_grade.py
 python3 skills/motionvfx-catalog/scripts/test_catalog.py
 python3 skills/dual-video-sync-pip/scripts/pip_plan.py selftest
 python3 skills/split-edits/scripts/split_edits.py selftest
+python3 skills/jump-cuts/scripts/jump_cuts.py selftest
 python3 skills/sound-design/scripts/test_sound_library.py
 python3 skills/audio-finish/scripts/loudness.py selftest
 python3 skills/resolve-core/scripts/timeline_map.py selftest
