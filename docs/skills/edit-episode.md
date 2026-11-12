@@ -84,6 +84,8 @@ Picture and sound are locked now: A-roll, B-roll and Voice are locked (`track-la
 7. `track-layout cleanup` (empty tracks, after confirmation), then `pre-delivery-qc` on the episode and on every Short. Errors go back to the step that owns them.
 8. `deliver all`.
 
+Stage C ran before any title or zoom existed. So after steps 1–2 are approved, `sound-design` runs once more only for sounds on the new titles and big zooms, and `audio-finish` measures and trims the mix again; both are skipped if nothing was placed or you want no sound on graphics.
+
 After steps 1, 2 and 5 the skill that placed the graphics, zooms or Short captions runs `frame-critic` on them once. Its findings are part of that step's review: fixes go back to the owner skill only after your yes, and the verdict and what stayed open go into `episode.md`.
 
 **Review:** watch the graphics and zooms in context, read the chapter list, and pick the Shorts and thumbnail before rendering.

@@ -82,6 +82,8 @@ Picture and sound of the episode are locked now: lock A-roll, B-roll and Voice (
 
 `frame-critic` checks what steps 1 (graphics), 2 (screen zooms) and 5 (each Short) placed: the owner skill runs it once at its end, so don't run it again. Its findings and fixes are part of that step's approval stop: the fix rounds go back to the owner only after the user's yes, before the next step. Record the critic verdict and what stayed open in `episode.md`.
 
+Sound for the graphics: stage C ran before any title or zoom existed, so once steps 1–2 are approved (critic fixes in), run `sound-design` again limited to cues on the new titles and the big zooms (SFX only, its own approval table; A-roll, B-roll and Voice stay locked), then `audio-finish` §4 alone (measure and trim, no second leveling), so the loudness that QC and `deliver` rely on is the mix with those sounds in it. No title or zoom placed, or the user wants no sound on graphics → skip both and record it.
+
 Approval: the user watches the graphics and zooms in context, reads the chapter list, and picks the Shorts and thumbnail before rendering (the judge's blind ranking is advice).
 
 ## Finish
